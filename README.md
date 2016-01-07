@@ -1,3 +1,20 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [impTest – Electric Imp Test Runner](#imptest-%E2%80%93-electric-imp-test-runner)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [imptest commands](#imptest-commands)
+    - [init](#init)
+    - [test](#test)
+  - [.imptest file specification](#imptest-file-specification)
+  - [Development](#development)
+    - [Installation](#installation-1)
+    - [Testing](#testing)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # impTest – Electric Imp Test Runner
 
 ## Requirements
