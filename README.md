@@ -58,7 +58,7 @@ Options:
 
 ## .imptest file specification
 
-__.imptest__ file is used to deploy code to a certain device/model.
+__.imptest__ file is used to deploy tests to a certain device/model.
 
 ```json
 {
