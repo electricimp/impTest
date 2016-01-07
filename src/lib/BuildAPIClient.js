@@ -6,7 +6,7 @@ var colors = require('colors');
 /**
  * Electric Imp Build API service
  */
-class BuildAPI {
+class BuildAPIClient {
 
   /**
    * @param {{}} val
@@ -96,4 +96,4 @@ class BuildAPI {
   }
 }
 
-module.exports = BuildAPI;
+module.exports = BuildAPIClient;
