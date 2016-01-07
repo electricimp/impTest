@@ -29,6 +29,15 @@ class BuildAPI {
     this.options = options;
   }
 
+  /**
+   * Make Build API request
+   *
+   * @param {string} method
+   * @param {string} path
+   * @param {{}} headers
+   * @param {string} query
+   * @returns {Promise}
+   */
   request(method, path, headers, query) {
     return new Promise((resolve, reject) => {
 
@@ -88,4 +97,3 @@ class BuildAPI {
 }
 
 module.exports = BuildAPI;
-
