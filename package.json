@@ -1,0 +1,23 @@
+{
+  "name": "imptest",
+  "version": "0.0.1-dev",
+  "description": "Electric Imp Test Runner",
+  "main": "src/cli/imptest.js",
+  "scripts": {
+    "test": "node_modules/jasmine/bin/jasmine.js"
+  },
+  "bin": {
+    "imptest": "src/cli/imptest.js"
+  },
+  "author": "mikhail@electricimp.com",
+  "license": "MIT",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "commander": "^2.9.0",
+    "request": "^2.67.0",
+    "strip-json-comments": "^2.0.0"
+  },
+  "devDependencies": {
+    "jasmine": "^2.4.1"
+  }
+}
