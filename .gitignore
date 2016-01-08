@@ -1,3 +1,4 @@
 _private
 node_modules
 tests
+spec/config.js
