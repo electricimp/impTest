@@ -2,8 +2,11 @@
  * Init command
  */
 
+'use strict';
+
 var commander = require('commander');
 var InitCommand = require('../lib/Commands/InitCommand');
+var parseBool = require('../lib/utils/parseBool');
 
 commander
   .option('-d, --debug', 'debug output')

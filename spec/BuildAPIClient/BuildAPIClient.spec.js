@@ -2,10 +2,10 @@
 
 var BuildAPIClient = require('../../src/lib/BuildAPIClient');
 
-describe('BuildAPI test suite', function () {
-  it('should get list a of devices', function (done) {
+describe('BuildAPI test suite', () => {
+  it('should get list a of devices', (done) => {
 
-    let client = new BuildAPIClient({
+    const client = new BuildAPIClient({
       debug: true,
       apiKey: process.env.IMP_BUILD_API_KEY
     });

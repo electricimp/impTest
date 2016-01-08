@@ -53,7 +53,7 @@ class AbstractCommand {
    */
   _debug() {
     if (this._options.debug) {
-      let args = Array.prototype.slice.call(arguments);
+      const args = Array.prototype.slice.call(arguments);
       args.unshift(colors.green('[debug:' + this.constructor.name + ']'));
       console.log.apply(this, args);
     }

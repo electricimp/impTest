@@ -46,12 +46,12 @@ class BuildAPIClient {
       headers = headers || {};
       query = query || '';
 
-      let options = {
-        'method': method,
-        'json': true,
-        'url': this._options.apiEndpoint + path,
-        'headers': {
-          'User-agent': 'imptest',
+      const options = {
+        method,
+        json: true,
+        url: this._options.apiEndpoint + path,
+        header: {
+          'User-agent': 'impTest',
           'Content-type': 'application/json',
           'Authorization': 'Basic ' + new Buffer(this._options.apiKey || '').toString('base64')
         }
@@ -95,6 +95,9 @@ class BuildAPIClient {
             reject(new Error(result.message));
           }
 
+          // todo: handle rate limit hit
+          // todo: produce custom error types
+
         } else {
 
           // we're cool
@@ -112,7 +115,7 @@ class BuildAPIClient {
    */
   _debug() {
     if (this._options.debug) {
-      let args = Array.prototype.slice.call(arguments);
+      const args = Array.prototype.slice.call(arguments);
       args.unshift(colors.green('[debug:' + this.constructor.name + ']'));
       console.log.apply(this, args);
     }

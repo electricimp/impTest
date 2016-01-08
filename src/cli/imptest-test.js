@@ -2,6 +2,8 @@
  * Test command
  */
 
+'use strict';
+
 var commander = require('commander');
 var TestCommand = require('../lib/Commands/TestCommand');
 var parseBool = require('../lib/utils/parseBool');

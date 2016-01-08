@@ -4,8 +4,9 @@
  * CLI app
  */
 
+'use strict';
+
 var commander = require('commander');
-var packageJson = require(__dirname + '/../../package');
 
 commander
   .command('init', 'Initialize .impconfig file')
