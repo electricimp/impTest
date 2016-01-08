@@ -3,8 +3,6 @@
 var config = require('../config');
 var BuildAPIClient = require('../../src/lib/BuildAPIClient');
 
-console.log(config);
-
 describe('BuildAPI test suite', () => {
 
   const client = new BuildAPIClient({
