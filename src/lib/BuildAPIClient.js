@@ -43,14 +43,14 @@ class BuildAPIClient {
     return new Promise((resolve, reject) => {
 
       method = method.toUpperCase();
-      headers = headers || {};
       query = query || '';
+      headers = headers || {};
 
       const options = {
         method,
         json: true,
         url: this._options.apiEndpoint + path,
-        header: {
+        headers: {
           'User-agent': 'impTest',
           'Content-type': 'application/json',
           'Authorization': 'Basic ' + new Buffer(this._options.apiKey || '').toString('base64')
@@ -64,7 +64,8 @@ class BuildAPIClient {
         options.body = query;
       }
 
-      // add heeaders passed
+      // add headers passed
+
       Object.assign(options.headers, headers);
 
       this._debug(colors.blue('Doing the request with options:'), options);
