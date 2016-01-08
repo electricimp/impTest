@@ -1,22 +1,35 @@
 'use strict';
 
+var config = require('../config');
 var BuildAPIClient = require('../../src/lib/BuildAPIClient');
 
+console.log(config);
+
 describe('BuildAPI test suite', () => {
+
+  const client = new BuildAPIClient({
+    debug: true,
+    apiKey: config.build_api_key
+  });
+
   it('should get list a of devices', (done) => {
 
-    const client = new BuildAPIClient({
-      debug: true,
-      apiKey: process.env.IMP_BUILD_API_KEY
-    });
-
     client.request('GET', '/devices')
-      .then((body) => {
-        done();
-      })
+      .then(done)
       .catch((error) => {
         done.fail(error);
       });
 
   });
+
+  it('should push a new revision', (done) => {
+
+    client.createRevision(config.model_id, 'server.log("hi there!")')
+      .then(done)
+      .catch((error) => {
+        done.fail(error);
+      });
+
+  });
+
 });
