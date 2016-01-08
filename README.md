@@ -86,6 +86,8 @@ npm i
 
 ### Testing
 
+Copy __spec/config.js.dist" to __config.js__ and fill-in the neccesary settings, then:
+
 ```bash
-IMP_BUILD_API_KEY=<key> npm test
+npm test
 ```
