@@ -5,6 +5,7 @@ var colors = require('colors');
 
 /**
  * Electric Imp Build API service
+ * @see https://electricimp.com/docs/buildapi/
  */
 class BuildAPIClient {
 
@@ -34,11 +35,11 @@ class BuildAPIClient {
    *
    * @param {string} method
    * @param {string} path
-   * @param {{}} headers
    * @param {string} query
+   * @param {{}} headers
    * @returns {Promise}
    */
-  request(method, path, headers, query) {
+  request(method, path, query, headers) {
     return new Promise((resolve, reject) => {
 
       method = method.toUpperCase();
@@ -69,16 +70,38 @@ class BuildAPIClient {
       this._debug(colors.blue('Doing the request with options:'), options);
 
       // do request to build api
-      request(options, (error, response, body) => {
+      request(options, (error, response, result) => {
+
+        // debug output
+        response && this._debug(colors.blue('Response code:'), response.statusCode);
+        result && this._debug(colors.blue('Response:'), result);
+        error && this._debug(colors.blue('Error:'), error);
+
+        // handle result
+
         if (error) {
+
+          // we're completely screwed
+          // error is produced by request libabry
           reject(error);
-        } else if (!body.success) {
-          reject(body.error);
+
+        } else if (!result.success) {
+
+          // we have an error message from web server
+
+          if (result.error) {
+            reject(new Error(result.error.code));
+          } else {
+            reject(new Error(result.message));
+          }
+
         } else {
-          resolve(body);
+
+          // we're cool
+          resolve(result);
+
         }
       });
-
     });
   }
 
