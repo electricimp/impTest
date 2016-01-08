@@ -1,0 +1,8 @@
+/**
+ * Copy this file to "config.js" and fill it with settings for running specs
+ */
+
+'use strict';
+
+exports.build_api_key = '...';
+exports.model_id = '...';
