@@ -22,7 +22,7 @@ describe('BuildAPIClient test suite', () => {
 
   it('should push a new revision', (done) => {
 
-    client.createRevision(config.model_id, 'server.log("hi there!")')
+    client.createRevision(config.model_id, `server.log("hi there @ ${(new Date()).toUTCString()}")`)
       .then(done)
       .catch((error) => {
         done.fail(error);
