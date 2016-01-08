@@ -20,10 +20,7 @@
     "no-dupe-keys": 2,
     "no-duplicate-case": 2,
     "no-ex-assign": 2,
-    "quote-props": [
-      2,
-      "as-needed"
-    ],
+    "quote-props": [2, "as-needed", { "keywords": true, "unnecessary": false }],
     "no-unreachable": 2,
     "valid-typeof": 2,
     "no-fallthrough": 2,
