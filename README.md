@@ -86,7 +86,7 @@ npm i
 
 ### Testing
 
-Copy __spec/config.js.dist" to __config.js__ and fill-in the neccesary settings, then:
+Copy __spec/config.js.dist__ to __config.js__ and fill-in the neccesary settings, then:
 
 ```bash
 npm test
