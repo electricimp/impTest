@@ -110,6 +110,26 @@ class BuildAPIClient {
   }
 
   /**
+   * Upload a new code revision
+   * @see https://electricimp.com/docs/buildapi/coderev/upload/
+   *
+   * @param {string} modelId
+   * @param {string} [deviceCode=undefined]
+   * @param {string} [agentCode=undefined]
+   * @param {string} [releaseNotes=undefined]
+   * @returns {Promise}
+   */
+  createRevision(modelId, deviceCode, agentCode, releaseNotes) {
+
+    return this.request('POST', '/models/' + modelId + '/revisions', {
+      device_code: deviceCode,
+      agent_code: agentCode,
+      release_notes: releaseNotes
+    });
+
+  };
+
+  /**
    * Debug print
    * @param {*} ...objects
    * @protected
