@@ -34,4 +34,16 @@ describe('BuildAPIClient test suite', () => {
 
   });
 
+  it('should restart the model', (done) => {
+
+    client.restartModel(
+        config.model_id
+      )
+      .then(done)
+      .catch((error) => {
+        done.fail(error);
+      });
+
+  });
+
 });

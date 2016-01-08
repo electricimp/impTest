@@ -120,14 +120,23 @@ class BuildAPIClient {
    * @returns {Promise}
    */
   createRevision(modelId, deviceCode, agentCode, releaseNotes) {
-
-    return this.request('POST', '/models/' + modelId + '/revisions', {
+    return this.request('POST', `/models/${modelId}/revisions`, {
       device_code: deviceCode,
       agent_code: agentCode,
       release_notes: releaseNotes
     });
-
   };
+
+  /**
+   * Restart model
+   * @see https://electricimp.com/docs/buildapi/model/restart/
+   *
+   * @param {string} modelId
+   * @returns {Promise}
+   */
+  restartModel(modelId) {
+    return this.request('POST', `/models/${modelId}/restart`);
+  }
 
   /**
    * Debug print
