@@ -35,7 +35,7 @@ class BuildAPIClient {
    *
    * @param {string} method
    * @param {string} path
-   * @param {string} query
+   * @param {string|{}} query
    * @param {{}} headers
    * @returns {Promise}
    */
@@ -136,6 +136,23 @@ class BuildAPIClient {
    */
   restartModel(modelId) {
     return this.request('POST', `/models/${modelId}/restart`);
+  }
+
+  /**
+   * Get device logs
+   * @see https://electricimp.com/docs/buildapi/logentry/list/
+   * @see https://electricimp.com/docs/buildapi/logentry/
+   *
+   * @param deviceId
+   * @param {Date} [since=undefined] - start date
+   */
+  getDeviceLogs(deviceId, since) {
+    // convert since to ISO 8601 format
+    since && (since = since.toISOString());
+
+    return this.request('GET', `/devices/${deviceId}/logs`, {
+      since
+    });
   }
 
   /**
