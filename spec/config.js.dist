@@ -6,3 +6,4 @@
 
 exports.build_api_key = '...';
 exports.model_id = '...';
+exports.device_id = '...';
