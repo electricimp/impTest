@@ -122,6 +122,7 @@ class BuildAPIClient {
    * @returns {Promise}
    */
   createRevision(modelId, deviceCode, agentCode, releaseNotes) {
+    // todo: check for extra parameters (tag, etc.)
     return this.request('POST', `/models/${modelId}/revisions`, {
       device_code: deviceCode,
       agent_code: agentCode,
@@ -146,11 +147,11 @@ class BuildAPIClient {
    * @see https://electricimp.com/docs/buildapi/logentry/
    *
    * @param deviceId
-   * @param {Date} [since=undefined] - start date
+   * @param {Date|string} [since=undefined] - start date
    */
   getDeviceLogs(deviceId, since) {
     // convert since to ISO 8601 format
-    since && (since = since.toISOString());
+    since && (since instanceof Date) && (since = since.toISOString());
 
     return this.request('GET', `/devices/${deviceId}/logs`, {
       since
