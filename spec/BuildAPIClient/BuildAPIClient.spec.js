@@ -2,11 +2,12 @@
 
 var config = require('../config');
 var BuildAPIClient = require('../../src/lib/BuildAPIClient');
+var parseBool = require('../../src/lib/utils/parseBool');
 
 describe('BuildAPIClient test suite', () => {
 
   const client = new BuildAPIClient({
-    debug: true,
+    debug: parseBool(process.env.SPEC_DEBUG),
     apiKey: config.build_api_key
   });
 
