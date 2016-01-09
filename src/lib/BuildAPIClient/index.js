@@ -147,7 +147,7 @@ class BuildAPIClient {
    * @see https://electricimp.com/docs/buildapi/logentry/
    *
    * @param deviceId
-   * @param {Date|string} [since=undefined] - start date
+   * @param {Date|string} [since=undefined] - start date (string in ISO 8601 format or Date instance)
    */
   getDeviceLogs(deviceId, since) {
     // convert since to ISO 8601 format
