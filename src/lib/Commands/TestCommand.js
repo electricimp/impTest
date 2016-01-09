@@ -4,10 +4,10 @@
 
 'use strict';
 
-var AbstractCommand = require('./AbstractCommand');
 var fs = require('fs');
 var path = require('path');
 var colors = require('colors');
+var AbstractCommand = require('./AbstractCommand');
 var BuildAPIClient = require('../BuildAPIClient');
 
 class TestCommand extends AbstractCommand {
@@ -76,7 +76,6 @@ class TestCommand extends AbstractCommand {
       .catch(() => {
         console.log('error');
       });
-
 
   }
 

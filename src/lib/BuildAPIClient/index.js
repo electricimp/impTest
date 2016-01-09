@@ -4,7 +4,9 @@ var request = require('request');
 var colors = require('colors');
 
 /**
- * Electric Imp Build API service
+ * Electric Imp Build API client.
+ * Will be published as package eventually.
+ *
  * @see https://electricimp.com/docs/buildapi/
  */
 class BuildAPIClient {
