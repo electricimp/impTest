@@ -47,4 +47,19 @@ describe('BuildAPIClient test suite', () => {
 
   });
 
+  it('should get device logs', (done) => {
+
+    const since = new Date((new Date()) - 1000 * 60 * 60 /* -1 day */);
+
+    client.getDeviceLogs(config.device_id, since, 'status')
+      .then((body) => {
+        expect(body.logs.length).toBeGreaterThan(0);
+        done();
+      })
+      .catch((error) => {
+        done.fail(error);
+      });
+
+  });
+
 });
