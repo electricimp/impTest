@@ -37,9 +37,7 @@ describe('BuildAPIClient test suite', () => {
 
   it('should restart the model', (done) => {
 
-    client.restartModel(
-        config.model_id
-      )
+    client.restartModel(config.model_id)
       .then(done)
       .catch((error) => {
         done.fail(error);
@@ -51,7 +49,7 @@ describe('BuildAPIClient test suite', () => {
 
     const since = new Date((new Date()) - 1000 * 60 * 60 /* -1 day */);
 
-    client.getDeviceLogs(config.device_id, since, 'status')
+    client.getDeviceLogs(config.device_id, since)
       .then((body) => {
         expect(body.logs.length).toBeGreaterThan(0);
         done();
