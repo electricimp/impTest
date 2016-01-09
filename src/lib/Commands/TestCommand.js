@@ -36,20 +36,18 @@ class TestCommand extends AbstractCommand {
    * @returns {BuildAPIClient}
    * @private
    */
-  _getBuildApiClient() {
-
-    if (!this._buildApiClient) {
-      this._buildApiClient = new BuildAPIClient({
-        debug: this._options.debug,
-        apiKey: this._config.values.apiKey
-      });
-    }
-
-    return this._buildApiClient;
+  _createBuildApiClient() {
+    return new BuildAPIClient({
+      debug: this._options.debug,
+      apiKey: this._config.values.apiKey
+    });
   }
 
-  _runTest() {
-
+  /**
+   * Read agent/device source code
+   * @private
+   */
+  _readCode() {
     // read agent code
     if (this._options.agent && !!this._config.values.agentFile) {
       this._agentFilePath = path.resolve(this._config.values.agentFile);
@@ -63,18 +61,36 @@ class TestCommand extends AbstractCommand {
       this._deviceCode = fs.readFileSync(this._deviceFilePath, 'utf8');
       this._debug(colors.blue('Using device code file:'), this._deviceFilePath);
     }
+  }
 
-    this._getBuildApiClient()
-      .createRevision(
-        this._config.values.modelId,
-        this._deviceCode,
-        this._agentCode
-      )
-      .then(() => {
-        console.log('cool');
+  /**
+   * Run test
+   * @private
+   */
+  _runTest() {
+
+    this._readCode();
+
+    // todo: combine code with test framework
+    // todo: reporting of the test progress
+
+    const client = this._createBuildApiClient();
+    let revision; // current revision
+
+    client.createRevision(this._config.values.modelId, this._deviceCode, this._agentCode)
+
+      .then((body) => {
+        revision = body.revision;
+        return client.restartModel(this._config.values.modelId);
       })
-      .catch(() => {
-        console.log('error');
+
+      .then(() => {
+        // get logs since current revision was created
+        return client.getDeviceLogs(this._config.values.devices[0], revision.created_at);
+      })
+
+      .catch((error) => {
+        console.log(error);
       });
 
   }
