@@ -62,15 +62,15 @@ __.imptest__ file is used to deploy tests to a certain device/model.
 
 ```json
 {
-    "apiKey": "<key> {string} Build API key",
-    "modelId": "<id> {string} Model ID",
-    "modelName": "(optional) <name> {string} Model name",
+    "apiKey": "{string} Build API key",
+    "modelId": "{string} Model ID",
     "devices": [
-        "<id> {string} Electric Imp module ID #1 to run on",
-        "<id> {string} Electric Imp module ID #2 to run on"
+        "{string} Electric Imp module ID #1 to run on",
+        "{string} Electric Imp module ID #2 to run on"
     ],
-    "deviceFile": "<path> {string} Device code",
-    "agentFile": "<path> {string} Agent code"
+    "deviceFile": "{string} Device code, default: device.nut",
+    "agentFile": "{string} Agent code, default: agent.nut",
+    "testFiles": "{string} test file search pattern, default: *.test.nut" 
 }
 ```
 
