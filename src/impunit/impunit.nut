@@ -1,28 +1,24 @@
 // @see https://github.com/electricimp/Promise
 #require "promise.class.nut:1.0.0"
 
-
-
 class ImpTestCase {
   constructor() {
   }
 
   function setUp() {
-    return true;
   }
 
   function tearDown() {
-
   }
 }
 
-
 class TestCase1 extends ImpTestCase {
+
   function setUp() {
     // async version
     return Promise(function (resolve, reject){
-      resolve();
-    });
+      resolve("something useful");
+    }.bindenv(this));
   }
 
   function testSomething() {
@@ -32,62 +28,59 @@ class TestCase1 extends ImpTestCase {
 
 class ImpTestRunner {
 
-  function iterateOverTestFunctions() {
-    local testFunctions = [];
+  testFunctions = null;
+
+  constructor() {
+    this.testFunctions = this._getTestFunctions();
+  }
+
+  function _getTestFunctions() {
 
     foreach (rootKey, rootValue in getroottable()) {
+
       if (type(rootValue) == "class" && rootValue.getbase() == ImpTestCase) {
+
+        local testInstance = rootValue();
+
+        server.log(rootKey + "::setUp()");
+        yield testInstance.setUp.bindenv(testInstance);
+
         foreach (memberKey, memberValue in rootValue) {
 
           if (memberKey.len() >= 4 && memberKey.slice(0, 4) == "test") {
-            // testFunctions.push([])
+            server.log(rootKey + "::" + memberKey + "()");
+            yield memberValue.bindenv(testInstance);
           }
 
         }
+
+        server.log(rootKey + "::tearDown()");
+        yield testInstance.tearDown.bindenv(testInstance);
+
       }
     }
 
     return null;
   }
 
-
   function run() {
+    local testFunc = resume this.testFunctions;
 
-    foreach (rootKey, rootValue in getroottable()) {
+    if (testFunc) {
+      local result = testFunc();
 
-      // look for classes derived from ImpTestCase
-      if (type(rootValue) == "class" && rootValue.getbase() == ImpTestCase) {
+      if (result instanceof Promise) {
 
-        server.log("# test case found: " + rootKey);
+        result.then(function (e) {
+          this.run.bindenv(this)();
+        }.bindenv(this));
 
-        local testInstance = rootValue();
-
-        local res = testInstance.setUp();
-
-
-
-        foreach (memberKey, memberValue in rootValue) {
-          // look for test* methods
-          if (memberKey.len() >= 4 && memberKey.slice(0, 4) == "test") {
-            server.log("# running " + rootKey + "::" + memberKey);
-            // testInstance[memberKey]();
-            memberValue.bindenv(testInstance)();
-          }
-        }
-
-        testInstance.tearDown();
-
+      } else {
+        this.run();
       }
 
     }
-
   }
 }
 
 ImpTestRunner().run();
-
-
-
-
-
-
