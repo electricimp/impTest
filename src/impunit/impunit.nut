@@ -1,49 +1,91 @@
+// @see https://github.com/electricimp/Promise
+#require "promise.class.nut:1.0.0"
+
 
 
 class ImpTestCase {
   constructor() {
-
   }
 
-  function setup() {
-
+  function setUp() {
+    return true;
   }
 
-  function teardown() {
+  function tearDown() {
 
   }
 }
 
 
 class TestCase1 extends ImpTestCase {
-  function setup() {
-
+  function setUp() {
+    // async version
+    return Promise(function (resolve, reject){
+      resolve();
+    });
   }
 
   function testSomething() {
-    server.log("TestCase1.testSomething()");
+
   }
 }
 
-function run() {
-  foreach (rootKey, rootValue in getroottable()) {
+class ImpTestRunner {
 
-    // look for classes derived from ImpTestCase
-    if (type(rootValue) == "class" && rootValue.getbase() == ImpTestCase) {
-      server.log("# test case found: " + rootKey);
+  function iterateOverTestFunctions() {
+    local testFunctions = [];
 
-      local testInstance = rootValue();
+    foreach (rootKey, rootValue in getroottable()) {
+      if (type(rootValue) == "class" && rootValue.getbase() == ImpTestCase) {
+        foreach (memberKey, memberValue in rootValue) {
 
-      foreach (memberKey, memberValue in rootValue) {
-        server.log(rootKey + "::" + memberKey);
-        testInstance[memberKey]();
+          if (memberKey.len() >= 4 && memberKey.slice(0, 4) == "test") {
+            // testFunctions.push([])
+          }
+
+        }
       }
     }
+
+    return null;
   }
 
+
+  function run() {
+
+    foreach (rootKey, rootValue in getroottable()) {
+
+      // look for classes derived from ImpTestCase
+      if (type(rootValue) == "class" && rootValue.getbase() == ImpTestCase) {
+
+        server.log("# test case found: " + rootKey);
+
+        local testInstance = rootValue();
+
+        local res = testInstance.setUp();
+
+
+
+        foreach (memberKey, memberValue in rootValue) {
+          // look for test* methods
+          if (memberKey.len() >= 4 && memberKey.slice(0, 4) == "test") {
+            server.log("# running " + rootKey + "::" + memberKey);
+            // testInstance[memberKey]();
+            memberValue.bindenv(testInstance)();
+          }
+        }
+
+        testInstance.tearDown();
+
+      }
+
+    }
+
+  }
 }
 
-run();
+ImpTestRunner().run();
+
 
 
 
