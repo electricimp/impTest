@@ -1,4 +1,5 @@
 _private
 node_modules
+/src/impunit/research
 samples
 spec/config.js
