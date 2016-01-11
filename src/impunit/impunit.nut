@@ -1,51 +1,51 @@
-function formatTable(table, margin = 4, tabWidth = 2) {
 
-	local indent = function (n) {
-		local ret = "";
 
-		for (local i = 0; i < n; ++i) {
-      ret += " ";
-    }
+class ImpTestCase {
+  constructor() {
 
-		return ret;
-	}
+  }
 
-	local ret = "";
+  function setup() {
 
-	foreach (key, value in table) {
+  }
 
-		ret += indent(margin);
-		ret += key;
+  function teardown() {
 
-		switch (type(value)) {
-			case "table":
-				ret += " = {\n";
-				ret += formatTable(value, margin + tabWidth, tabWidth);
-				ret += indent(margin);
-				ret += "}";
-				break
-
-      case "array":
-				ret += " = [\n";
-				ret += formatTable(value, margin + tabWidth, tabWidth);
-				ret += indent(margin);
-				ret += "]";
-				break
-
-      case "string":
-				ret += " = \"";
-				ret += value;
-				ret += "\"";
-				break;
-
-			default:
-				ret += " = ";
-				ret += value;
-				break;
-		}
-
-		ret += "\n";
-	}
-
-	return ret;
+  }
 }
+
+
+class TestCase1 extends ImpTestCase {
+  function setup() {
+
+  }
+
+  function testSomething() {
+    server.log("TestCase1.testSomething()");
+  }
+}
+
+function run() {
+  foreach (rootKey, rootValue in getroottable()) {
+
+    // look for classes derived from ImpTestCase
+    if (type(rootValue) == "class" && rootValue.getbase() == ImpTestCase) {
+      server.log("# test case found: " + rootKey);
+
+      local testInstance = rootValue();
+
+      foreach (memberKey, memberValue in rootValue) {
+        server.log(rootKey + "::" + memberKey);
+        testInstance[memberKey]();
+      }
+    }
+  }
+
+}
+
+run();
+
+
+
+
+
