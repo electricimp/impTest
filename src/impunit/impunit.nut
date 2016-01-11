@@ -42,18 +42,21 @@ class ImpTestRunner {
 
         local testInstance = rootValue();
 
+        // setup
         server.log(rootKey + "::setUp()");
         yield testInstance.setUp.bindenv(testInstance);
 
         foreach (memberKey, memberValue in rootValue) {
 
           if (memberKey.len() >= 4 && memberKey.slice(0, 4) == "test") {
+            // test method
             server.log(rootKey + "::" + memberKey + "()");
             yield memberValue.bindenv(testInstance);
           }
 
         }
 
+        // teardown
         server.log(rootKey + "::tearDown()");
         yield testInstance.tearDown.bindenv(testInstance);
 
@@ -84,3 +87,10 @@ class ImpTestRunner {
 }
 
 ImpTestRunner().run();
+
+// todo: catch exceptions/rejections
+// todo: add test doc
+// todo: run standalone test functions
+// todo: assertion methods
+// todo: reporting to the tool
+// todo: timeouts for async execution OR global timeout
