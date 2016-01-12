@@ -56,6 +56,80 @@ Options:
   -i, --imp [bool]     push device code [default: true]
 ```
 
+## Writing tests
+
+impTest looks for classes inherited from the  `ImpTestCase` class and treats them as a test cases.
+Methods named as __test...__ are considered as test methods.
+
+Here is a sample test case:
+
+```squirrel
+class TestCase1 extends ImpTestCase {
+
+  /**
+   * (optional) Async version, can also be synchronous
+   */
+  function setUp() {
+    return Promise(function (resolve, reject){
+      resolve("we're ready");
+    }.bindenv(this));
+  }
+
+  /**
+   * Sync test method
+   */
+  function testSomethingSync() {
+     this.assert(true); // ok
+     this.assert(false); // fails
+  }
+
+  /**
+   * Async test method
+   */
+   </ timeout = 3 />
+  function testSomethingAsync() {
+    return Promise(function (resolve, reject){
+
+      // return in 2 seconds
+      imp.wakeup(2 /* 2 seconds */, function () {
+        resolve("something useful");
+      }.bindenv(this));
+
+    }.bindenv(this));
+  }
+
+  /**
+   * (optional) Teardown method - cleans up after the test
+   */
+  function tearDown() {
+  }
+
+}
+```
+
+### Test case lifecycle: setUp() and tearDown() methods
+
+Each test case has __setUp()__ and __tearDown()__ methods for instantiating the environment and cleaning-up afterwards.
+
+### Asynchronous methods
+
+Every test method (__setUp()__ and __tearDown()__ included) can either be synchronous or asynchronous.
+In order for method to be asynchronous it should return an instance of __Promise__, like that:
+
+```squirrel
+function testSomethingAsyncronously() {
+  return Promise(function (resolve, reject){
+    resolve("we're done");
+  });
+}
+```
+
+### Assertions
+
+Currently the following assertions available:
+
+* this.assert();
+
 ## .imptest file specification
 
 __.imptest__ file is used to deploy tests to a certain device/model.
@@ -70,7 +144,7 @@ __.imptest__ file is used to deploy tests to a certain device/model.
     ],
     "deviceFile": "{string} Device code, default: device.nut",
     "agentFile": "{string} Agent code, default: agent.nut",
-    "testFiles": "{string} test file search pattern, default: *.test.nut" 
+    "testFiles": "{string} test file search pattern, default: *.test.nut"
 }
 ```
 
