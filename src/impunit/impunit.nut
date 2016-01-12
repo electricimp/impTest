@@ -2,6 +2,12 @@
 #require "promise.class.nut:1.0.0"
 
 /**
+ * ImpUnit
+ * Imp testing framework
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
+ */
+
+/**
  * JSON encoder. Decoder is coming.
  * @author Mikhail Yurasov <mikhail@electricimp.com>
  * @verion 0.0.1
@@ -88,6 +94,16 @@ IMP_TEST_TOOL <- true;
  * Base for test cases
  */
 class ImpTestCase {
+
+  assertions = 0;
+
+  function assert(condition) {
+    this.assertions++;
+    if (!condition) {
+      throw "Failed to assert that condition is true";
+    }
+  }
+
   /**
    * Setup test case
    * Can be async
@@ -118,7 +134,7 @@ class TestCase1 extends ImpTestCase {
   }
 
   function testSomethingSync() {
-    //
+     this.assert(true);
   }
 
   function testSomethingAsync() {
@@ -180,6 +196,8 @@ class ImpTestMessage {
  */
 class ImpTestRunner {
 
+  tests = 0;
+  assertions = 0;
   testFunctions = null;
 
   constructor() {
@@ -224,7 +242,7 @@ class ImpTestRunner {
         this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::setUp()"));
 
         // yield setUp method
-        yield testInstance.setUp.bindenv(testInstance);
+        yield [testInstance, testInstance.setUp.bindenv(testInstance)];
 
         // iterate through members of test class
         foreach (memberKey, memberValue in rootValue) {
@@ -234,7 +252,7 @@ class ImpTestRunner {
             this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::" + memberKey + "()"));
 
             // yield test method
-            yield memberValue.bindenv(testInstance);
+            yield [testInstance, memberValue.bindenv(testInstance)];
           }
         }
 
@@ -243,7 +261,7 @@ class ImpTestRunner {
         this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::tearDown()"));
 
         // yield tearDown method
-        yield testInstance.tearDown.bindenv(testInstance);
+        yield [testInstance, testInstance.tearDown.bindenv(testInstance)];
       }
 
     }
@@ -252,56 +270,63 @@ class ImpTestRunner {
     return null;
   }
 
-  tests = 0;
-  assertions = 0;
-
   /**
    * Run tests
    */
   function run() {
-    local testMethod = resume this.testFunctions;
 
-    if (testMethod) {
+    local test = resume this.testFunctions;
+
+    if (test) {
+
+      local testInstance = test[0];
+      local testMethod = test[1];
+      local result = null;
+      local oldAssertions;
+
+      this.tests++;
 
       // do GC before each
       collectgarbage();
 
-      local result;
-
-      // run test method
       try {
+        oldAssertions = testInstance.assertions;
         result = testMethod();
-        this.tests++;
       } catch (e) {
-        // todo: report error
-        // todo: add setting to stop on failure
+        //
       }
 
       if (result instanceof Promise) {
 
         result
           .then(function (e) {
+            // next one
+            this.assertions += testInstance.assertions - oldAssertions;
             this.run.bindenv(this)();
           }.bindenv(this))
           .fail(function (e) {
+            // next one
             // todo: report error
             // todo: add setting to stop on failure
+            this.assertions += testInstance.assertions - oldAssertions;
             this.run.bindenv(this)();
           }.bindenv(this));
 
-      } else {
 
-        // next function
+      } else {
+        this.assertions += testInstance.assertions - oldAssertions;
         this.run();
       }
 
     } else {
 
       this._log(ImpTestMessage(ImpTestMessageTypes.result, {
-        tests = this.tests - 2 /* -setUp -tearDown */
+        tests = this.tests - 2 /* -setUp -tearDown */,
+        assertions = this.assertions
       }));
 
     }
+
   }
 }
 
