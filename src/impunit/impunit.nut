@@ -307,3 +307,8 @@ class ImpTestRunner {
 
 ImpTestRunner().run();
 
+// todo: timeouts for async execution AND/OR global timeout
+// todo: use attributes for timeout settings
+// todo: add test doc
+// todo: assertion methods
+// todo: run standalone test functions
