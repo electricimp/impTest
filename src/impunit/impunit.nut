@@ -135,6 +135,7 @@ class TestCase1 extends ImpTestCase {
 
   function testSomethingSync() {
      this.assert(true);
+     this.assert(false);
   }
 
   function testSomethingAsync() {
@@ -337,3 +338,4 @@ ImpTestRunner().run();
 // todo: add test doc
 // todo: assertion methods
 // todo: run standalone test functions
+// todo: track failures
