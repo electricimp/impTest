@@ -88,9 +88,6 @@ IMP_TEST_TOOL <- true;
  * Base for test cases
  */
 class ImpTestCase {
-
-  constructor() {}
-
   /**
    * Setup test case
    * Can be async
@@ -105,6 +102,7 @@ class ImpTestCase {
    */
   function tearDown() {
   }
+
 }
 
 /**
@@ -177,6 +175,9 @@ class ImpTestMessage {
   }
 }
 
+/**
+ * Imp test runner
+ */
 class ImpTestRunner {
 
   testFunctions = null;
@@ -232,7 +233,7 @@ class ImpTestRunner {
             // log test method execution
             this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::" + memberKey + "()"));
 
-            // execute yield test method
+            // yield test method
             yield memberValue.bindenv(testInstance);
           }
         }
@@ -251,6 +252,9 @@ class ImpTestRunner {
     return null;
   }
 
+  tests = 0;
+  assertions = 0;
+
   /**
    * Run tests
    */
@@ -267,6 +271,7 @@ class ImpTestRunner {
       // run test method
       try {
         result = testMethod();
+        this.tests++;
       } catch (e) {
         // todo: report error
         // todo: add setting to stop on failure
@@ -281,14 +286,20 @@ class ImpTestRunner {
           .fail(function (e) {
             // todo: report error
             // todo: add setting to stop on failure
-            this.run();
-          });
+            this.run.bindenv(this)();
+          }.bindenv(this));
 
       } else {
 
         // next function
         this.run();
       }
+
+    } else {
+
+      this._log(ImpTestMessage(ImpTestMessageTypes.result, {
+        tests = this.tests - 2 /* -setUp -tearDown */
+      }));
 
     }
   }
