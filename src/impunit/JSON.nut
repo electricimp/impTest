@@ -7,21 +7,22 @@ JSON <- {
 
   version = [0, 0, 1],
 
-/**
- * Encode value to JSON
- * @param {table|array} val
- * @returns {string}
- */
+  /**
+   * Encode value to JSON
+   * @param {table|array} val
+   * @returns {string}
+   */
   stringify = function (value) {
     return JSON._encode(value, true, type(value) == "array");
   },
 
-/**
- * @param {table|array} val
- * @param {boolean} root
- * @private
- */
-  _encode = function (val, _isRoot = true, _isArray = false) {
+  /**
+   * @param {table|array} val
+   * @param {bool} _isRoot
+   * @param {bool} _isArray
+   * @private
+   */
+ _encode = function (val, _isRoot = true, _isArray = false) {
 
     local r = "";
 
@@ -47,6 +48,7 @@ JSON <- {
 
         case "integer":
         case "float":
+        case "bool":
           r += value;
           break;
 
