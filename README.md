@@ -86,7 +86,6 @@ class TestCase1 extends ImpTestCase {
   /**
    * Async test method
    */
-   </ timeout = 3 />
   function testSomethingAsync() {
     return Promise(function (resolve, reject){
 
