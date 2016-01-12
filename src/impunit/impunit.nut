@@ -141,6 +141,9 @@ class TestCase1 extends ImpTestCase {
   function testSomethingAsync() {
     // async version
     return Promise(function (resolve, reject){
+
+      this.assert(false);
+
       imp.wakeup(2 /* 2 seconds */, function () {
         resolve("something useful");
       }.bindenv(this));
@@ -152,7 +155,8 @@ class TestCase1 extends ImpTestCase {
 enum ImpTestMessageTypes {
   result = "RESULT",
   debug = "DEBUG",
-  status = "STATUS"
+  status = "STATUS",
+  fail = "FAIL"
 }
 
 /**
@@ -199,6 +203,7 @@ class ImpTestRunner {
 
   tests = 0;
   assertions = 0;
+  failures = 0;
   testFunctions = null;
 
   constructor() {
@@ -294,7 +299,8 @@ class ImpTestRunner {
         oldAssertions = testInstance.assertions;
         result = testMethod();
       } catch (e) {
-        //
+        this.failures++;
+        this._log(ImpTestMessage(ImpTestMessageTypes.fail, e));
       }
 
       if (result instanceof Promise) {
@@ -310,6 +316,8 @@ class ImpTestRunner {
             // todo: report error
             // todo: add setting to stop on failure
             this.assertions += testInstance.assertions - oldAssertions;
+            this.failures++;
+            this._log(ImpTestMessage(ImpTestMessageTypes.fail, e));
             this.run.bindenv(this)();
           }.bindenv(this));
 
@@ -323,7 +331,8 @@ class ImpTestRunner {
 
       this._log(ImpTestMessage(ImpTestMessageTypes.result, {
         tests = this.tests - 2 /* -setUp -tearDown */,
-        assertions = this.assertions
+        assertions = this.assertions,
+        failures = this.failures
       }));
 
     }
@@ -336,6 +345,5 @@ ImpTestRunner().run();
 // todo: timeouts for async execution AND/OR global timeout
 // todo: use attributes for timeout settings
 // todo: add test doc
-// todo: assertion methods
+// todo: more assertion methods
 // todo: run standalone test functions
-// todo: track failures
