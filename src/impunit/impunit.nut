@@ -84,17 +84,32 @@ JSON <- {
 // test is executed by impTest tool
 IMP_TEST_TOOL <- true;
 
+/**
+ * Base for test cases
+ */
 class ImpTestCase {
-  constructor() {
-  }
 
-  function setUp() {
-  }
+  constructor() {}
 
+  /**
+   * Setup test case
+   * Can be async
+   * @return {Promise|*}
+   */
+  function setUp() {}
+
+  /**
+   * Teardown test case
+   * Can be async
+   * @return {Promise|*}
+   */
   function tearDown() {
   }
 }
 
+/**
+ *
+ */
 class TestCase1 extends ImpTestCase {
 
   function setUp() {
@@ -118,20 +133,8 @@ class TestCase1 extends ImpTestCase {
   }
 }
 
-class ImpTestResult {
-  name = "";
-  tests = 0;
-  failures = 0;
-  errors = [];
-
-  function toJSON() {
-
-  }
-}
-
+// impTest message types
 enum ImpTestMessageTypes {
-  setup = "SETUP",
-  tearDown = "TEARDOWN",
   result = "RESULT",
   debug = "DEBUG",
   status = "STATUS"
@@ -202,53 +205,88 @@ class ImpTestRunner {
     }
   }
 
+  /**
+   * Loog for test cases/test functions
+   * @returns {generator}
+   */
   function _getTestFunctions() {
 
+    // iterate through the
     foreach (rootKey, rootValue in getroottable()) {
 
       if (type(rootValue) == "class" && rootValue.getbase() == ImpTestCase) {
 
+        // create instance of the test class
         local testInstance = rootValue();
 
+        // log setUp() execution
         this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::setUp()"));
 
+        // yield setUp method
         yield testInstance.setUp.bindenv(testInstance);
 
+        // iterate through members of test class
         foreach (memberKey, memberValue in rootValue) {
-
+          // we need test* methods
           if (memberKey.len() >= 4 && memberKey.slice(0, 4) == "test") {
-            server.log(rootKey + "::" + memberKey + "()");
+            // log test method execution
+            this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::" + memberKey + "()"));
+
+            // execute yield test method
             yield memberValue.bindenv(testInstance);
           }
-
         }
 
-        server.log(rootKey + "::tearDown()");
-        yield testInstance.tearDown.bindenv(testInstance);
 
+        // log tearDown() execution
+        this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::tearDown()"));
+
+        // yield tearDown method
+        yield testInstance.tearDown.bindenv(testInstance);
       }
+
     }
 
+    // we're done
     return null;
   }
 
+  /**
+   * Run tests
+   */
   function run() {
-    local testFunc = resume this.testFunctions;
+    local testMethod = resume this.testFunctions;
 
-    if (testFunc) {
+    if (testMethod) {
 
       // do GC before each
       collectgarbage();
 
-      local result = testFunc();
+      local result;
+
+      // run test method
+      try {
+        result = testMethod();
+      } catch (e) {
+        // todo: report error
+        // todo: add setting to stop on failure
+      }
 
       if (result instanceof Promise) {
 
-        result.then(function (e) {
-          this.run.bindenv(this)();
-        }.bindenv(this));
+        result
+          .then(function (e) {
+            this.run.bindenv(this)();
+          }.bindenv(this))
+          .fail(function (e) {
+            // todo: report error
+            // todo: add setting to stop on failure
+            this.run();
+          });
 
       } else {
+
+        // next function
         this.run();
       }
 
