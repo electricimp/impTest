@@ -7,7 +7,7 @@
  */
 class Promise {
 
-    static version = [1, 1, 0];
+    static version = [1, 1, 0, "impTest"];
 
     _state = null;
     _value = null;
