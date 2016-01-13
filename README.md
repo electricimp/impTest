@@ -12,6 +12,8 @@
     - [Test case lifecycle: setUp() and tearDown() methods](#test-case-lifecycle-setup-and-teardown-methods)
     - [Asynchronous methods](#asynchronous-methods)
     - [Assertions](#assertions)
+    - [Async tests timeout](#async-tests-timeout)
+    - [Running the tests manually](#running-the-tests-manually)
   - [.imptest file specification](#imptest-file-specification)
   - [Development](#development)
     - [Installation](#installation-1)
@@ -144,8 +146,10 @@ __asyncTimeout__ parameter on ImpTestRunner class sets the timeout after which t
 Tests can be executed manually with human-readable output with
 
 ```squirrel
-testRunner <- ImpTestRunner(true /* enable readable output */);
-testRunner.asyncTimeout = 1;
+testRunner <- ImpTestRunner();
+testRunner.asyncTimeout = 1 /* [seconds] */;
+testRunner.readableOutput = true;
+testRunner.stopOnFailure = true;
 testRunner.run();
 ```
 
