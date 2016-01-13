@@ -428,7 +428,7 @@ class ImpUnitMessage {
    */
   function toJSON() {
     return JSON.stringify({
-      __IMP_TEST_MESSAGE__ = true,
+      __IMPUNIT_MESSAGE__ = true,
       type = this.type,
       message = this.message
     });
