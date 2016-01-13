@@ -14,6 +14,7 @@
     - [Assertions](#assertions)
     - [Async tests timeout](#async-tests-timeout)
     - [Running the tests manually](#running-the-tests-manually)
+    - [Sample output](#sample-output)
   - [.imptest file specification](#imptest-file-specification)
   - [Development](#development)
     - [Installation](#installation-1)
@@ -152,6 +153,12 @@ testRunner.readableOutput = true;
 testRunner.stopOnFailure = true;
 testRunner.run();
 ```
+
+### Sample output
+
+(in human readable mode)
+
+![Sample output (readable format)](sample-log.png)
 
 ## .imptest file specification
 
