@@ -129,9 +129,25 @@ function testSomethingAsyncronously() {
 
 ### Assertions
 
-Currently the following assertions available:
+Currently the following assertions are available:
 
-* this.assert();
+* this.assertTrue(value, [message]);
+* this.assertEqual(expected, actual, [message]);
+* this.assertClose(expected, actual, maxDifference, [message]);
+
+### Async tests timeout
+
+__asyncTimeout__ parameter on ImpTestRunner class sets the timeout after which the async test will fail.
+
+### Running the tests manually
+
+Tests can be executed manually with human-readable output with
+
+```squirrel
+testRunner <- ImpTestRunner(true /* enable readable output */);
+testRunner.asyncTimeout = 1;
+testRunner.run();
+```
 
 ## .imptest file specification
 
