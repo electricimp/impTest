@@ -3,11 +3,11 @@
 
 /**
  * Promise
- * @version 1.1.0-impTest
+ * @version 1.1.0-impUnit
  */
 class Promise {
 
-    static version = [1, 1, 0, "impTest"];
+    static version = [1, 1, 0];
 
     _state = null;
     _value = null;
@@ -291,7 +291,7 @@ JSON <- {
 /**
  * Base for test cases
  */
-class ImpTestCase {
+class ImpUnitCase {
 
   assertions = 0;
 
@@ -352,7 +352,7 @@ class ImpTestCase {
 /**
  *
  */
-class TestCase1 extends ImpTestCase {
+class TestCase1 extends ImpUnitCase {
 
   function setUp() {
     // async version
@@ -398,8 +398,8 @@ class TestCase1 extends ImpTestCase {
   }
 }
 
-// impTest message types
-enum ImpTestMessageTypes {
+// message types
+enum ImpUnitMessageTypes {
   result = "RESULT",
   debug = "DEBUG",
   status = "STATUS",
@@ -409,13 +409,13 @@ enum ImpTestMessageTypes {
 /**
  * Test message
  */
-class ImpTestMessage {
+class ImpUnitMessage {
 
   type = "";
   message = "";
 
   /**
-   * @param {ImpTestMessageTypes} type - Message type
+   * @param {ImpUnitMessageTypes} type - Message type
    * @param {string} message - Message
    */
   constructor(type, message = "") {
@@ -438,7 +438,7 @@ class ImpTestMessage {
    * Convert to human-readable string
    */
   function _tostring() {
-    return "[impTest:" + this.type + "] "
+    return "[impUnit:" + this.type + "] "
       + (typeof this.message == "table"
           ? JSON.stringify(this.message)
           : this.message
@@ -449,7 +449,7 @@ class ImpTestMessage {
 /**
  * Imp test runner
  */
-class ImpTestRunner {
+class ImpUnitRunner {
 
   // public options
   asyncTimeout = 2;
@@ -469,7 +469,7 @@ class ImpTestRunner {
 
   /**
    * Log message
-   * @parame {ImpTestMessage} message
+   * @parame {ImpUnitMessage} message
    */
   function _log(message) {
     if (this.readableOutput) {
@@ -488,13 +488,13 @@ class ImpTestRunner {
     // iterate through the
     foreach (rootKey, rootValue in getroottable()) {
 
-      if (type(rootValue) == "class" && rootValue.getbase() == ImpTestCase) {
+      if (type(rootValue) == "class" && rootValue.getbase() == ImpUnitCase) {
 
         // create instance of the test class
         local testInstance = rootValue();
 
         // log setUp() execution
-        this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::setUp()"));
+        this._log(ImpUnitMessage(ImpUnitMessageTypes.status, rootKey + "::setUp()"));
 
         // yield setUp method
         yield [testInstance, testInstance.setUp.bindenv(testInstance)];
@@ -504,7 +504,7 @@ class ImpTestRunner {
           // we need test* methods
           if (memberKey.len() >= 4 && memberKey.slice(0, 4) == "test") {
             // log test method execution
-            this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::" + memberKey + "()"));
+            this._log(ImpUnitMessage(ImpUnitMessageTypes.status, rootKey + "::" + memberKey + "()"));
 
             this.tests++;
 
@@ -514,7 +514,7 @@ class ImpTestRunner {
         }
 
         // log tearDown() execution
-        this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::tearDown()"));
+        this._log(ImpUnitMessage(ImpUnitMessageTypes.status, rootKey + "::tearDown()"));
 
         // yield tearDown method
         yield [testInstance, testInstance.tearDown.bindenv(testInstance)];
@@ -531,7 +531,7 @@ class ImpTestRunner {
    */
   function _finish() {
     // log result message
-    this._log(ImpTestMessage(ImpTestMessageTypes.result, {
+    this._log(ImpUnitMessage(ImpUnitMessageTypes.result, {
       tests = this.tests,
       assertions = this.assertions,
       failures = this.failures
@@ -560,7 +560,7 @@ class ImpTestRunner {
         result = testMethod();
       } catch (e) {
         this.failures++;
-        this._log(ImpTestMessage(ImpTestMessageTypes.fail, e));
+        this._log(ImpUnitMessage(ImpUnitMessageTypes.fail, e));
       }
 
       if (result instanceof Promise) {
@@ -575,7 +575,7 @@ class ImpTestRunner {
 
             // log failure
             this.failures++;
-            this._log(ImpTestMessage(ImpTestMessageTypes.fail, "Timeout"));
+            this._log(ImpUnitMessage(ImpUnitMessageTypes.fail, "Timeout"));
 
             // update assertins counter to ignore assertions afrer the timeout
             oldAssertions = testInstance.assertions;
@@ -614,7 +614,7 @@ class ImpTestRunner {
             if (!result.timedOut) {
               // log failure
               this.failures++;
-              this._log(ImpTestMessage(ImpTestMessageTypes.fail, e));
+              this._log(ImpUnitMessage(ImpUnitMessageTypes.fail, e));
 
               // update assertions number
               this.assertions += testInstance.assertions - oldAssertions;
@@ -652,7 +652,7 @@ class ImpTestRunner {
 
 }
 
-testRunner <- ImpTestRunner();
+testRunner <- ImpUnitRunner();
 testRunner.asyncTimeout = 100;
 testRunner.readableOutput = false;
 testRunner.stopOnFailure = false;
