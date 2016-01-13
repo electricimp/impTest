@@ -451,16 +451,18 @@ class ImpTestMessage {
  */
 class ImpTestRunner {
 
+  // public options
   asyncTimeout = 2;
+  readableOutput = true;
+  stopOnFailure = false;
+
 
   tests = 0;
   assertions = 0;
   failures = 0;
   testFunctions = null;
 
-  readableOutput = true;
-
-  constructor(readableOutput = true) {
+  constructor() {
     this.readableOutput = readableOutput;
     this.testFunctions = this._getTestFunctions();
   }
@@ -504,6 +506,8 @@ class ImpTestRunner {
             // log test method execution
             this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::" + memberKey + "()"));
 
+            this.tests++;
+
             // yield test method
             yield [testInstance, memberValue.bindenv(testInstance)];
           }
@@ -523,6 +527,18 @@ class ImpTestRunner {
   }
 
   /**
+   * We're done
+   */
+  function _finish() {
+    // log result message
+    this._log(ImpTestMessage(ImpTestMessageTypes.result, {
+      tests = this.tests,
+      assertions = this.assertions,
+      failures = this.failures
+    }));
+  }
+
+  /**
    * Run tests
    */
   function run() {
@@ -535,8 +551,6 @@ class ImpTestRunner {
       local testMethod = test[1];
       local result = null;
       local oldAssertions;
-
-      this.tests++;
 
       // do GC before each run
       collectgarbage();
@@ -551,30 +565,45 @@ class ImpTestRunner {
 
       if (result instanceof Promise) {
 
-      imp.wakeup(this.asyncTimeout, function () {
+        // set the timeout timer
+        imp.wakeup(this.asyncTimeout, function () {
 
-        if (result._state == 0 /* pending*/) {
-          this.failures++;
-          this._log(ImpTestMessage(ImpTestMessageTypes.fail, "Timeout"));
-          result.timedOut = true;
+          if (result._state == 0 /* pending*/) {
 
-          // update assertins counter to ignore assertions afrer the timeout
-          oldAssertions = testInstance.assertions;
+            // set the timeout flag
+            result.timedOut = true;
 
-          // next
-          this.assertions += testInstance.assertions - oldAssertions;
-          this.run.call(this);
-        }
+            // log failure
+            this.failures++;
+            this._log(ImpTestMessage(ImpTestMessageTypes.fail, "Timeout"));
 
-      }.bindenv(this));
+            // update assertins counter to ignore assertions afrer the timeout
+            oldAssertions = testInstance.assertions;
 
+            // update assertions number
+            this.assertions += testInstance.assertions - oldAssertions;
+
+            // next
+            if (!this.stopOnFailure) {
+              this.run.call(this);
+            } else {
+              this._finish();
+            }
+
+          }
+
+        }.bindenv(this));
+
+        // handle result
         result
 
           .then(function (e) {
 
             if (!result.timedOut) {
-              // next
+              // update assertions number
               this.assertions += testInstance.assertions - oldAssertions;
+
+              // next
               this.run.call(this);
             }
 
@@ -587,38 +616,50 @@ class ImpTestRunner {
               this.failures++;
               this._log(ImpTestMessage(ImpTestMessageTypes.fail, e));
 
-              // next
+              // update assertions number
               this.assertions += testInstance.assertions - oldAssertions;
-              this.run.call(this);
+
+              // next
+              if (!this.stopOnFailure) {
+                this.run.call(this);
+              } else {
+                this._finish();
+              }
             }
 
           }.bindenv(this));
 
 
       } else {
+        // update assertions number
         this.assertions += testInstance.assertions - oldAssertions;
-        this.run();
+
+        // next
+        if (!this.stopOnFailure) {
+          this.run.call(this);
+        } else {
+          this._finish();
+        }
       }
 
     } else {
 
-      this._log(ImpTestMessage(ImpTestMessageTypes.result, {
-        tests = this.tests - 2 /* -setUp -tearDown */,
-        assertions = this.assertions,
-        failures = this.failures
-      }));
+      this._finish();
 
     }
 
   }
+
 }
 
-testRunner <- ImpTestRunner(false /* enable readable output */);
-testRunner.asyncTimeout = 1;
+testRunner <- ImpTestRunner();
+testRunner.asyncTimeout = 100;
+testRunner.readableOutput = false;
+testRunner.stopOnFailure = false;
 testRunner.run();
 
-// todo: timeouts for async execution AND/OR global timeout
+// +todo: timeouts for async execution AND/OR global timeout
 // todo: more assertion methods
 // todo: run standalone test functions
 // todo: propose public API for getting Promise state
-// todo: add setting to stop on failure
+// +todo: add setting to stop on failure
