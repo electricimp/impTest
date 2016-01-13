@@ -7,6 +7,9 @@
  * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
+// test is executed by impTest tool
+IMP_TEST_TOOL <- true;
+
 /**
  * JSON encoder.
  * @author Mikhail Yurasov <mikhail@electricimp.com>
@@ -162,9 +165,6 @@ JSON <- {
     return res;
   }
 }
-
-// test is executed by impTest tool
-IMP_TEST_TOOL <- true;
 
 /**
  * Base for test cases
