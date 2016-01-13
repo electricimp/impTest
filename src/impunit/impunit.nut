@@ -299,7 +299,10 @@ class ImpTestMessage {
    */
   function _tostring() {
     return "[impTest:" + this.type + "] "
-      + this.message;
+      + (typeof this.message == "table"
+          ? JSON.stringify(this.message)
+          : this.message
+        );
   }
 }
 
