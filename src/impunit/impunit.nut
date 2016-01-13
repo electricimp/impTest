@@ -1,5 +1,129 @@
 // @see https://github.com/electricimp/Promise
-#require "promise.class.nut:1.0.0"
+//#require "promise.class.nut:1.0.0"
+
+/**
+ * Promise
+ * @version 1.1.0-impTest
+ */
+class Promise {
+
+    static version = [1, 1, 0];
+
+    _state = null;
+    _value = null;
+    _handlers = null;
+
+    // !!!
+    timedOut = false;
+
+    constructor(fn) {
+
+        const PROMISE_STATE_PENDING = 0;
+        const PROMISE_STATE_FULFILLED = 1;
+        const PROMISE_STATE_REJECTED = 2;
+
+        _state = PROMISE_STATE_PENDING;
+        _handlers = [];
+        _doResolve(fn, _resolve, _reject);
+    }
+
+    // **** Private functions ****
+
+    function _fulfill(result) {
+        _state = PROMISE_STATE_FULFILLED;
+        _value = result;
+        foreach (handler in _handlers) {
+            _handle(handler);
+        }
+        _handlers = null;
+    }
+
+    function _reject(error) {
+        _state = PROMISE_STATE_REJECTED;
+        _value = error;
+        foreach (handler in _handlers) {
+            _handle(handler);
+        }
+        _handlers = null;
+    }
+
+    function _resolve(result) {
+        try {
+            local then = _getThen(result);
+            if (then) {
+                _doResolve(then.bindenv(result), _resolve, _reject);
+                return;
+            }
+            _fulfill(result);
+        } catch (e) {
+            _reject(e);
+        }
+    }
+
+    function _getThen(value) {
+        local t = typeof value;
+        if (value && (t == "object" || t == "function")) {
+            local then = value.then;
+            if (typeof then == "function") {
+                return then;
+            }
+        }
+        return null;
+    }
+
+    function _doResolve(fn, onFulfilled, onRejected) {
+        local done = false;
+        try {
+            fn(
+                function (value) {
+                    if (done) return;
+                    done = true;
+                    onFulfilled(value)
+                }.bindenv(this),
+
+                function (reason) {
+                    if (done) return;
+                    done = true;
+                    onRejected(reason)
+                }.bindenv(this)
+            )
+        } catch (ex) {
+            if (done) return;
+            done = true;
+            onRejected(ex);
+        }
+    }
+
+    function _handle(handler) {
+        if (_state == PROMISE_STATE_PENDING) {
+            _handlers.push(handler);
+        } else {
+            if (_state == PROMISE_STATE_FULFILLED && typeof handler.onFulfilled == "function") {
+                handler.onFulfilled(_value);
+            }
+            if (_state == PROMISE_STATE_REJECTED && typeof handler.onRejected == "function") {
+                handler.onRejected(_value);
+            }
+        }
+    }
+
+    // **** Public functions ****
+
+    function then(onFulfilled = null, onRejected = null) {
+        // ensure we are always asynchronous
+        imp.wakeup(0, function () {
+            _handle({ onFulfilled=onFulfilled, onRejected=onRejected });
+        }.bindenv(this));
+
+        return this;
+    }
+
+    function fail(onRejected = null) {
+        return then(null, onRejected);
+    }
+
+
+}
 
 /**
  * ImpUnit
@@ -241,17 +365,35 @@ class TestCase1 extends ImpTestCase {
 
   function testSomethingSync() {
      this.assertTrue(true);
-    // this.assertTrue(false);
      this.assertClose(10, 11, 0.5);
   }
 
   function testSomethingAsync() {
     // async version
     return Promise(function (resolve, reject){
-
-      this.assertTrue(false);
-
       imp.wakeup(2 /* 2 seconds */, function () {
+        this.assertTrue(true);
+        resolve("something useful");
+      }.bindenv(this));
+    }.bindenv(this));
+  }
+
+  function testSomethingAsync2() {
+    // async version
+    return Promise(function (resolve, reject){
+      imp.wakeup(2 /* 2 seconds */, function () {
+        this.assertTrue(true);
+        resolve("something useful");
+      }.bindenv(this));
+    }.bindenv(this));
+  }
+
+
+  function testSomethingAsync3() {
+    // async version
+    return Promise(function (resolve, reject){
+      imp.wakeup(2 /* 2 seconds */, function () {
+        this.assertTrue(true);
         resolve("something useful");
       }.bindenv(this));
     }.bindenv(this));
@@ -310,6 +452,8 @@ class ImpTestMessage {
  * Imp test runner
  */
 class ImpTestRunner {
+
+  asyncTimeout = 2;
 
   tests = 0;
   assertions = 0;
@@ -414,20 +558,47 @@ class ImpTestRunner {
 
       if (result instanceof Promise) {
 
+      imp.wakeup(this.asyncTimeout, function () {
+
+        if (result._state == 0 /* pending*/) {
+          this.failures++;
+          this._log(ImpTestMessage(ImpTestMessageTypes.fail, "Timeout"));
+          result.timedOut = true;
+
+          // update assertins counter to ignore assertions afrer the timeout
+          oldAssertions = testInstance.assertions;
+
+          // next
+          this.assertions += testInstance.assertions - oldAssertions;
+          this.run.call(this);
+        }
+
+      }.bindenv(this));
+
         result
+
           .then(function (e) {
-            // next one
-            this.assertions += testInstance.assertions - oldAssertions;
-            this.run.bindenv(this)();
+
+            if (!result.timedOut) {
+              // next
+              this.assertions += testInstance.assertions - oldAssertions;
+              this.run.call(this);
+            }
+
           }.bindenv(this))
+
           .fail(function (e) {
-            // next one
-            // todo: report error
-            // todo: add setting to stop on failure
-            this.assertions += testInstance.assertions - oldAssertions;
-            this.failures++;
-            this._log(ImpTestMessage(ImpTestMessageTypes.fail, e));
-            this.run.bindenv(this)();
+
+            if (!result.timedOut) {
+              // log failure
+              this.failures++;
+              this._log(ImpTestMessage(ImpTestMessageTypes.fail, e));
+
+              // next
+              this.assertions += testInstance.assertions - oldAssertions;
+              this.run.call(this);
+            }
+
           }.bindenv(this));
 
 
@@ -449,9 +620,12 @@ class ImpTestRunner {
   }
 }
 
-ImpTestRunner().run();
+r <- ImpTestRunner();
+r.asyncTimeout = 1;
+r.run();
 
 // todo: timeouts for async execution AND/OR global timeout
-// todo: add test doc
 // todo: more assertion methods
 // todo: run standalone test functions
+// todo: propose public API for getting Promise state
+// todo: add setting to stop on failure
