@@ -131,8 +131,6 @@ class Promise {
  * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
-// test is executed by impTest tool
-IMP_TEST_TOOL <- true;
 
 /**
  * JSON encoder.
@@ -460,16 +458,11 @@ class ImpTestRunner {
   failures = 0;
   testFunctions = null;
 
-  constructor() {
-    this.testFunctions = this._getTestFunctions();
-  }
+  readableOutput = true;
 
-  /**
-   * Determine if the test is executed by test tool
-   */
-  function _isExecutedFromTestTool() {
-    return "IMP_TEST_TOOL" in getroottable()
-      && getroottable()["IMP_TEST_TOOL"] == true;
+  constructor(readableOutput = true) {
+    this.readableOutput = readableOutput;
+    this.testFunctions = this._getTestFunctions();
   }
 
   /**
@@ -477,10 +470,10 @@ class ImpTestRunner {
    * @parame {ImpTestMessage} message
    */
   function _log(message) {
-    if (this._isExecutedFromTestTool()) {
-      server.log(message.toJSON());
-    } else {
+    if (this.readableOutput) {
       server.log(message)
+    } else {
+      server.log(message.toJSON());
     }
   }
 
@@ -620,9 +613,9 @@ class ImpTestRunner {
   }
 }
 
-r <- ImpTestRunner();
-r.asyncTimeout = 1;
-r.run();
+testRunner <- ImpTestRunner(false /* enable readable output */);
+testRunner.asyncTimeout = 1;
+testRunner.run();
 
 // todo: timeouts for async execution AND/OR global timeout
 // todo: more assertion methods
