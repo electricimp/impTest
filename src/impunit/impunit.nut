@@ -8,82 +8,158 @@
  */
 
 /**
- * JSON encoder. Decoder is coming.
+ * JSON encoder.
  * @author Mikhail Yurasov <mikhail@electricimp.com>
- * @verion 0.0.1
+ * @verion 0.2.0
  */
 JSON <- {
 
-  version = [0, 0, 1],
+  version = [0, 2, 0],
+
+  // max structure depth
+  // anything above probably has a cyclic ref
+  _maxDepth = 32,
 
   /**
    * Encode value to JSON
-   * @param {table|array} val
+   * @param {table|array|*} value
    * @returns {string}
    */
   stringify = function (value) {
-    return JSON._encode(value, true, type(value) == "array");
+    return JSON._encode(value);
   },
 
   /**
    * @param {table|array} val
-   * @param {bool} _isRoot
-   * @param {bool} _isArray
+   * @param {integer=0} depth – current depth level
    * @private
    */
- _encode = function (val, _isRoot = true, _isArray = false) {
+  _encode = function (val, depth = 0) {
 
-    local r = "";
-
-    foreach (key, value in val) {
-
-      if (!_isArray) {
-        (r += "\"" + key + "\":");
-      }
-
-      switch (type(value)) {
-
-        case "table":
-          r += "{\n" + JSON._encode(value, false) + "}";
-          break
-
-        case "array":
-          r += "[" + JSON._encode(value, false, true) + "]";
-          break
-
-        case "string":
-          r += "\"" + value + "\"";
-          break;
-
-        case "integer":
-        case "float":
-        case "bool":
-          r += value;
-          break;
-
-        case "null":
-          r += "null";
-          break;
-
-        default:
-          r += "\"" + value + "\"";
-          break;
-      }
-
-      r += ",";
+    // detect cyclic reference
+    if (depth > JSON._maxDepth) {
+      throw "Possible cyclic reference";
     }
 
-    r = r.slice(0, r.len() - 1);
+    local
+      r = "",
+      s = "",
+      i = 0;
 
-    if (_isRoot) {
-      if (_isArray) {
-        return "[" + r + "]";
+    switch (type(val)) {
+
+      case "table":
+      case "class":
+        s = "";
+
+        foreach (k, v in val) {
+          if ("_serialize" != k) {
+            s += ",\"" + k + "\":" + JSON._encode(v, depth + 1);
+          }
+        }
+
+        s = s.len() > 0 ? s.slice(1) : s;
+        r += "{" + s + "}";
+        break;
+
+      case "array":
+        s = "";
+
+        for (i = 0; i < val.len(); i++) {
+          s += "," + JSON._encode(val[i], depth + 1);
+        }
+
+        s = (i > 1) ? s.slice(1) : s;
+        r += "[" + s + "]";
+        break;
+
+      case "integer":
+      case "float":
+      case "bool":
+        r += val;
+        break;
+
+      case "string":
+        r += "\"" + this._escape(val) + "\"";
+        break;
+
+      case "null":
+        r += "null";
+        break;
+
+      case "instance":
+        if ("_serialize" in val && type(val._serialize) == "function") {
+          r += JSON._encode(val._serialize());
+        }
+        break;
+
+      default:
+        r += "\"" + val + "\"";
+        break;
+    }
+
+    return r;
+  },
+
+  /**
+   * Escape strings according to http://www.json.org/ spec
+   * @param {string} str
+   */
+  _escape = function (str) {
+    local res = "";
+
+    for (local i = 0; i < str.len(); i++) {
+
+      local ch1 = (str[i] & 0xFF);
+
+      if ((ch1 & 0x80) == 0x00) {
+        // 7-bit Ascii
+
+        ch1 = format("%c", ch1);
+
+        if (ch1 == "\"") {
+          res += "\\\"";
+        } else if (ch1 == "\\") {
+          res += "\\\\";
+        } else if (ch1 == "/") {
+          res += "\\/";
+        } else if (ch1 == "\b") {
+          res += "\\b";
+        } else if (ch1 == "\f") {
+          res += "\\f";
+        } else if (ch1 == "\n") {
+          res += "\\n";
+        } else if (ch1 == "\r") {
+          res += "\\r";
+        } else if (ch1 == "\t") {
+          res += "\\t";
+        } else {
+          res += ch1;
+        }
+
       } else {
-        return "{" + r + "}";
+
+        if ((ch1 & 0xE0) == 0xC0) {
+          // 110xxxxx = 2-byte unicode
+          local ch2 = (str[++i] & 0xFF)
+          res += format("%c%c", ch1, ch2);
+        } else if ((ch1 & 0xF0) == 0xE0) {
+          // 1110xxxx = 3-byte unicode
+          local ch2 = (str[++i] & 0xFF)
+          local ch3 = (str[++i] & 0xFF)
+          res += format("%c%c%c", ch1, ch2, ch3);
+        } else if ((ch1 & 0xF8) == 0xF0) {
+          // 11110xxx = 4 byte unicode
+          local ch2 = (str[++i] & 0xFF)
+          local ch3 = (str[++i] & 0xFF)
+          local ch4 = (str[++i] & 0xFF)
+          res += format("%c%c%c%c", ch1, ch2, ch3, ch4);
+        }
+
       }
-    } else {
-      return r;
     }
+
+    return res;
   }
 }
 
@@ -97,10 +173,40 @@ class ImpTestCase {
 
   assertions = 0;
 
-  function assert(condition) {
+  /**
+   * Assert that something is true
+   * @param {bool} condition
+   * @param {string|false} message
+   */
+  function assertTrue(condition, message = false) {
     this.assertions++;
     if (!condition) {
-      throw "Failed to assert that condition is true";
+      throw message ? message : "Failed to assert that condition is true";
+    }
+  }
+
+  /**
+   * Assert that two values are equal
+   * @param {bool} condition
+   * @param {string|false} message
+   */
+   function assertEqual(expected, actual, message = false) {
+    this.assertions++;
+    if (expected != actual) {
+      throw message ? message : "Expected value: " + expected + ", got: " + actual;
+    }
+  }
+
+  /**
+   * Assert that two values are within a certain range
+   * @param {bool} condition
+   * @param {string|false} message
+   */
+  function assertClose(expected, actual, maxDiff, message = false) {
+    this.assertions++;
+    if (math.abs(expected - actual) > maxDiff) {
+      throw message ? message :
+        "Expected value: " + expected + "±" + maxDiff + ", got: " + actual;
     }
   }
 
@@ -134,15 +240,16 @@ class TestCase1 extends ImpTestCase {
   }
 
   function testSomethingSync() {
-     this.assert(true);
-     this.assert(false);
+     this.assertTrue(true);
+    // this.assertTrue(false);
+     this.assertClose(10, 11, 0.5);
   }
 
   function testSomethingAsync() {
     // async version
     return Promise(function (resolve, reject){
 
-      this.assert(false);
+      this.assertTrue(false);
 
       imp.wakeup(2 /* 2 seconds */, function () {
         resolve("something useful");
@@ -262,7 +369,6 @@ class ImpTestRunner {
           }
         }
 
-
         // log tearDown() execution
         this._log(ImpTestMessage(ImpTestMessageTypes.status, rootKey + "::tearDown()"));
 
@@ -292,7 +398,7 @@ class ImpTestRunner {
 
       this.tests++;
 
-      // do GC before each
+      // do GC before each run
       collectgarbage();
 
       try {
@@ -343,7 +449,6 @@ class ImpTestRunner {
 ImpTestRunner().run();
 
 // todo: timeouts for async execution AND/OR global timeout
-// todo: use attributes for timeout settings
 // todo: add test doc
 // todo: more assertion methods
 // todo: run standalone test functions
