@@ -158,7 +158,7 @@ testRunner.run();
 
 (in human readable mode)
 
-![Sample output (readable format)](sample-log.png =440x)
+<img src="sample-log.png" width=440>
 
 ## .imptest file specification
 
