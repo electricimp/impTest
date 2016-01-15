@@ -709,15 +709,14 @@ class ImpUnitRunner {
 
 }
 
-testRunner <- ImpUnitRunner();
-testRunner.asyncTimeout = 2;
-testRunner.readableOutput = false;
-testRunner.stopOnFailure = false;
-server.log("\n\n\n");
-testRunner.run();
+//testRunner <- ImpUnitRunner();
+//testRunner.asyncTimeout = 2;
+//testRunner.readableOutput = false;
+//testRunner.stopOnFailure = false;
+//server.log("\n\n\n");
+//testRunner.run();
 
 // +todo: timeouts for async execution AND/OR global timeout
 // todo: more assertion methods
 // todo: run standalone test functions
 // todo: propose public API for getting Promise state
-// +todo: add setting to stop on failure
