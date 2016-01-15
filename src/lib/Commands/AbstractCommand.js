@@ -53,10 +53,36 @@ class AbstractCommand {
    */
   _debug() {
     if (this._options.debug) {
-      const args = Array.prototype.slice.call(arguments);
-      args.unshift(colors.green('[debug:' + this.constructor.name + ']'));
-      console.log.apply(this, args);
+      this._log('debug', arguments);
     }
+  }
+
+  /**
+   * Log info message
+   * @param {*} ...objects
+   * @protected
+   */
+  _info() {
+    this._log('info', arguments);
+  }
+
+  /**
+   * Log message
+   * @param {string} type
+   * @param {[*]} params
+   * @private
+   */
+  _log(type, params) {
+    // convert params to true array (from arguments)
+    params = Array.prototype.slice.call(params);
+
+    if (type === 'debug') {
+      params.unshift(colors.green('[:' + type + this.constructor.name + ']'));
+    } else if (type === 'info') {
+      params.unshift(colors.yellow('[:' + type + this.constructor.name + ']'));
+    }
+
+    console.log.apply(this, params);
   }
 
   /**
