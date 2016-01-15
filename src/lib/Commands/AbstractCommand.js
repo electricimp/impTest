@@ -77,9 +77,9 @@ class AbstractCommand {
     params = Array.prototype.slice.call(params);
 
     if (type === 'debug') {
-      params.unshift(colors.green('[:' + type + this.constructor.name + ']'));
+      params.unshift(colors.green('[' + this.constructor.name + ':' + type + ']'));
     } else if (type === 'info') {
-      params.unshift(colors.yellow('[:' + type + this.constructor.name + ']'));
+      params.unshift(colors.yellow('[' + this.constructor.name + ':' + type + ']'));
     }
 
     console.log.apply(this, params);
