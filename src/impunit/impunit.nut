@@ -1,20 +1,28 @@
-// @see https://github.com/electricimp/Promise
-//#require "promise.class.nut:1.0.0"
+/**
+ * ImpUnit
+ * Imp testing framework
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
+ */
 
 /**
- * Promise
- * @version 1.1.0-impUnit
+ * Promise class for Squirrel (Electric Imp)
+ * This file is licensed under the MIT License
+ *
+ * Initial version: 08-12-2015
+ *
+ * @see https://www.promisejs.org/implementing/
+ *
+ * @copyright (c) 2015 SMS Diagnostics Pty Ltd
+ * @author Aron Steg
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 class Promise {
 
-    static version = [1, 1, 0];
+    static version = [1, 0, 0];
 
     _state = null;
     _value = null;
     _handlers = null;
-
-    // !!!
-    timedOut = false;
 
     constructor(fn) {
 
@@ -60,14 +68,24 @@ class Promise {
         }
     }
 
+   /**
+    * Check if a value is a Promise and, if it is,
+    * return the `then` method of that promise.
+    *
+    * @param {Promise|*} value
+    * @return {function|null}
+    */
     function _getThen(value) {
         local t = typeof value;
-        if (value && (t == "object" || t == "function")) {
+
+        if (value && (t == "instance") && ("then" in value)) {
             local then = value.then;
+
             if (typeof then == "function") {
                 return then;
             }
         }
+
         return null;
     }
 
@@ -75,13 +93,13 @@ class Promise {
         local done = false;
         try {
             fn(
-                function (value) {
+                function (value = null /* allow resolving without argument */) {
                     if (done) return;
                     done = true;
                     onFulfilled(value)
                 }.bindenv(this),
 
-                function (reason) {
+                function (reason = null /* allow rejection without argument */) {
                     if (done) return;
                     done = true;
                     onRejected(reason)
@@ -109,6 +127,11 @@ class Promise {
 
     // **** Public functions ****
 
+    /**
+     * Execute handler once the Promise is resolved/rejected
+     * @param {function|null} onFulfilled
+     * @param {function|null} onRejected
+     */
     function then(onFulfilled = null, onRejected = null) {
         // ensure we are always asynchronous
         imp.wakeup(0, function () {
@@ -118,28 +141,31 @@ class Promise {
         return this;
     }
 
+    /**
+     * Execute handler on failure
+     * @param {function|null} onRejected
+     */
     function fail(onRejected = null) {
         return then(null, onRejected);
     }
 
-
+    /**
+     * Execute handler both on success and failure
+     * @param {function|null} always
+     */
+    function finally(always = null) {
+      return then(always, always);
+    }
 }
-
-/**
- * ImpUnit
- * Imp testing framework
- * @author Mikhail Yurasov <mikhail@electricimp.com>
- */
-
 
 /**
  * JSON encoder.
  * @author Mikhail Yurasov <mikhail@electricimp.com>
- * @verion 0.2.0
+ * @verion 0.3.2
  */
 JSON <- {
 
-  version = [0, 2, 0],
+  version = [0, 3, 2],
 
   // max structure depth
   // anything above probably has a cyclic ref
@@ -177,8 +203,9 @@ JSON <- {
       case "class":
         s = "";
 
+        // serialize properties, but not functions
         foreach (k, v in val) {
-          if ("_serialize" != k) {
+          if (type(v) != "function") {
             s += ",\"" + k + "\":" + JSON._encode(v, depth + 1);
           }
         }
@@ -204,22 +231,49 @@ JSON <- {
         r += val;
         break;
 
-      case "string":
-        r += "\"" + this._escape(val) + "\"";
-        break;
-
       case "null":
         r += "null";
         break;
 
       case "instance":
+
         if ("_serialize" in val && type(val._serialize) == "function") {
-          r += JSON._encode(val._serialize());
+
+          // serialize instances by calling _serialize method
+          r += JSON._encode(val._serialize(), depth + 1);
+
+        } else {
+
+          s = "";
+
+          try {
+
+            // iterate through instances which implement _nexti meta-method
+            foreach (k, v in val) {
+              s += ",\"" + k + "\":" + JSON._encode(v, depth + 1);
+            }
+
+          } catch (e) {
+
+            // iterate through instances w/o _nexti
+            // serialize properties, but not functions
+            foreach (k, v in val.getclass()) {
+              if (type(v) != "function") {
+                s += ",\"" + k + "\":" + JSON._encode(val[k], depth + 1);
+              }
+            }
+
+          }
+
+          s = s.len() > 0 ? s.slice(1) : s;
+          r += "{" + s + "}";
         }
+
         break;
 
+      // strings and all other
       default:
-        r += "\"" + val + "\"";
+        r += "\"" + this._escape(val.tostring()) + "\"";
         break;
     }
 
@@ -266,18 +320,18 @@ JSON <- {
 
         if ((ch1 & 0xE0) == 0xC0) {
           // 110xxxxx = 2-byte unicode
-          local ch2 = (str[++i] & 0xFF)
+          local ch2 = (str[++i] & 0xFF);
           res += format("%c%c", ch1, ch2);
         } else if ((ch1 & 0xF0) == 0xE0) {
           // 1110xxxx = 3-byte unicode
-          local ch2 = (str[++i] & 0xFF)
-          local ch3 = (str[++i] & 0xFF)
+          local ch2 = (str[++i] & 0xFF);
+          local ch3 = (str[++i] & 0xFF);
           res += format("%c%c%c", ch1, ch2, ch3);
         } else if ((ch1 & 0xF8) == 0xF0) {
           // 11110xxx = 4 byte unicode
-          local ch2 = (str[++i] & 0xFF)
-          local ch3 = (str[++i] & 0xFF)
-          local ch4 = (str[++i] & 0xFF)
+          local ch2 = (str[++i] & 0xFF);
+          local ch3 = (str[++i] & 0xFF);
+          local ch4 = (str[++i] & 0xFF);
           res += format("%c%c%c%c", ch1, ch2, ch3, ch4);
         }
 
