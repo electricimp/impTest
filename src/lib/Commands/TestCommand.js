@@ -128,6 +128,7 @@ class TestCommand extends AbstractCommand {
 
       .catch((error) => {
         this._error(error.message);
+        process.exit(1);
       });
 
   }
