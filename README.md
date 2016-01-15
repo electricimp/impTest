@@ -86,8 +86,8 @@ class TestCase1 extends ImpTestCase {
    * Sync test method
    */
   function testSomethingSync() {
-     this.assert(true); // ok
-     this.assert(false); // fails
+     this.assertTrue(true); // ok
+     this.assertTrue(false); // fails
   }
 
   /**
