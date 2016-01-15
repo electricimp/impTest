@@ -20,5 +20,6 @@ commander
   debug: parseBool(commander.debug),
   config: commander.config,
   agent: parseBool(commander.agent),
-  device: parseBool(commander.imp)
+  device: parseBool(commander.imp),
+  testFrameworkFile: __dirname + '/../impunit/impUnit.nut'
 })).run();

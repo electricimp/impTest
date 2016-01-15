@@ -20,7 +20,8 @@ class TestCommand extends AbstractCommand {
       debug: false,
       config: '.imptest',
       agent: true,
-      device: true
+      device: true,
+      testFrameworkFile: '' // path to test framework main file
     };
   }
 
