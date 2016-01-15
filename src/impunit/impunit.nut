@@ -342,6 +342,13 @@ JSON <- {
   }
 }
 
+// extend Promise for our needs
+// don't do this, children
+class Promise extends Promise {
+  timedOut = false;
+  timerId = null;
+}
+
 /**
  * Base for test cases
  */
@@ -510,7 +517,6 @@ class ImpUnitRunner {
   readableOutput = true;
   stopOnFailure = false;
 
-
   tests = 0;
   assertions = 0;
   failures = 0;
@@ -593,6 +599,30 @@ class ImpUnitRunner {
   }
 
   /**
+   * Called when test method is finished
+   * @param {bool} success
+   * @param {*} result - resolution/rejection argument
+   * @param {integer} assertions - # of assettions made
+   */
+  function _done(success, result, assertions) {
+      if (!success) {
+        // log failure
+        this.failures++;
+        this._log(ImpUnitMessage(ImpUnitMessageTypes.fail, result));
+      }
+
+      // update assertions number
+      this.assertions += assertions;
+
+      // next
+      if (!success && this.stopOnFailure) {
+        this._finish();
+      } else {
+        this.run.call(this);
+      }
+  }
+
+  /**
    * Run tests
    */
   function run() {
@@ -604,102 +634,75 @@ class ImpUnitRunner {
       local testInstance = test[0];
       local testMethod = test[1];
       local result = null;
-      local oldAssertions;
+      local assertionsMade;
+
+      local syncSuccess = true;
+      local syncMessage = "";
 
       // do GC before each run
       collectgarbage();
 
       try {
-        oldAssertions = testInstance.assertions;
+        assertionsMade = testInstance.assertions;
         result = testMethod();
       } catch (e) {
-        this.failures++;
-        this._log(ImpUnitMessage(ImpUnitMessageTypes.fail, e));
+
+        // store sync test info
+        syncSuccess = false;
+        syncMessage = e;
+
       }
 
       if (result instanceof Promise) {
 
         // set the timeout timer
-        imp.wakeup(this.asyncTimeout, function () {
 
+        result.timerId = imp.wakeup(this.asyncTimeout, function () {
           if (result._state == 0 /* pending*/) {
-
             // set the timeout flag
             result.timedOut = true;
 
-            // log failure
-            this.failures++;
-            this._log(ImpUnitMessage(ImpUnitMessageTypes.fail, "Timeout"));
+            // update assertions counter to ignore assertions afrer the timeout
+            assertionsMade = testInstance.assertions;
 
-            // update assertins counter to ignore assertions afrer the timeout
-            oldAssertions = testInstance.assertions;
-
-            // update assertions number
-            this.assertions += testInstance.assertions - oldAssertions;
-
-            // next
-            if (!this.stopOnFailure) {
-              this.run.call(this);
-            } else {
-              this._finish();
-            }
-
+            this._done(false, "Timed out after " + this.asyncTimeout + "s", 0);
           }
-
         }.bindenv(this));
 
         // handle result
+
         result
 
-          .then(function (e) {
-
+          // we're fine
+          .then(function (message) {
             if (!result.timedOut) {
-              // update assertions number
-              this.assertions += testInstance.assertions - oldAssertions;
-
-              // next
-              this.run.call(this);
+              this._done(true, message, testInstance.assertions - assertionsMade);
             }
-
           }.bindenv(this))
 
-          .fail(function (e) {
-
+          // we're screwed
+          .fail(function (reason) {
             if (!result.timedOut) {
-              // log failure
-              this.failures++;
-              this._log(ImpUnitMessage(ImpUnitMessageTypes.fail, e));
-
-              // update assertions number
-              this.assertions += testInstance.assertions - oldAssertions;
-
-              // next
-              if (!this.stopOnFailure) {
-                this.run.call(this);
-              } else {
-                this._finish();
-              }
+              this._done(false, reason, testInstance.assertions - assertionsMade);
             }
+          }.bindenv(this))
 
-          }.bindenv(this));
-
+          // anyways...
+          .finally(function(e) {
+            // cancel timeout detection
+            if (result.timerId) {
+              imp.cancelwakeup(result.timerId);
+              result.timerId = null;
+            }
+          });
 
       } else {
-        // update assertions number
-        this.assertions += testInstance.assertions - oldAssertions;
-
-        // next
-        if (!this.stopOnFailure) {
-          this.run.call(this);
-        } else {
-          this._finish();
-        }
+        // test was sync one
+        this._done(syncSuccess, syncMessage, testInstance.assertions - assertionsMade);
       }
 
     } else {
-
       this._finish();
-
     }
 
   }
@@ -707,9 +710,10 @@ class ImpUnitRunner {
 }
 
 testRunner <- ImpUnitRunner();
-testRunner.asyncTimeout = 100;
+testRunner.asyncTimeout = 2;
 testRunner.readableOutput = false;
 testRunner.stopOnFailure = false;
+server.log("\n\n\n");
 testRunner.run();
 
 // +todo: timeouts for async execution AND/OR global timeout
