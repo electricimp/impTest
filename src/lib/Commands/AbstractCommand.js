@@ -63,7 +63,7 @@ class AbstractCommand {
    * @protected
    */
   _info() {
-    this._log('info', colors.yellow, arguments);
+    this._log('info', colors.grey, arguments);
   }
 
   /**

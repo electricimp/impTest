@@ -2,6 +2,6 @@
 
 class AA {
   function addTwoNums(a, b) {
-    return a + b;
+    return a + b + 10;
   }
 }

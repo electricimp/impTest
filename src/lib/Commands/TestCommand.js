@@ -112,7 +112,7 @@ class TestCommand extends AbstractCommand {
 
       .then((body) => {
         this._revision = body.revision;
-        /* [info] */ this._info(colors.blue('Revision created: ') + this._revision.version);
+        /* [info] */ this._info(colors.blue('Created revision: ') + this._revision.version);
         return this._client.restartModel(this._config.values.modelId);
       })
 
@@ -147,10 +147,16 @@ class TestCommand extends AbstractCommand {
         // filter agent/device messages
         if (message.type === type) {
           const hash = JSON.stringify(message);
+
           if (!this._logs[hash]) {
             const line = JSON.parse(message.message);
             this._printLogLine(line);
             done = line.type === 'RESULT';
+
+            if (line.type === 'FAIL') {
+              this._testPrint(colors.red('FAILED: ' + line.message));
+            }
+
             this._logs[hash] = line;
           }
         }
@@ -170,7 +176,7 @@ class TestCommand extends AbstractCommand {
       } else if (line.message.indexOf('::tearDown()') !== -1) {
         this._testPrint(colors.blue('Tearing down ') + line.message.replace(/::.*$/, ''));
       } else {
-        this._testPrint(colors.blue('Executing ') + line.message);
+        this._testPrint(line.message);
       }
     }
   }
@@ -181,7 +187,7 @@ class TestCommand extends AbstractCommand {
    * @protected
    */
   _testPrint() {
-    this._log('test', colors.magenta, arguments);
+    this._log('test', colors.grey, arguments);
   }
 }
 
