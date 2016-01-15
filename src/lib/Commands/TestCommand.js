@@ -84,7 +84,17 @@ class TestCommand extends AbstractCommand {
       ///* [info] */ this._info(colors.blue('Have agent code'));
 
       // xxx search for test files
-      this._agentTestFilePath = this._agentFilePath.replace('.nut', '.test.nut');
+      this._agentTestFilePath = this._agentFilePath.replace(/\/([^\/]+)\.nut$/, '/tests/$1.test.nut');
+      //
+      if (!fs.existsSync(this._agentTestFilePath)) {
+        this._agentTestFilePath = this._agentFilePath.replace(/\/([^\/]+)\.nut$/, '/$1.test.nuts');
+      }
+
+      // check if the code exists
+      if (!fs.existsSync(this._agentTestFilePath )) {
+        this._error('Code not found');
+        process.exit(1);
+      }
 
       this._agentTestCode = fs.readFileSync(this._agentTestFilePath, 'utf-8');
 
