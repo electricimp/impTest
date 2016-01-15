@@ -123,7 +123,7 @@ class TestCommand extends AbstractCommand {
       })
 
       .catch((error) => {
-        console.log(error);
+        this._error(error.message);
       });
 
   }

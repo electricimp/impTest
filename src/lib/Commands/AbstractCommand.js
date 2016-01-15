@@ -67,6 +67,15 @@ class AbstractCommand {
   }
 
   /**
+   * Error message
+   * @param {*} ...objects
+   * @protected
+   */
+  _error() {
+    this._log('error', arguments);
+  }
+
+  /**
    * Log message
    * @param {string} type
    * @param {[*]} params
@@ -80,6 +89,8 @@ class AbstractCommand {
       params.unshift(colors.green('[' + this.constructor.name + ':' + type + ']'));
     } else if (type === 'info') {
       params.unshift(colors.yellow('[' + this.constructor.name + ':' + type + ']'));
+    } else if (type === 'error') {
+      params.unshift(colors.red('[' + this.constructor.name + ':' + type + ']'));
     }
 
     console.log.apply(this, params);
