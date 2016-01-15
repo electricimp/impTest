@@ -53,7 +53,7 @@ class AbstractCommand {
    */
   _debug() {
     if (this._options.debug) {
-      this._log('debug', arguments);
+      this._log('debug', colors.green, arguments);
     }
   }
 
@@ -63,7 +63,7 @@ class AbstractCommand {
    * @protected
    */
   _info() {
-    this._log('info', arguments);
+    this._log('info', colors.yellow, arguments);
   }
 
   /**
@@ -72,7 +72,7 @@ class AbstractCommand {
    * @protected
    */
   _error() {
-    this._log('error', arguments);
+    this._log('error', colors.red, arguments);
   }
 
   /**
@@ -81,18 +81,10 @@ class AbstractCommand {
    * @param {[*]} params
    * @private
    */
-  _log(type, params) {
+  _log(type, colorFn, params) {
     // convert params to true array (from arguments)
     params = Array.prototype.slice.call(params);
-
-    if (type === 'debug') {
-      params.unshift(colors.green('[' + this.constructor.name + ':' + type + ']'));
-    } else if (type === 'info') {
-      params.unshift(colors.yellow('[' + this.constructor.name + ':' + type + ']'));
-    } else if (type === 'error') {
-      params.unshift(colors.red('[' + this.constructor.name + ':' + type + ']'));
-    }
-
+    params.unshift(colorFn('[' + type + ']'));
     console.log.apply(this, params);
   }
 

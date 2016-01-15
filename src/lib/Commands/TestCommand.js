@@ -71,7 +71,7 @@ class TestCommand extends AbstractCommand {
    */
   _runTest() {
 
-    /* [info] */ this._info('Reading the code');
+    /* [info] */ this._info(colors.blue('Reading the code'));
 
     this._readCode();
 
@@ -81,7 +81,7 @@ class TestCommand extends AbstractCommand {
     // bundle agent code
 
     if (this._agentCode) {
-      /* [info] */ this._info('Have agent code');
+      ///* [info] */ this._info(colors.blue('Have agent code'));
 
       // xxx search for test files
       this._agentTestFilePath = this._agentFilePath.replace('.nut', '.test.nut');
@@ -103,23 +103,27 @@ class TestCommand extends AbstractCommand {
       `;
     }
 
-    // todo: combine code with test framework
-    // todo: reporting of the test progress
+    // run tests
 
-    const client = this._createBuildApiClient();
-    let revision; // current revision
+    this._client = this._createBuildApiClient();
+    this._logs = {/* ts: message */};
 
-    client.createRevision(this._config.values.modelId, this._deviceCode, this._agentCode)
+    this._client.createRevision(this._config.values.modelId, this._deviceCode, this._agentCode)
 
       .then((body) => {
-        revision = body.revision;
-        /* [info] */ this._info('Revision created: ' + revision.version);
-        return client.restartModel(this._config.values.modelId);
+        this._revision = body.revision;
+        /* [info] */ this._info(colors.blue('Revision created: ') + this._revision.version);
+        return this._client.restartModel(this._config.values.modelId);
       })
 
       .then(() => {
         // get logs since current revision was created
-        return client.getDeviceLogs(this._config.values.devices[0], revision.created_at);
+        return this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
+      })
+
+      // now read logs
+      .then(() => {
+        this._readLogs('agent.log'); // !!! also read device logs
       })
 
       .catch((error) => {
@@ -128,6 +132,57 @@ class TestCommand extends AbstractCommand {
 
   }
 
+  /**
+   * Read logs
+   * @private
+   */
+  _readLogs(type) {
+    this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at).then((val) => {
+
+      let done = false;
+
+      // parse log messages
+      for (const message of val.logs) {
+
+        // filter agent/device messages
+        if (message.type === type) {
+          const hash = JSON.stringify(message);
+          if (!this._logs[hash]) {
+            const line = JSON.parse(message.message);
+            this._printLogLine(line);
+            done = line.type === 'RESULT';
+            this._logs[hash] = line;
+          }
+        }
+
+      }
+
+      if (!done) {
+        setTimeout(() => { this._readLogs(type); }, 1000);
+      }
+    });
+  }
+
+  _printLogLine(line) {
+    if (line.type === 'STATUS') {
+      if (line.message.indexOf('::setUp()') !== -1) {
+        this._testPrint(colors.blue('Setting up ') + line.message.replace(/::.*$/, ''));
+      } else if (line.message.indexOf('::tearDown()') !== -1) {
+        this._testPrint(colors.blue('Tearing down ') + line.message.replace(/::.*$/, ''));
+      } else {
+        this._testPrint(colors.blue('Executing ') + line.message);
+      }
+    }
+  }
+
+  /**
+   * Test message
+   * @param {*} ...objects
+   * @protected
+   */
+  _testPrint() {
+    this._log('test', colors.magenta, arguments);
+  }
 }
 
 module.exports = TestCommand;
