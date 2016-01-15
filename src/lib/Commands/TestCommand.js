@@ -178,6 +178,12 @@ class TestCommand extends AbstractCommand {
 
       if (!done) {
         setTimeout(() => { this._readLogs(type); }, 1000);
+      } else {
+        if (failed) {
+          process.exit(1 /* error */);
+        } else {
+          process.exit(0 /* just fine */);
+        }
       }
     });
   }
