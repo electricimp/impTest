@@ -49,6 +49,7 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _readCode() {
+
     // read agent code
     if (this._options.agent && !!this._config.values.agentFile) {
       this._agentFilePath = path.resolve(this._config.values.agentFile);
@@ -70,7 +71,37 @@ class TestCommand extends AbstractCommand {
    */
   _runTest() {
 
+    /* [info] */ this._info('Reading the code');
+
     this._readCode();
+
+    // read test framework code
+    this._testFrameworkCode = fs.readFileSync(this._options.testFrameworkFile, 'utf-8');
+
+    // bundle agent code
+
+    if (this._agentCode) {
+      /* [info] */ this._info('Have agent code');
+
+      // xxx search for test files
+      this._agentTestFilePath = this._agentFilePath.replace('.nut', '.test.nut');
+
+      this._agentTestCode = fs.readFileSync(this._agentTestFilePath, 'utf-8');
+
+      this._agentCode = '// AGENT CODE:\n\n' + this._agentCode
+                        + '\n// TEST FRAMEWORK:\n\n' + this._testFrameworkCode
+                        + '\n// TEST CASES:\n\n' + this._agentTestCode;
+
+      // add bootstrap commands
+      this._agentCode += `
+        // run test
+        testRunner <- ImpUnitRunner();
+        testRunner.asyncTimeout = 5;
+        testRunner.readableOutput = false;
+        testRunner.stopOnFailure = false;
+        testRunner.run();
+      `;
+    }
 
     // todo: combine code with test framework
     // todo: reporting of the test progress
@@ -82,6 +113,7 @@ class TestCommand extends AbstractCommand {
 
       .then((body) => {
         revision = body.revision;
+        /* [info] */ this._info('Revision created: ' + revision.version);
         return client.restartModel(this._config.values.modelId);
       })
 
