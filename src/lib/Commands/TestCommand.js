@@ -140,6 +140,7 @@ class TestCommand extends AbstractCommand {
     this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at).then((val) => {
 
       let done = false;
+      let failed = false;
 
       // parse log messages
       for (const message of val.logs) {
@@ -151,10 +152,22 @@ class TestCommand extends AbstractCommand {
           if (!this._logs[hash]) {
             const line = JSON.parse(message.message);
             this._printLogLine(line);
-            done = line.type === 'RESULT';
 
             if (line.type === 'FAIL') {
               this._testPrint(colors.red('FAILED: ' + line.message));
+              failed = true;
+            } else if (line.type === 'RESULT') {
+              done = true;
+
+              const result = 'tests: ' + line.message.tests + ', '
+                           + 'assertions: ' + line.message.assertions + ', '
+                           + 'failures: ' + line.message.failures;
+
+              if (failed) {
+                this._testPrint(colors.red('Testing failed (' + result + ')'));
+              } else {
+                this._testPrint(colors.green('Testing succeeded (' + result + ')'));
+              }
             }
 
             this._logs[hash] = line;
