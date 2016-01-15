@@ -175,6 +175,8 @@ __.imptest__ file is used to deploy tests to a certain device/model.
     "deviceFile": "{string} Device code, default: device.nut",
     "agentFile": "{string} Agent code, default: agent.nut",
     "testFiles": "{string} test file search pattern, default: *.test.nut"
+    "stopOnFailure": "{boolean} Stop tests execution on failure? Default: false",
+    "timeout": "{number} Async test methods timeout, seconds. Default: 10"
 }
 ```
 
