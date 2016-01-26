@@ -12,6 +12,18 @@ class ConfigFile {
    * @param {string} configPath
    */
   constructor(configPath) {
+
+    this._defaultValues = {
+      apiKey: '',
+      modelId: '',
+      devices: [],
+      agentFile: 'agent.nut',
+      deviceFile: 'device.nut',
+      stopOnFailure: false,
+      timeout: 10,
+      tests: ['*.test.nut', 'tests/**/*.test.nut']
+    };
+
     this._path = path.resolve(configPath);
   }
 
@@ -33,6 +45,7 @@ class ConfigFile {
         this._values = fs.readFileSync(this._path).toString();
         this._values = stripJsonComments(this._values);
         this._values = JSON.parse(this._values);
+        this._values = Object.assign(this._defaultValues, this._values);
       }
     }
 
