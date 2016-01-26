@@ -168,7 +168,7 @@ __.imptest__ file is used to deploy tests to a certain device/model.
 {
     "apiKey":         {string},           // Build API key
     "modelId":        {string},           // model id
-    "devices":        {array},            // Device IDs
+    "devices":        {string[]},         // Device IDs
     "deviceFile":     {string},           // Device code file, default: device.nut",
     "agentFile":      {string},           // Agent code file, default: agent.nut",
     "tests":          {string|string[]},  // Test file search pattern, default: *.test.nut",
