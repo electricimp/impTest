@@ -8,6 +8,20 @@ var sprintf = require("sprintf-js").sprintf;
 class AbstractCommand {
 
   /**
+   * Run command with error handling and exit.
+   * Sets the return code to 1 in  case of error.
+   */
+  tryRun() {
+    try {
+      this.run();
+      process.exit(0);
+    } catch (e) {
+      this._error(e);
+      process.exit(1);
+    }
+  }
+
+  /**
    * Default options
    * @returns {{}}
    */
@@ -94,8 +108,6 @@ class AbstractCommand {
       let dif =  (now - this._logDate) / 1000;
       dif = sprintf('%.3f', dif);
       dateMessage += ' (+' +  dif + ')';
-    } else {
-      dateMessage += dateformat(now, ' mm/dd/yy');
     }
 
     this._logDate = new Date();

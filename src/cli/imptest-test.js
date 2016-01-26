@@ -16,12 +16,12 @@ commander
   .option('-i, --imp [bool]', 'push device code [default: true]', true)
   .parse(process.argv);
 
-// run command
+  // run command
 (new TestCommand({
   debug: parseBool(commander.debug),
   config: commander.config,
   agent: parseBool(commander.agent),
   device: parseBool(commander.imp),
   testFrameworkFile: __dirname + '/../impunit/impUnit.nut',
-  testCaseFile: commander.argv[0] || null
-})).run();
+  testCaseFile: commander.args[0] || null
+})).tryRun();

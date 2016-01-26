@@ -19,4 +19,4 @@ commander
   debug: parseBool(commander.debug),
   force: parseBool(commander.force),
   config: commander.config
-})).run();
+})).tryRun();
