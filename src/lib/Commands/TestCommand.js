@@ -74,28 +74,40 @@ class TestCommand extends AbstractCommand {
   _findTestFiles() {
     let agent = [];
     let device = [];
+    let configCwd;
 
     let pushFile = file => {
+      const res = {
+        name: file,
+        path: path.resolve(configCwd, file)
+      };
+      //
       if (/\bagent\./i.test(file)) {
         // assume this is for agent
-        agent.push(file);
+        agent.push(res);
       } else {
         // assume this is for device
-        device.push(file);
+        device.push(res);
       }
     };
 
     if (this._options.testCaseFile) {
       // test file is passed via cli
 
+      // look in the current path
+      configCwd = path.resolve('.');
+
       if (!fs.existsSync(this._options.testCaseFile)) {
         throw new Error('File "' + this._options.testCaseFile + '" not found');
       }
 
-      pushFile(path.resolve(this._options.testCaseFile));
+      pushFile(this._options.testCaseFile);
 
     } else {
       // look through .imptest.tests glob(s)
+
+      // look in config file directory
+      configCwd = path.dirname(this._config.path);
 
       let searchPatterns = this._config.values.tests;
 
@@ -104,10 +116,8 @@ class TestCommand extends AbstractCommand {
       }
 
       for (const searchPattern of searchPatterns) {
-        for (const file of glob.sync(searchPattern, {
-          cwd: path.dirname(this._config.path)
-        })) {
-          pushFile(path.resolve(file));
+        for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
+          pushFile(file);
         }
       }
     }
@@ -124,14 +134,19 @@ class TestCommand extends AbstractCommand {
    */
   _runTest() {
 
-    /* [info] */
-    this._info(colors.blue('Reading the code...'));
-
     // find test case files
     let testFiles = this._findTestFiles();
     this._debug(colors.blue('Test files found:'), testFiles);
 
-    // !!!
+    const testFilesCount = testFiles.agent.length + testFiles.device.length;
+    this._info(colors.blue('Found ') + testFilesCount + colors.blue(' test file' + (testFilesCount === 1 ? '' : 's')));
+
+    process.exit(0);
+
+    // !!! continue from here !!!
+
+    /* [info] */
+    this._info(colors.blue('Reading the code...'));
 
     this._readCode();
 
