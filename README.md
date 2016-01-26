@@ -164,19 +164,16 @@ testRunner.run();
 
 __.imptest__ file is used to deploy tests to a certain device/model.
 
-```json
+```js
 {
-    "apiKey": "{string} Build API key",
-    "modelId": "{string} Model ID",
-    "devices": [
-        "{string} Electric Imp module ID #1 to run on",
-        "{string} Electric Imp module ID #2 to run on"
-    ],
-    "deviceFile": "{string} Device code, default: device.nut",
-    "agentFile": "{string} Agent code, default: agent.nut",
-    "testFiles": "{string} test file search pattern, default: *.test.nut",
-    "stopOnFailure": "{boolean} Stop tests execution on failure? Default: false",
-    "timeout": "{number} Async test methods timeout, seconds. Default: 10"
+    "apiKey":         {string},           // Build API key
+    "modelId":        {string},           // model id
+    "devices":        {array},            // Device IDs
+    "deviceFile":     {string},           // Device code file, default: device.nut",
+    "agentFile":      {string},           // Agent code file, default: agent.nut",
+    "tests":          {string|string[]},  // Test file search pattern, default: *.test.nut",
+    "stopOnFailure":  {boolean},          // Stop tests execution on failure? Default: false",
+    "timeout":        {number}            // Async test methods timeout, seconds. Default: 10"
 }
 ```
 
