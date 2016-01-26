@@ -48,7 +48,6 @@ class AbstractCommand {
    */
   constructor(options) {
     this.options = options;
-
     this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
   }
 
