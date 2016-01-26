@@ -2,6 +2,8 @@
 
 var ConfigFile = require('../ConfigFile');
 var colors = require('colors');
+var dateformat = require('dateformat');
+var sprintf = require("sprintf-js").sprintf;
 
 class AbstractCommand {
 
@@ -32,6 +34,8 @@ class AbstractCommand {
    */
   constructor(options) {
     this.options = options;
+
+    this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss'));
   }
 
   /**
@@ -82,9 +86,23 @@ class AbstractCommand {
    * @private
    */
   _log(type, colorFn, params) {
+
+    const now = new Date();
+    let dateMessage = dateformat(now, 'HH:MM:ss');
+
+    if (this._logDate) {
+      let dif =  (now - this._logDate) / 1000;
+      dif = sprintf('%.3f', dif);
+      dateMessage += ' (+' +  dif + ')';
+    } else {
+      dateMessage += dateformat(now, ' mm/dd/yy');
+    }
+
+    this._logDate = new Date();
+
     // convert params to true array (from arguments)
     params = Array.prototype.slice.call(params);
-    params.unshift(colorFn('[' + type + ']'));
+    params.unshift(colorFn('[' + dateMessage + ' ' + type + ']'));
     console.log.apply(this, params);
   }
 
