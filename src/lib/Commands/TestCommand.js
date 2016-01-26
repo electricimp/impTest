@@ -21,7 +21,8 @@ class TestCommand extends AbstractCommand {
       config: '.imptest',
       agent: true,
       device: true,
-      testFrameworkFile: '' // path to test framework main file
+      testFrameworkFile: '', // path to test framework main file
+      testCaseFile: null // path to test case file, of empty test cases will be searched automatically
     };
   }
 
@@ -66,12 +67,35 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
+   * @returns {{agent:[],device:[]}}
+   * @private
+   */
+  _findTestFiles() {
+    if (this._options.testCaseFile) {
+
+      let file = this._options.testCaseFile;
+
+      if (!fs.existsSync(file)) {
+        throw new Error('File "' + file + '" not found');
+      }
+
+      if (/\bagent\./i.test(this._options.testCaseFile)) {
+        // assume this is for agent
+      } else {
+        // assume this is for device
+      }
+    }
+  }
+
+  /**
    * Run test
    * @private
    */
   _runTest() {
 
     /* [info] */ this._info(colors.blue('Reading the code...'));
+
+    this._findTestFiles();
 
     this._readCode();
 
