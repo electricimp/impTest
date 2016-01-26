@@ -136,8 +136,9 @@ class TestCommand extends AbstractCommand {
 
     // find test case files
     let testFiles = this._findTestFiles();
-    this._debug(colors.blue('Test files found:'), testFiles);
+    /* [debug] */ this._debug(colors.blue('Test files found:'), testFiles);
 
+    /* [info] */
     const testFilesCount = testFiles.agent.length + testFiles.device.length;
     this._info(colors.blue('Found ') + testFilesCount + colors.blue(' test file' + (testFilesCount === 1 ? '' : 's')));
 
