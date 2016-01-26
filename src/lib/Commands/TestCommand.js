@@ -71,7 +71,7 @@ class TestCommand extends AbstractCommand {
    */
   _runTest() {
 
-    /* [info] */ this._info(colors.blue('Reading the code'));
+    /* [info] */ this._info(colors.blue('Reading the code...'));
 
     this._readCode();
 
