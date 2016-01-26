@@ -12,8 +12,6 @@ commander
   .usage('[options] <test case file>')
   .option('-d, --debug', 'debug output')
   .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
-  .option('-a, --agent [bool]', 'push agent code [default: true]', true)
-  .option('-i, --imp [bool]', 'push device code [default: true]', true)
   .parse(process.argv);
 
   // run command

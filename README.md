@@ -59,8 +59,6 @@ Options:
 
   -d, --debug          debug output
   -c, --config [path]  config file path [default: .imptest]
-  -a, --agent [bool]   push agent code [default: true]
-  -i, --imp [bool]     push device code [default: true]
 ```
 
 ## Writing tests

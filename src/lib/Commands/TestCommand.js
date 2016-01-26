@@ -20,8 +20,6 @@ class TestCommand extends AbstractCommand {
     return {
       debug: false,
       config: '.imptest',
-      agent: true,
-      device: true,
       testFrameworkFile: '', // path to test framework main file
       testCaseFile: null // path to test case file, of empty test cases will be searched automatically
     };
@@ -161,7 +159,7 @@ class TestCommand extends AbstractCommand {
 
       // xxx search for test files
       this._agentTestFilePath = this._agentFilePath.replace(/\/([^\/]+)\.nut$/, '/tests/$1.test.nut');
-      //
+
       if (!fs.existsSync(this._agentTestFilePath)) {
         this._agentTestFilePath = this._agentFilePath.replace(/\/([^\/]+)\.nut$/, '/$1.test.nuts');
       }
