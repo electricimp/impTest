@@ -6,6 +6,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var glob = require('glob');
 var colors = require('colors');
 var AbstractCommand = require('./AbstractCommand');
 var BuildAPIClient = require('../BuildAPIClient');
@@ -71,20 +72,50 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _findTestFiles() {
-    if (this._options.testCaseFile) {
+    let agent = [];
+    let device = [];
 
-      let file = this._options.testCaseFile;
-
-      if (!fs.existsSync(file)) {
-        throw new Error('File "' + file + '" not found');
-      }
-
-      if (/\bagent\./i.test(this._options.testCaseFile)) {
+    let pushFile = file => {
+      if (/\bagent\./i.test(file)) {
         // assume this is for agent
+        agent.push(file);
       } else {
         // assume this is for device
+        device.push(file);
+      }
+    };
+
+    if (this._options.testCaseFile) {
+      // test file is passed via cli
+
+      if (!fs.existsSync(this._options.testCaseFile)) {
+        throw new Error('File "' + this._options.testCaseFile + '" not found');
+      }
+
+      pushFile(path.resolve(this._options.testCaseFile));
+
+    } else {
+      // look through .imptest.tests glob(s)
+
+      let searchPatterns = this._config.values.tests;
+
+      if (typeof searchPatterns === 'string') {
+        searchPatterns = [searchPatterns];
+      }
+
+      for (const searchPattern of searchPatterns) {
+        for (const file of glob.sync(searchPattern, {
+          cwd: path.dirname(this._config.path)
+        })) {
+          pushFile(path.resolve(file));
+        }
       }
     }
+
+    return {
+      agent,
+      device
+    };
   }
 
   /**
@@ -93,9 +124,14 @@ class TestCommand extends AbstractCommand {
    */
   _runTest() {
 
-    /* [info] */ this._info(colors.blue('Reading the code...'));
+    /* [info] */
+    this._info(colors.blue('Reading the code...'));
 
-    this._findTestFiles();
+    // find test case files
+    let testFiles = this._findTestFiles();
+    this._debug(colors.blue('Test files found:'), testFiles);
+
+    // !!!
 
     this._readCode();
 
@@ -115,7 +151,7 @@ class TestCommand extends AbstractCommand {
       }
 
       // check if the code exists
-      if (!fs.existsSync(this._agentTestFilePath )) {
+      if (!fs.existsSync(this._agentTestFilePath)) {
         this._error('Code not found');
         process.exit(1);
       }
@@ -146,7 +182,8 @@ class TestCommand extends AbstractCommand {
 
       .then((body) => {
         this._revision = body.revision;
-        /* [info] */ this._info(colors.blue('Created revision: ') + this._revision.version);
+        /* [info] */
+        this._info(colors.blue('Created revision: ') + this._revision.version);
         return this._client.restartModel(this._config.values.modelId);
       })
 
@@ -195,8 +232,8 @@ class TestCommand extends AbstractCommand {
               done = true;
 
               const result = 'tests: ' + line.message.tests + ', '
-                           + 'assertions: ' + line.message.assertions + ', '
-                           + 'failures: ' + line.message.failures;
+                             + 'assertions: ' + line.message.assertions + ', '
+                             + 'failures: ' + line.message.failures;
 
               if (failed) {
                 this._testPrint(colors.red('Testing failed (' + result + ')'));
@@ -212,7 +249,9 @@ class TestCommand extends AbstractCommand {
       }
 
       if (!done) {
-        setTimeout(() => { this._readLogs(type); }, 1000);
+        setTimeout(() => {
+          this._readLogs(type);
+        }, 1000);
       } else {
         if (failed) {
           process.exit(1 /* error */);
