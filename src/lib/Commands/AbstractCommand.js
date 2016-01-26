@@ -3,7 +3,7 @@
 var ImpTestFile = require('../ImpTestFile');
 var colors = require('colors');
 var dateformat = require('dateformat');
-var sprintf = require("sprintf-js").sprintf;
+var sprintf = require('sprintf-js').sprintf;
 
 class AbstractCommand {
 
