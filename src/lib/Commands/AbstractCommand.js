@@ -1,6 +1,6 @@
 'use strict';
 
-var ConfigFile = require('../ConfigFile');
+var ImpTestFile = require('../ImpTestFile');
 var colors = require('colors');
 var dateformat = require('dateformat');
 var sprintf = require("sprintf-js").sprintf;
@@ -123,7 +123,7 @@ class AbstractCommand {
    * @protected
    */
   _readConfig() {
-    this._config = new ConfigFile(this._options.config);
+    this._config = new ImpTestFile(this._options.config);
 
     this._debug(colors.blue('Using config file:'), this._config.path);
 

@@ -7,7 +7,7 @@ var stripJsonComments = require('strip-json-comments');
 /**
  * Config file abstraction
  */
-class ConfigFile {
+class ImpTestFile {
   /**
    * @param {string} configPath
    */
@@ -67,4 +67,4 @@ class ConfigFile {
   }
 }
 
-module.exports = ConfigFile;
+module.exports = ImpTestFile;
