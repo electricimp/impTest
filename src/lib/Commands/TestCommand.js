@@ -45,48 +45,20 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
-   * Read agent/device source code
-   * @private
-   */
-  _readCode() {
-
-    // read agent code
-    if (this._options.agent && !!this._config.values.agentFile) {
-      this._agentFilePath = path.resolve(this._config.values.agentFile);
-      this._agentCode = fs.readFileSync(this._agentFilePath, 'utf8');
-      this._debug(colors.blue('Using agent code file:'), this._agentFilePath);
-    }
-
-    // read device code
-    if (this._options.device && !!this._config.values.deviceFile) {
-      this._deviceFilePath = path.resolve(this._config.values.deviceFile);
-      this._deviceCode = fs.readFileSync(this._deviceFilePath, 'utf8');
-      this._debug(colors.blue('Using device code file:'), this._deviceFilePath);
-    }
-  }
-
-  /**
-   * @returns {{agent:[],device:[]}}
+   * Find test files
+   * @returns {[{name, path, type}]}
    * @private
    */
   _findTestFiles() {
-    let agent = [];
-    let device = [];
+    let files = [];
     let configCwd;
 
     let pushFile = file => {
-      const res = {
+      files.push({
         name: file,
-        path: path.resolve(configCwd, file)
-      };
-      //
-      if (/\bagent\./i.test(file)) {
-        // assume this is for agent
-        agent.push(res);
-      } else {
-        // assume this is for device
-        device.push(res);
-      }
+        path: path.resolve(configCwd, file),
+        type: /\bagent\./i.test(file) ? 'agent' : 'device'
+      });
     };
 
     if (this._options.testCaseFile) {
@@ -120,10 +92,18 @@ class TestCommand extends AbstractCommand {
       }
     }
 
-    return {
-      agent,
-      device
-    };
+    return files;
+  }
+
+  /**
+   * Run test file
+   * @param {name, path, type} file
+   * @private
+   */
+  _runFile(file) {
+    this._info(colors.blue('Running ') +
+               file.type + colors.blue(' test file ')
+               + file.name);
   }
 
   /**
@@ -133,12 +113,25 @@ class TestCommand extends AbstractCommand {
   _runTest() {
 
     // find test case files
-    let testFiles = this._findTestFiles();
-    /* [debug] */ this._debug(colors.blue('Test files found:'), testFiles);
+    const testFiles = this._findTestFiles();
+
+    /* [debug] */
+    this._debug(colors.blue('Test files found:'), testFiles);
 
     /* [info] */
-    const testFilesCount = testFiles.agent.length + testFiles.device.length;
-    this._info(colors.blue('Found ') + testFilesCount + colors.blue(' test file' + (testFilesCount === 1 ? '' : 's')));
+    this._info(colors.blue('Found ') +
+               testFiles.length +
+               colors.blue(' test file' +
+               (testFiles.length === 1 ? '' : 's'))
+    );
+
+    // run test files
+
+    // agent
+
+    for (const testFile of testFiles) {
+      this._runFile(testFile);
+    }
 
     process.exit(0);
 
