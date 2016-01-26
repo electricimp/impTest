@@ -167,13 +167,13 @@ __.imptest__ file is used to deploy tests to a certain device/model.
 ```js
 {
     "apiKey":         {string},           // Build API key
-    "modelId":        {string},           // model id
+    "modelId":        {string},           // Model id
     "devices":        {string[]},         // Device IDs
-    "deviceFile":     {string},           // Device code file, default: device.nut",
-    "agentFile":      {string},           // Agent code file, default: agent.nut",
-    "tests":          {string|string[]},  // Test file search pattern, default: *.test.nut",
-    "stopOnFailure":  {boolean},          // Stop tests execution on failure? Default: false",
-    "timeout":        {number}            // Async test methods timeout, seconds. Default: 10"
+    "deviceFile":     {string},           // Device code file. Default: "device.nut"
+    "agentFile":      {string},           // Agent code file. Default: "agent.nut"
+    "tests":          {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
+    "stopOnFailure":  {boolean},          // Stop tests execution on failure? Default: false
+    "timeout":        {number}            // Async test methods timeout, seconds. Default: 10
 }
 ```
 
