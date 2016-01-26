@@ -9,6 +9,7 @@ var TestCommand = require('../lib/Commands/TestCommand');
 var parseBool = require('../lib/utils/parseBool');
 
 commander
+  .usage('[options] <test case file>')
   .option('-d, --debug', 'debug output')
   .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
   .option('-a, --agent [bool]', 'push agent code [default: true]', true)
@@ -21,5 +22,6 @@ commander
   config: commander.config,
   agent: parseBool(commander.agent),
   device: parseBool(commander.imp),
-  testFrameworkFile: __dirname + '/../impunit/impUnit.nut'
+  testFrameworkFile: __dirname + '/../impunit/impUnit.nut',
+  testCaseFile: commander.argv[0] || null
 })).run();
