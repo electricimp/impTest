@@ -2,35 +2,34 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [impTest – Electric Imp Test Runner](#imptest-%E2%80%93-electric-imp-test-runner)
-  - [Requirements](#requirements)
+- [impTest](#imptest)
   - [Installation](#installation)
-  - [imptest commands](#imptest-commands)
+  - [Commands](#commands)
     - [init](#init)
     - [test](#test)
-  - [[Writing tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
-  - [.imptest file specification](#imptest-file-specification)
   - [Development](#development)
     - [Installation](#installation-1)
     - [Testing](#testing)
+  - [[Writing tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
+  - [[.imptest File Specification](docs/imptest-spec.md)](#imptest-file-specificationdocsimptest-specmd)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# impTest – Electric Imp Test Runner
+# impTest
 
-## Requirements
+**Electric Imp Test Runner**
+
+## Installation
+
+`npm install -g imptest`
+
+*Requirements:*
 
 |Dependency|OS X Installation|
 |:--|:--|
 |Node.js 5.1+|`brew install nodejs`|
 
-## Installation
-
-_(not published yet)_
-
-`npm install -g imptest`
-
-## imptest commands
+## Commands
 
 ### init
 
@@ -55,25 +54,6 @@ Options:
   -c, --config [path]  config file path [default: .imptest]
 ```
 
-## [Writing tests](docs/writing-tests.md)
-
-## .imptest file specification
-
-__.imptest__ file is used to deploy tests to a certain device/model.
-
-```js
-{
-    "apiKey":         {string},           // Build API key
-    "modelId":        {string},           // Model id
-    "devices":        {string[]},         // Device IDs
-    "deviceFile":     {string},           // Device code file. Default: "device.nut"
-    "agentFile":      {string},           // Agent code file. Default: "agent.nut"
-    "tests":          {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
-    "stopOnFailure":  {boolean},          // Stop tests execution on failure? Default: false
-    "timeout":        {number}            // Async test methods timeout, seconds. Default: 10
-}
-```
-
 ## Development
 
 ### Installation
@@ -91,3 +71,7 @@ Copy __spec/config.js.dist__ to __config.js__ and fill-in the neccesary settings
 ```bash
 SPEC_DEBUG=<true|false> npm test
 ```
+
+## [Writing tests](docs/writing-tests.md)
+
+## [.imptest File Specification](docs/imptest-spec.md)
