@@ -77,7 +77,7 @@ class TestCommand extends AbstractCommand {
       // look through .imptest.tests glob(s)
 
       // look in config file directory
-      configCwd = path.dirname(this._config.path);
+      configCwd = this._config.dir;
 
       let searchPatterns = this._config.values.tests;
 

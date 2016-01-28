@@ -60,6 +60,13 @@ class ImpTestFile {
   }
 
   /**
+   * @returns {string}
+   */
+  get dir() {
+    return path.dirname(this._path);
+  }
+
+  /**
    * Write config to file
    */
   write() {
