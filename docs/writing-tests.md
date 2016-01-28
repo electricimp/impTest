@@ -1,3 +1,17 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Writing Tests](#writing-tests)
+  - [Test Case Lifecycle: setUp() and tearDown()](#test-case-lifecycle-setup-and-teardown)
+  - [Asynchronous Testing](#asynchronous-testing)
+  - [Timeouts](#timeouts)
+  - [Assertions](#assertions)
+  - [Running Tests Manually](#running-tests-manually)
+  - [Test Case Example](#test-case-example)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Writing Tests
 
 impTest looks for classes inherited from the `ImpUnitTestCase` and treats them as test cases.
