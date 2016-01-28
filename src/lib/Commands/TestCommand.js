@@ -96,6 +96,38 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
+   * @return {{agent, device}}
+   * @private
+   */
+  _getSoureCode() {
+
+    let sourceFilePath;
+    const result = {};
+
+    // read the code
+
+    sourceFilePath = path.resolve(this._config.dir, this._config.values.agentFile);
+
+    /* [debug] */this._debug(colors.blue('Agent source code file path: ') + sourceFilePath);
+    /* [info] */ this._info(colors.blue('Using ') + 'agent'
+                            + colors.blue('source code file: ')
+                            + this._config.values.agentFile);
+
+    result.agent = fs.readFileSync(sourceFilePath, 'utf-8');
+
+    sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
+
+    /* [debug] */ this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
+    /* [info] */ this._info(colors.blue('Using ') + 'device'
+                            + colors.blue('source code file: ')
+                            + this._config.values.deviceFile);
+
+    result.device = fs.readFileSync(sourceFilePath, 'utf-8');
+
+    return result;
+  }
+
+  /**
    * Run test file
    * @param {name, path, type} file
    * @private
@@ -103,22 +135,7 @@ class TestCommand extends AbstractCommand {
   _runFile(file) {
     /* [info] */
     this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
-
-    let sourceFilePath;
-
-    // read the code
-
-    sourceFilePath = path.resolve(this._config.values.agentFile);
-    this._debug(colors.blue('Agent source code file: ') + sourceFilePath);
-    this._info(colors.blue('Using ') + 'agent' + colors.blue('source code file: ') + this._config.values.agentFile);
-    const agentCode = fs.readFileSync(file.path, 'utf-8');
-
-    sourceFilePath = path.resolve(this._config.values.deviceFile);
-    this._debug(colors.blue('Device source code file: ') + sourceFilePath);
-    const deviceCode = fs.readFileSync(file.path, 'utf-8');
-
-
-
+    console.log(this._sourceCode);
   }
 
   /**
@@ -139,6 +156,9 @@ class TestCommand extends AbstractCommand {
                colors.blue(' test file' +
                (testFiles.length === 1 ? '' : 's'))
     );
+
+    // read source code
+    this._sourceCode = this._getSoureCode();
 
     // run test files
 
