@@ -10,7 +10,7 @@
   - [Development](#development)
     - [Installation](#installation-1)
     - [Testing](#testing)
-  - [[Writing tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
+  - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
   - [[.imptest File Specification](docs/imptest-spec.md)](#imptest-file-specificationdocsimptest-specmd)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -72,6 +72,6 @@ Copy __spec/config.js.dist__ to __config.js__ and fill-in the neccesary settings
 SPEC_DEBUG=<true|false> npm test
 ```
 
-## [Writing tests](docs/writing-tests.md)
+## [Writing Tests](docs/writing-tests.md)
 
 ## [.imptest File Specification](docs/imptest-spec.md)
