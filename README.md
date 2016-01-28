@@ -15,6 +15,8 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+_Please note that this is still under development and published for preview purposes only._
+
 # impTest
 
 **Electric Imp Test Runner**
