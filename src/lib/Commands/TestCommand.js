@@ -101,9 +101,24 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _runFile(file) {
-    this._info(colors.blue('Running ') +
-               file.type + colors.blue(' test file ')
-               + file.name);
+    /* [info] */
+    this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
+
+    let sourceFilePath;
+
+    // read the code
+
+    sourceFilePath = path.resolve(this._config.values.agentFile);
+    this._debug(colors.blue('Agent source code file: ') + sourceFilePath);
+    this._info(colors.blue('Using ') + 'agent' + colors.blue('source code file: ') + this._config.values.agentFile);
+    const agentCode = fs.readFileSync(file.path, 'utf-8');
+
+    sourceFilePath = path.resolve(this._config.values.deviceFile);
+    this._debug(colors.blue('Device source code file: ') + sourceFilePath);
+    const deviceCode = fs.readFileSync(file.path, 'utf-8');
+
+
+
   }
 
   /**
@@ -131,6 +146,8 @@ class TestCommand extends AbstractCommand {
 
     for (const testFile of testFiles) {
       this._runFile(testFile);
+
+
     }
 
     process.exit(0);
