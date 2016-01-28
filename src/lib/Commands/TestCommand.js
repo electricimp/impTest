@@ -30,7 +30,7 @@ class TestCommand extends AbstractCommand {
    */
   run() {
     super.run();
-    this._runTest();
+    this._test();
   }
 
   /**
@@ -96,6 +96,7 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
+   * Read source code
    * @return {{agent, device}}
    * @private
    */
@@ -128,21 +129,10 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
-   * Run test file
-   * @param {name, path, type} file
+   * Run tests
    * @private
    */
-  _runFile(file) {
-    /* [info] */
-    this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
-    console.log(this._sourceCode);
-  }
-
-  /**
-   * Run test
-   * @private
-   */
-  _runTest() {
+  _test() {
 
     // find test case files
     const testFiles = this._findTestFiles();
@@ -249,6 +239,17 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
+   * Run test file
+   * @param {name, path, type} file
+   * @private
+   */
+  _runTestFile(file) {
+    /* [info] */
+    this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
+    console.log(this._sourceCode);
+  }
+
+  /**
    * Read logs
    * @private
    */
@@ -306,6 +307,11 @@ class TestCommand extends AbstractCommand {
     });
   }
 
+  /**
+   * Prints log message
+   * @param line
+   * @private
+   */
   _printLogLine(line) {
     if (line.type === 'STATUS') {
       if (line.message.indexOf('::setUp()') !== -1) {
@@ -319,7 +325,7 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
-   * Test message
+   * Print [test] message
    * @param {*} ...objects
    * @protected
    */
