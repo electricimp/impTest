@@ -1,3 +1,3 @@
 [submodule "src/impUnit"]
 	path = src/impUnit
-	url = https://github.com/ElectricImp-PDSE/impUnit.git
+	url = https://github.com/electricimp/impUnit.git
