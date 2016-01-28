@@ -8,7 +8,7 @@
 
 ## .imptest File Specification
 
-__.imptest__ file is used to deploy tests to configure tests execution.
+__.imptest__ file is used to configure tests execution.
 
 ```js
 {
