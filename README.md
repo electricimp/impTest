@@ -12,6 +12,7 @@
     - [Testing](#testing)
   - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
   - [[.imptest File Specification](docs/imptest-spec.md)](#imptest-file-specificationdocsimptest-specmd)
+  - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -77,3 +78,7 @@ SPEC_DEBUG=<true|false> npm test
 ## [Writing Tests](docs/writing-tests.md)
 
 ## [.imptest File Specification](docs/imptest-spec.md)
+
+## License
+
+The code in this repository is licensed under [MIT License](https://github.com/electricimp/serializer/tree/master/LICENSE).
