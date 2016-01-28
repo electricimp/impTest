@@ -28,7 +28,8 @@ class AbstractCommand {
   get defaultOptions() {
     return {
       debug: false,
-      config: '.imptest'
+      config: '.imptest',
+      version: null
     };
   }
 
@@ -49,6 +50,7 @@ class AbstractCommand {
   constructor(options) {
     this.options = options;
     this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
+    this._info('impTest/' + this._options.version);
   }
 
   /**

@@ -7,6 +7,7 @@
 var commander = require('commander');
 var InitCommand = require('../lib/Commands/InitCommand');
 var parseBool = require('../lib/utils/parseBool');
+var packageJson = require('../../package.json');
 
 commander
   .option('-d, --debug', 'debug output')
@@ -18,5 +19,6 @@ commander
 (new InitCommand({
   debug: parseBool(commander.debug),
   force: parseBool(commander.force),
-  config: commander.config
+  config: commander.config,
+  version: packageJson.version
 })).tryRun();
