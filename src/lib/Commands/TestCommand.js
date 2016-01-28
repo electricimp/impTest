@@ -110,8 +110,7 @@ class TestCommand extends AbstractCommand {
     sourceFilePath = path.resolve(this._config.dir, this._config.values.agentFile);
 
     /* [debug] */this._debug(colors.blue('Agent source code file path: ') + sourceFilePath);
-    /* [info] */ this._info(colors.blue('Using ') + 'agent'
-                            + colors.blue('source code file: ')
+    /* [info] */ this._info('Agent' + colors.blue(' source code file: ')
                             + this._config.values.agentFile);
 
     result.agent = fs.readFileSync(sourceFilePath, 'utf-8');
@@ -119,8 +118,7 @@ class TestCommand extends AbstractCommand {
     sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
 
     /* [debug] */ this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
-    /* [info] */ this._info(colors.blue('Using ') + 'device'
-                            + colors.blue('source code file: ')
+    /* [info] */ this._info('Device' + colors.blue(' source code file: ')
                             + this._config.values.deviceFile);
 
     result.device = fs.readFileSync(sourceFilePath, 'utf-8');
@@ -155,7 +153,7 @@ class TestCommand extends AbstractCommand {
     // agent
 
     for (const testFile of testFiles) {
-      this._runFile(testFile);
+      this._runTestFile(testFile);
 
 
     }
@@ -246,7 +244,6 @@ class TestCommand extends AbstractCommand {
   _runTestFile(file) {
     /* [info] */
     this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
-    console.log(this._sourceCode);
   }
 
   /**
