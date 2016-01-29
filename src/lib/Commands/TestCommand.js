@@ -280,60 +280,76 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _readLogs(type) {
-    return this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at).then((val) => {
 
-      let done = false;
-      let failed = false;
+    let done = false;
+    let failed = false;
 
-      // parse log messages
-      for (const message of val.logs) {
+    return new Promise((resolve, reject) => {
 
-        // filter agent/device messages
-        if (message.type === type) {
-          const hash = JSON.stringify(message);
+      this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at).then((val) => {
 
-          if (!this._logs[hash]) {
+        let result;
 
-            // todo: check for ERRORS
-            // todo: check for __IMPUNIT__ marks
+        // parse log messages
+        for (const logLine of val.logs) {
 
-            const testMessage = JSON.parse(message.message);
-            this._printLogLine(testMessage);
+          // filter agent/device messages
+          if (logLine.type === type) {
+            const hash = JSON.stringify(logLine);
 
-            if (testMessage.type === 'FAIL') {
+            if (!this._logs[hash]) {
 
-              this._testPrint(colors.red('FAILED: ' + testMessage.message));
-              failed = true;
+              // todo: check for ERRORS
+              // todo: check for __IMPUNIT__ marks
 
-            } else if (testMessage.type === 'RESULT') {
-              done = true;
+              const testMessage = JSON.parse(logLine.message);
+              this._printLogLine(testMessage);
 
-              const result = 'tests: ' + testMessage.message.tests + ', '
-                             + 'assertions: ' + testMessage.message.assertions + ', '
-                             + 'failures: ' + testMessage.message.failures;
+              if (testMessage.type === 'FAIL') {
 
-              if (failed) {
-                this._testPrint(colors.red('Testing failed (' + result + ')'));
-              } else {
-                this._testPrint(colors.green('Testing succeeded (' + result + ')'));
+                this._testPrint(colors.red('FAILED: ' + testMessage.message));
+                failed = true;
+
+              } else if (testMessage.type === 'RESULT') {
+                done = true;
+
+                result = 'tests: ' + testMessage.message.tests + ', '
+                         + 'assertions: ' + testMessage.message.assertions + ', '
+                         + 'failures: ' + testMessage.message.failures;
+
+                if (failed) {
+                  this._testPrint(colors.red('Testing failed (' + result + ')'));
+                } else {
+                  this._testPrint(colors.green('Testing succeeded (' + result + ')'));
+                }
               }
+
+              this._logs[hash] = testMessage;
             }
-
-            this._logs[hash] = testMessage;
           }
+
+        } // for logLine...
+
+        if (done) {
+
+          if (failed) {
+            // !!! todo: mark error state, collect stats
+            reject(result);
+          } else {
+            resolve(result);
+          }
+
+        } else {
+
+          // repeat in 1s
+          setTimeout(() => {
+            this._readLogs.call(this, arguments);
+          }, 1000);
+
         }
 
-      }
+      });
 
-      if (!done) {
-        setTimeout(() => {
-          this._readLogs(type);
-        }, 1000);
-      } else {
-        if (failed) {
-          // !!! todo: mark error state, collect stats
-        }
-      }
     });
   }
 
