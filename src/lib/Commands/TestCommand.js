@@ -255,22 +255,32 @@ class TestCommand extends AbstractCommand {
 
     // create complete codebase
 
+    const bootstrapCode = '// run tests\n' +
+      't <- ImpUnitRunner();\n' +
+      't.timeout = ' + parseFloat(this._config.values.timeout) + ';\n' +
+      't.readableOutput = false;\n' +
+      't.stopOnFailure = ' + !!this._config.values.stopOnFailure + ';\n' +
+      't.run();';
+
     let agentCode, deviceCode;
 
     if ('agent' === file.type) {
       agentCode = this._frameworkCode + '\n\n' +
                   this._sourceCode.agent + '\n\n' +
-                  fs.readFileSync(file.path, 'utf-8');
+                  fs.readFileSync(file.path, 'utf-8') + '\n\n' +
+                  bootstrapCode;
       deviceCode = this._sourceCode.device;
     } else {
       deviceCode = this._frameworkCode + '\n\n' +
                   this._sourceCode.device + '\n\n' +
-                  fs.readFileSync(file.path, 'utf-8');
+                  fs.readFileSync(file.path, 'utf-8') + '\n\n' +
+                  bootstrapCode;
       agentCode = this._sourceCode.agent;
     }
 
-    this._info(colors.blue('Agent code size: ') + agentCode.length + ' bytes');
-    this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
+    /* [info] */ this._info(colors.blue('Agent code size: ') + agentCode.length + ' bytes');
+    /* [info] */ this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
+
   }
 
   /**
