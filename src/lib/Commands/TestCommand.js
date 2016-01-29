@@ -11,6 +11,7 @@ var colors = require('colors');
 var AbstractCommand = require('./AbstractCommand');
 var BuildAPIClient = require('../BuildAPIClient');
 var Bundler = require('../Bundler');
+var promiseWhile = require('../utils/promiseWhile');
 
 class TestCommand extends AbstractCommand {
 
@@ -146,6 +147,7 @@ class TestCommand extends AbstractCommand {
 
   /**
    * Run tests
+   * @return {Promise}
    * @private
    */
   _test() {
@@ -170,16 +172,22 @@ class TestCommand extends AbstractCommand {
     // run framework code
     this._frameworkCode = this._readFramework();
 
-    // agent
+    // run test files
 
-    for (const testFile of testFiles) {
-      this._runTestFile(testFile);
-    }
+    let i = 0;
+
+    return promiseWhile(
+      () => i++ < testFiles.length,
+      () => {
+        this._runTestFile(testFiles[i]);
+      }
+    );
   }
 
   /**
    * Run test file
    * @param {name, path, type} file
+   * @returns {Promise}
    * @private
    */
   _runTestFile(file) {
@@ -214,7 +222,7 @@ class TestCommand extends AbstractCommand {
     /* [info] */ this._info(colors.blue('Agent code size: ') + agentCode.length + ' bytes');
     /* [info] */ this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
 
-    const r = this._executeTest(deviceCode, agentCode, file.type); // !!! here
+    return this._executeTest(deviceCode, agentCode, file.type);
   }
 
   /**
