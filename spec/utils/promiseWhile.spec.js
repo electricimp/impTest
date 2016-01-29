@@ -12,7 +12,6 @@ describe('utils/promiseWhile test suite', () => {
       () => {
         return new Promise((resolve, reject) => {
           setTimeout(() => {
-            console.log('aye', i);
             resolve(i++);
           }, 1);
         });
