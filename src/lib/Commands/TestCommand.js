@@ -54,7 +54,7 @@ class TestCommand extends AbstractCommand {
     const files = [];
     let configCwd;
 
-    let pushFile = file => {
+    const pushFile = file => {
       files.push({
         name: file,
         path: path.resolve(configCwd, file),
@@ -258,12 +258,12 @@ class TestCommand extends AbstractCommand {
     let agentCode, deviceCode;
 
     if ('agent' === file.type) {
-      agentCode = this._frameworkCode +'\n\n' +
+      agentCode = this._frameworkCode + '\n\n' +
                   this._sourceCode.agent + '\n\n' +
                   fs.readFileSync(file.path, 'utf-8');
       deviceCode = this._sourceCode.device;
     } else {
-      deviceCode = this._frameworkCode +'\n\n' +
+      deviceCode = this._frameworkCode + '\n\n' +
                   this._sourceCode.device + '\n\n' +
                   fs.readFileSync(file.path, 'utf-8');
       agentCode = this._sourceCode.agent;
