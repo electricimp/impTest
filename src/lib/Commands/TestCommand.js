@@ -101,28 +101,35 @@ class TestCommand extends AbstractCommand {
    * @return {{agent, device}}
    * @private
    */
-  _getSoureCode() {
-
+  _readSoureCode() {
     let sourceFilePath;
     const result = {};
 
-    // read the code
+    if (this._config.values.agentFile) {
+      sourceFilePath = path.resolve(this._config.dir, this._config.values.agentFile);
 
-    sourceFilePath = path.resolve(this._config.dir, this._config.values.agentFile);
+      /* [debug] */
+      this._debug(colors.blue('Agent source code file path: ') + sourceFilePath);
+      /* [info] */
+      this._info('Agent' + colors.blue(' source code file: ')
+                 + this._config.values.agentFile);
 
-    /* [debug] */this._debug(colors.blue('Agent source code file path: ') + sourceFilePath);
-    /* [info] */ this._info('Agent' + colors.blue(' source code file: ')
-                            + this._config.values.agentFile);
+      result.agent = fs.readFileSync(sourceFilePath, 'utf-8');
+    } else {
+      result.agent = '';
+    }
 
-    result.agent = fs.readFileSync(sourceFilePath, 'utf-8');
+    if (this._config.values.deviceFile) {
+      sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
 
-    sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
+      /* [debug] */ this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
+      /* [info] */ this._info('Device' + colors.blue(' source code file: ')
+                              + this._config.values.deviceFile);
 
-    /* [debug] */ this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
-    /* [info] */ this._info('Device' + colors.blue(' source code file: ')
-                            + this._config.values.deviceFile);
-
-    result.device = fs.readFileSync(sourceFilePath, 'utf-8');
+      result.device = fs.readFileSync(sourceFilePath, 'utf-8');
+    } else {
+      result.device = '';
+    }
 
     return result;
   }
