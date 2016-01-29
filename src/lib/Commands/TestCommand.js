@@ -154,6 +154,9 @@ class TestCommand extends AbstractCommand {
    */
   _test() {
 
+    /* [blank] */
+    console.log('');
+
     // find test case files
     const testFiles = this._findTestFiles();
 
@@ -180,10 +183,12 @@ class TestCommand extends AbstractCommand {
 
     return promiseWhile(
       () => {
-        return i++ <= testFiles.length + 10;
+        return i++ < testFiles.length;
       },
       () => {
-        this._runTestFile(testFiles[i]);
+        /* [blank] */
+        console.log('');
+        return this._runTestFile(testFiles[i - 1]);
       }
     );
   }
@@ -241,38 +246,33 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _executeTest(deviceCode, agentCode, type) {
-    return new Promise((resolve, reject) => {
+    // run tests
 
-      // run tests
+    this._client = this._createBuildApiClient();
+    this._logs = {/* ts: message */};
 
-      this._client = this._createBuildApiClient();
-      this._logs = {/* ts: message */};
+    return this._client.createRevision(this._config.values.modelId, deviceCode, agentCode)
 
-      return this._client.createRevision(this._config.values.modelId, deviceCode, agentCode)
+      .then((body) => {
+        this._revision = body.revision;
+        /* [info] */
+        this._info(colors.blue('Created revision: ') + this._revision.version);
+        return this._client.restartModel(this._config.values.modelId);
+      })
 
-        .then((body) => {
-          this._revision = body.revision;
-          /* [info] */
-          this._info(colors.blue('Created revision: ') + this._revision.version);
-          return this._client.restartModel(this._config.values.modelId);
-        })
+      .then(() => {
+        // get logs since current revision was created
+        return this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
+      })
 
-        .then(() => {
-          // get logs since current revision was created
-          return this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
-        })
+      // now read logs
+      .then(() => {
+        return this._readLogs({agent: 'agent', device: 'server'}[type] + '.log');
+      })
 
-        // now read logs
-        .then(() => {
-          this._readLogs({agent: 'agent', device: 'server'}[type] + '.log');
-        })
-
-        .catch((error) => {
-          this._error(error.message);
-          reject(error);
-        });
-
-    });
+      .catch((error) => {
+        this._error(error.message);
+      });
   }
 
   /**
@@ -280,7 +280,7 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _readLogs(type) {
-    this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at).then((val) => {
+    return this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at).then((val) => {
 
       let done = false;
       let failed = false;
@@ -331,9 +331,7 @@ class TestCommand extends AbstractCommand {
         }, 1000);
       } else {
         if (failed) {
-          process.exit(1 /* error */);
-        } else {
-          process.exit(0 /* just fine */);
+          // !!! todo: mark error state, collect stats
         }
       }
     });
