@@ -9,6 +9,7 @@
     - [test](#test)
   - [Development](#development)
     - [Installation](#installation-1)
+    - [Running](#running)
     - [Testing](#testing)
   - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
   - [[.imptest File Specification](docs/imptest-spec.md)](#imptest-file-specificationdocsimptest-specmd)
@@ -31,6 +32,8 @@ _Please note that this is still under development and published for preview purp
 |Dependency|OS X Installation|
 |:--|:--|
 |Node.js 5.1+|`brew install nodejs`|
+
+[Usage at development time](#running) 
 
 ## Commands
 
@@ -65,6 +68,18 @@ Options:
 git clone <repo-url-goes-here> imptest
 cd imptest
 npm i
+```
+
+### Running
+
+```bash
+src/cli/imptest.js <command> <options>
+```
+
+eg:
+
+```bash
+src/cli/imptest.js test -c samples/sample1/.imptest
 ```
 
 ### Testing
