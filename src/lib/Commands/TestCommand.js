@@ -10,6 +10,7 @@ var glob = require('glob');
 var colors = require('colors');
 var AbstractCommand = require('./AbstractCommand');
 var BuildAPIClient = require('../BuildAPIClient');
+var Bundler = require('../Bundler');
 
 class TestCommand extends AbstractCommand {
 
@@ -127,6 +128,16 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
+   * Read framework code
+   * @return {string}
+   * @private
+   */
+  _readFramework() {
+    return (new Bundler({debug: this._options.debug}))
+      .process(this._options.testFrameworkFile);
+  }
+
+  /**
    * Run tests
    * @private
    */
@@ -148,14 +159,13 @@ class TestCommand extends AbstractCommand {
     // read source code
     this._sourceCode = this._getSoureCode();
 
-    // run test files
+    // run framework code
+    this._frameworkCode = this._readFramework();
 
     // agent
 
     for (const testFile of testFiles) {
       this._runTestFile(testFile);
-
-
     }
 
     process.exit(0);

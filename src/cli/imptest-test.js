@@ -21,7 +21,7 @@ commander
   config: commander.config,
   agent: parseBool(commander.agent),
   device: parseBool(commander.imp),
-  testFrameworkFile: __dirname + '/../impunit/impUnit.nut',
+  testFrameworkFile: __dirname + '/../impUnit/bundle.nut',
   testCaseFile: commander.args[0] || null,
   version: packageJson.version
 })).tryRun();

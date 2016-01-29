@@ -102,20 +102,28 @@ class AbstractCommand {
    */
   _log(type, colorFn, params) {
 
-    const now = new Date();
-    let dateMessage = dateformat(now, 'HH:MM:ss');
+    let dateMessage = '';
 
-    if (this._logDate) {
-      let dif =  (now - this._logDate) / 1000;
-      dif = sprintf('%.3f', dif);
-      dateMessage += ' (+' +  dif + ')';
+    if (type === 'debug') {
+      type += ':' + this.constructor.name;
+    } else {
+      const now = new Date();
+      dateMessage = dateformat(now, 'HH:MM:ss');
+
+      if (this._logDate) {
+        let dif =  (now - this._logDate) / 1000;
+        dif = sprintf('%.3f', dif);
+        dateMessage += ' (+' +  dif + ')';
+      }
+
+      dateMessage += ' ';
+
+      this._logDate = new Date();
     }
-
-    this._logDate = new Date();
 
     // convert params to true array (from arguments)
     params = Array.prototype.slice.call(params);
-    params.unshift(colorFn('[' + dateMessage + ' ' + type + ']'));
+    params.unshift(colorFn('[' + dateMessage + type + ']'));
     console.log.apply(this, params);
   }
 
