@@ -123,9 +123,11 @@ class TestCommand extends AbstractCommand {
     if (this._config.values.deviceFile) {
       sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
 
-      /* [debug] */ this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
-      /* [info] */ this._info(colors.blue('Device source: ')
-                              + this._config.values.deviceFile);
+      /* [debug] */
+      this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
+      /* [info] */
+      this._info(colors.blue('Device source: ')
+                 + this._config.values.deviceFile);
 
       result.device = fs.readFileSync(sourceFilePath, 'utf-8');
     } else {
@@ -177,7 +179,9 @@ class TestCommand extends AbstractCommand {
     let i = 0;
 
     return promiseWhile(
-      () => i++ < testFiles.length,
+      () => {
+        return i++ <= testFiles.length + 10;
+      },
       () => {
         this._runTestFile(testFiles[i]);
       }
@@ -197,11 +201,11 @@ class TestCommand extends AbstractCommand {
     // create complete codebase
 
     const bootstrapCode = '// run tests\n' +
-      't <- ImpUnitRunner();\n' +
-      't.timeout = ' + parseFloat(this._config.values.timeout) + ';\n' +
-      't.readableOutput = false;\n' +
-      't.stopOnFailure = ' + !!this._config.values.stopOnFailure + ';\n' +
-      't.run();';
+                          't <- ImpUnitRunner();\n' +
+                          't.timeout = ' + parseFloat(this._config.values.timeout) + ';\n' +
+                          't.readableOutput = false;\n' +
+                          't.stopOnFailure = ' + !!this._config.values.stopOnFailure + ';\n' +
+                          't.run();';
 
     let agentCode, deviceCode;
 
@@ -213,14 +217,16 @@ class TestCommand extends AbstractCommand {
       deviceCode = this._sourceCode.device;
     } else {
       deviceCode = this._frameworkCode + '\n\n' +
-                  this._sourceCode.device + '\n\n' +
-                  fs.readFileSync(file.path, 'utf-8') + '\n\n' +
-                  bootstrapCode;
+                   this._sourceCode.device + '\n\n' +
+                   fs.readFileSync(file.path, 'utf-8') + '\n\n' +
+                   bootstrapCode;
       agentCode = this._sourceCode.agent;
     }
 
-    /* [info] */ this._info(colors.blue('Agent code size: ') + agentCode.length + ' bytes');
-    /* [info] */ this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
+    /* [info] */
+    this._info(colors.blue('Agent code size: ') + agentCode.length + ' bytes');
+    /* [info] */
+    this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
 
     return this._executeTest(deviceCode, agentCode, file.type);
   }
@@ -246,7 +252,8 @@ class TestCommand extends AbstractCommand {
 
         .then((body) => {
           this._revision = body.revision;
-          /* [info] */ this._info(colors.blue('Created revision: ') + this._revision.version);
+          /* [info] */
+          this._info(colors.blue('Created revision: ') + this._revision.version);
           return this._client.restartModel(this._config.values.modelId);
         })
 
@@ -257,7 +264,7 @@ class TestCommand extends AbstractCommand {
 
         // now read logs
         .then(() => {
-          this._readLogs(type + '.log');
+          this._readLogs({agent: 'agent', device: 'server'}[type] + '.log');
         })
 
         .catch((error) => {
