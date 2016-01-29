@@ -1,6 +1,5 @@
 'use strict';
 
-var config = require('../config');
 var promiseWhile = require('../../src/lib/utils/promiseWhile');
 
 describe('utils/promiseWhile test suite', () => {
