@@ -175,73 +175,6 @@ class TestCommand extends AbstractCommand {
     for (const testFile of testFiles) {
       this._runTestFile(testFile);
     }
-
-    process.exit(0);
-
-    // bundle agent code
-
-    if (this._agentCode) {
-      ///* [info] */ this._info(colors.blue('Have agent code'));
-
-      // xxx search for test files
-      this._agentTestFilePath = this._agentFilePath.replace(/\/([^\/]+)\.nut$/, '/tests/$1.test.nut');
-
-      if (!fs.existsSync(this._agentTestFilePath)) {
-        this._agentTestFilePath = this._agentFilePath.replace(/\/([^\/]+)\.nut$/, '/$1.test.nuts');
-      }
-
-      // check if the code exists
-      if (!fs.existsSync(this._agentTestFilePath)) {
-        this._error('Code not found');
-        process.exit(1);
-      }
-
-      this._agentTestCode = fs.readFileSync(this._agentTestFilePath, 'utf-8');
-
-      this._agentCode = '// AGENT CODE:\n\n' + this._agentCode
-                        + '\n// TEST FRAMEWORK:\n\n' + this._testFrameworkCode
-                        + '\n// TEST CASES:\n\n' + this._agentTestCode;
-
-      // add bootstrap commands
-      this._agentCode += `
-        // run test
-        testRunner <- ImpUnitRunner();
-        testRunner.asyncTimeout = 5;
-        testRunner.readableOutput = false;
-        testRunner.stopOnFailure = false;
-        testRunner.run();
-      `;
-    }
-
-    // run tests
-
-    this._client = this._createBuildApiClient();
-    this._logs = {/* ts: message */};
-
-    this._client.createRevision(this._config.values.modelId, this._deviceCode, this._agentCode)
-
-      .then((body) => {
-        this._revision = body.revision;
-        /* [info] */
-        this._info(colors.blue('Created revision: ') + this._revision.version);
-        return this._client.restartModel(this._config.values.modelId);
-      })
-
-      .then(() => {
-        // get logs since current revision was created
-        return this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
-      })
-
-      // now read logs
-      .then(() => {
-        this._readLogs('agent.log'); // !!! also read device logs
-      })
-
-      .catch((error) => {
-        this._error(error.message);
-        process.exit(1);
-      });
-
   }
 
   /**
@@ -281,6 +214,50 @@ class TestCommand extends AbstractCommand {
     /* [info] */ this._info(colors.blue('Agent code size: ') + agentCode.length + ' bytes');
     /* [info] */ this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
 
+    const r = this._executeTest(deviceCode, agentCode, file.type); // !!! here
+  }
+
+  /**
+   * Execute test via BuildAPI
+   *
+   * @param {string} deviceCode
+   * @param {string} agentCode
+   * @param {"agent"|"device"} type
+   * @return {Promise}
+   * @private
+   */
+  _executeTest(deviceCode, agentCode, type) {
+    return new Promise((resolve, reject) => {
+
+      // run tests
+
+      this._client = this._createBuildApiClient();
+      this._logs = {/* ts: message */};
+
+      return this._client.createRevision(this._config.values.modelId, deviceCode, agentCode)
+
+        .then((body) => {
+          this._revision = body.revision;
+          /* [info] */ this._info(colors.blue('Created revision: ') + this._revision.version);
+          return this._client.restartModel(this._config.values.modelId);
+        })
+
+        .then(() => {
+          // get logs since current revision was created
+          return this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
+        })
+
+        // now read logs
+        .then(() => {
+          this._readLogs(type + '.log');
+        })
+
+        .catch((error) => {
+          this._error(error.message);
+          reject(error);
+        });
+
+    });
   }
 
   /**
@@ -301,18 +278,24 @@ class TestCommand extends AbstractCommand {
           const hash = JSON.stringify(message);
 
           if (!this._logs[hash]) {
-            const line = JSON.parse(message.message);
-            this._printLogLine(line);
 
-            if (line.type === 'FAIL') {
-              this._testPrint(colors.red('FAILED: ' + line.message));
+            // todo: check for ERRORS
+            // todo: check for __IMPUNIT__ marks
+
+            const testMessage = JSON.parse(message.message);
+            this._printLogLine(testMessage);
+
+            if (testMessage.type === 'FAIL') {
+
+              this._testPrint(colors.red('FAILED: ' + testMessage.message));
               failed = true;
-            } else if (line.type === 'RESULT') {
+
+            } else if (testMessage.type === 'RESULT') {
               done = true;
 
-              const result = 'tests: ' + line.message.tests + ', '
-                             + 'assertions: ' + line.message.assertions + ', '
-                             + 'failures: ' + line.message.failures;
+              const result = 'tests: ' + testMessage.message.tests + ', '
+                             + 'assertions: ' + testMessage.message.assertions + ', '
+                             + 'failures: ' + testMessage.message.failures;
 
               if (failed) {
                 this._testPrint(colors.red('Testing failed (' + result + ')'));
@@ -321,7 +304,7 @@ class TestCommand extends AbstractCommand {
               }
             }
 
-            this._logs[hash] = line;
+            this._logs[hash] = testMessage;
           }
         }
 

@@ -14,7 +14,6 @@ class AbstractCommand {
   tryRun() {
     try {
       this.run();
-      process.exit(0);
     } catch (e) {
       this._error(e);
       process.exit(1);
