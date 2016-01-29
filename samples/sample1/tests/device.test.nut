@@ -17,7 +17,7 @@ class DeviceTestCase1 extends ImpUnitCase {
    */
   function testSomethingSync() {
      // ensure our setup was done
-     this.assertTrue(this.i instanceof AA);
+     this.assertTrue(this.i instanceof DA);
 
      // ensure that 5+4.9 is close enough to 10
      this.assertClose(10, this.i.addTwoNums(5, 4.9), 0.25);
