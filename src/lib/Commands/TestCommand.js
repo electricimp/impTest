@@ -51,7 +51,7 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _findTestFiles() {
-    let files = [];
+    const files = [];
     let configCwd;
 
     let pushFile = file => {
@@ -111,7 +111,7 @@ class TestCommand extends AbstractCommand {
       /* [debug] */
       this._debug(colors.blue('Agent source code file path: ') + sourceFilePath);
       /* [info] */
-      this._info('Agent' + colors.blue(' source code file: ')
+      this._info(colors.blue('Agent source: ')
                  + this._config.values.agentFile);
 
       result.agent = fs.readFileSync(sourceFilePath, 'utf-8');
@@ -123,7 +123,7 @@ class TestCommand extends AbstractCommand {
       sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
 
       /* [debug] */ this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
-      /* [info] */ this._info('Device' + colors.blue(' source code file: ')
+      /* [info] */ this._info(colors.blue('Device source: ')
                               + this._config.values.deviceFile);
 
       result.device = fs.readFileSync(sourceFilePath, 'utf-8');
@@ -160,11 +160,12 @@ class TestCommand extends AbstractCommand {
     this._info(colors.blue('Found ') +
                testFiles.length +
                colors.blue(' test file' +
-               (testFiles.length === 1 ? '' : 's'))
+               (testFiles.length === 1 ? '' : 's')) + ': '
+               + testFiles.map(e => e.name).join(', ')
     );
 
     // read source code
-    this._sourceCode = this._getSoureCode();
+    this._sourceCode = this._readSoureCode();
 
     // run framework code
     this._frameworkCode = this._readFramework();
@@ -176,16 +177,6 @@ class TestCommand extends AbstractCommand {
     }
 
     process.exit(0);
-
-    // !!! continue from here !!!
-
-    /* [info] */
-    this._info(colors.blue('Reading the code...'));
-
-    this._readCode();
-
-    // read test framework code
-    this._testFrameworkCode = fs.readFileSync(this._options.testFrameworkFile, 'utf-8');
 
     // bundle agent code
 
@@ -261,6 +252,25 @@ class TestCommand extends AbstractCommand {
   _runTestFile(file) {
     /* [info] */
     this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
+
+    // create complete codebase
+
+    let agentCode, deviceCode;
+
+    if ('agent' === file.type) {
+      agentCode = this._frameworkCode +'\n\n' +
+                  this._sourceCode.agent + '\n\n' +
+                  fs.readFileSync(file.path, 'utf-8');
+      deviceCode = this._sourceCode.device;
+    } else {
+      deviceCode = this._frameworkCode +'\n\n' +
+                  this._sourceCode.device + '\n\n' +
+                  fs.readFileSync(file.path, 'utf-8');
+      agentCode = this._sourceCode.agent;
+    }
+
+    this._info(colors.blue('Agent code size: ') + agentCode.length + ' bytes');
+    this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
   }
 
   /**
