@@ -267,7 +267,7 @@ class TestCommand extends AbstractCommand {
 
       // now read logs
       .then(() => {
-        return this._readLogs({agent: 'agent', device: 'server'}[type] + '.log');
+        return this._readLogs(type, this._config.values.devices[0], this._revision.created_at);
       })
 
       .catch((error) => {
@@ -279,77 +279,50 @@ class TestCommand extends AbstractCommand {
    * Read logs
    * @private
    */
-  _readLogs(type) {
 
-    let done = false;
-    let failed = false;
+  /**
+   * Read device logs
+   *
+   * @param {"agent"|"device"} testType
+   * @param {string} deviceId
+   * @param {string} since
+   * @returns {Promise}
+   *
+   * @private
+   */
+  _readLogs(testType, deviceId, since) {
 
-    return new Promise((resolve, reject) => {
+    return this._client.streamDeviceLogs(deviceId, since, function (data) {
 
-      this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at).then((val) => {
+      data = JSON.parse(data.toString());
 
-        let result;
+      for (let log of data.logs) {
+        console.log(colors.magenta(JSON.stringify(log)));
+      }
 
-        // parse log messages
-        for (const logLine of val.logs) {
+      return true;
+    });
 
-          // filter agent/device messages
-          if (logLine.type === type) {
-            const hash = JSON.stringify(logLine);
+    this._client.getDeviceLogs(deviceId, since).then((res) => {
 
-            if (!this._logs[hash]) {
 
-              // todo: check for ERRORS
-              // todo: check for __IMPUNIT__ marks
+      let log;
+      let logs = res.logs;
 
-              const testMessage = JSON.parse(logLine.message);
-              this._printLogLine(testMessage);
+      logs = logs.sort((a, b) => b.timestamp === a.timestamp ? 0 : (b.timestamp < a.timestamp ? -1 : 1));
 
-              if (testMessage.type === 'FAIL') {
+      while (log = logs.pop()) {
+        since = log.timestamp;
+        console.log(colors.cyan(JSON.stringify(log)));
+      }
 
-                this._testPrint(colors.red('FAILED: ' + testMessage.message));
-                failed = true;
+      setTimeout(() => {
+        this._readLogs(testType, deviceId, since);
+      }, 1000);
 
-              } else if (testMessage.type === 'RESULT') {
-                done = true;
+      console.log('==');
 
-                result = 'tests: ' + testMessage.message.tests + ', '
-                         + 'assertions: ' + testMessage.message.assertions + ', '
-                         + 'failures: ' + testMessage.message.failures;
-
-                if (failed) {
-                  this._testPrint(colors.red('Testing failed (' + result + ')'));
-                } else {
-                  this._testPrint(colors.green('Testing succeeded (' + result + ')'));
-                }
-              }
-
-              this._logs[hash] = testMessage;
-            }
-          }
-
-        } // for logLine...
-
-        if (done) {
-
-          if (failed) {
-            // !!! todo: mark error state, collect stats
-            reject(result);
-          } else {
-            resolve(result);
-          }
-
-        } else {
-
-          // repeat in 1s
-          setTimeout(() => {
-            this._readLogs.call(this, arguments);
-          }, 1000);
-
-        }
-
-      });
-
+      //console.log(colors.yellow(JSON.stringify(res)));
     });
   }
 
