@@ -59,7 +59,7 @@ class TestCommand extends AbstractCommand {
       files.push({
         name: file,
         path: path.resolve(configCwd, file),
-        type: /\bagent\./i.test(file) ? 'agent' : 'device'
+        type: /\bagent\b/i.test(file) ? 'agent' : 'device'
       });
     };
 
