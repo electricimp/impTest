@@ -75,7 +75,7 @@ class BuildAPIClient {
       this._debug(colors.blue('Doing the request with options:'), options);
 
       // do request to build api
-      request(options, (error, response, result) => {
+      const r = request(options, (error, response, result) => {
 
         // debug output
         response && this._debug(colors.blue('Response code:'), response.statusCode);
@@ -104,18 +104,18 @@ class BuildAPIClient {
           // todo: produce custom error types
 
         } else {
-
           // we're cool
           resolve(result);
-
         }
-      })
+      });
 
       // stream data
-        .on('data', (data) => {
-          if (onData) onData(data);
+      if (onData) {
+        r.on('data', (data) => {
           this._debug(colors.blue('STREAM: ') + colors.yellow(data));
+          onData(data);
         });
+      }
 
     });
   }
