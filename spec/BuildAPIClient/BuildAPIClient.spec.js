@@ -11,6 +11,10 @@ describe('BuildAPIClient test suite', () => {
     apiKey: config.build_api_key
   });
 
+  beforeEach(function() {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
+  });
+
   it('should get list a of devices', (done) => {
 
     client.request('GET', '/devices')
