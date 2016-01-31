@@ -29,7 +29,7 @@ describe('BuildAPIClient test suite', () => {
 
     client.createRevision(
         config.model_id,
-        `server.log("hi there from device @ ${(new Date()).toUTCString()}")`,
+        `w <- function() { server.log("Now: " + time()); imp.wakeup(0.01, w); } w();`,
         `server.log("hi there from agent @ ${(new Date()).toUTCString()}")`
       )
       .then(done)
