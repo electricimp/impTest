@@ -52,7 +52,7 @@ Options:
 ### test
 
 ```
-imptest test [options]
+imptest test [options] [test_file]
 
 Options:
 
@@ -73,7 +73,7 @@ npm i
 ### Running
 
 ```bash
-src/cli/imptest.js <command> <options>
+src/cli/imptest.js <command> [options] [arguments]
 ```
 
 eg:
