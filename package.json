@@ -16,6 +16,7 @@
     "commander": "^2.9.0",
     "dateformat": "^1.0.12",
     "glob": "^6.0.4",
+    "md5": "^2.0.0",
     "preprocessor": "^1.4.0",
     "request": "^2.67.0",
     "sprintf-js": "^1.0.3",

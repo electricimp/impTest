@@ -12,6 +12,7 @@ var AbstractCommand = require('./AbstractCommand');
 var BuildAPIClient = require('../BuildAPIClient');
 var Bundler = require('../Bundler');
 var promiseWhile = require('../utils/promiseWhile');
+var md5 = require('md5');
 
 class TestCommand extends AbstractCommand {
 
@@ -204,13 +205,22 @@ class TestCommand extends AbstractCommand {
     this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
 
     // create complete codebase
+    const testFileId = md5(file.path);
 
-    const bootstrapCode = '// run tests\n' +
-                          't <- ImpUnitRunner();\n' +
-                          't.timeout = ' + parseFloat(this._config.values.timeout) + ';\n' +
-                          't.readableOutput = false;\n' +
-                          't.stopOnFailure = ' + !!this._config.values.stopOnFailure + ';\n' +
-                          't.run();';
+    // bootstrap code
+    const bootstrapCode =
+`
+// run tests
+imp.wakeup(${1 /* prevent log sessions mixing */}, function() {
+  local t = ImpUnitRunner();
+  t.readableOutput = false;
+  t.sessionId = "${testFileId}";
+  t.timeout = ${parseFloat(this._config.values.timeout)};
+  t.stopOnFailure = ${!!this._config.values.stopOnFailure};
+  // poehali!
+  t.run();
+});
+`;
 
     let agentCode, deviceCode;
 
@@ -276,11 +286,6 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
-   * Read logs
-   * @private
-   */
-
-  /**
    * Read device logs
    *
    * @param {"agent"|"device"} testType
@@ -293,8 +298,6 @@ class TestCommand extends AbstractCommand {
   _readLogs(testType, deviceId, since) {
 
     return this._client.streamDeviceLogs(deviceId, since, function (data) {
-
-      data = JSON.parse(data.toString());
 
       for (let log of data.logs) {
         console.log(colors.magenta(JSON.stringify(log)));
