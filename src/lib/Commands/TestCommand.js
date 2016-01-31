@@ -204,14 +204,17 @@ class TestCommand extends AbstractCommand {
     /* [info] */
     this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
 
+    // start timeout [s]
+    const startTimeout = 1;
+
     // create complete codebase
-    const testFileId = md5(file.path);
+    const testFileId = md5(Math.random().toString());
 
     // bootstrap code
     const bootstrapCode =
 `
 // run tests
-imp.wakeup(${1 /* prevent log sessions mixing */}, function() {
+imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.sessionId = "${testFileId}";
