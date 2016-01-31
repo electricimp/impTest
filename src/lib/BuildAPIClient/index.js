@@ -2,6 +2,7 @@
 
 var request = require('request');
 var colors = require('colors');
+var promiseWhile = require('../utils/promiseWhile');
 
 /**
  * Electric Imp Build API client.
@@ -39,9 +40,10 @@ class BuildAPIClient {
    * @param {string} path
    * @param {string|{}} query
    * @param {{}} headers
+   * @param {function|null} [onData=null] data stream handler
    * @returns {Promise}
    */
-  request(method, path, query, headers) {
+  request(method, path, query, headers, onData) {
     return new Promise((resolve, reject) => {
 
       method = method.toUpperCase();
@@ -107,7 +109,14 @@ class BuildAPIClient {
           resolve(result);
 
         }
-      });
+      })
+
+      // stream data
+        .on('data', (data) => {
+          if (onData) onData(data);
+          this._debug(colors.blue('STREAM: ') + colors.yellow(data));
+        });
+
     });
   }
 
@@ -148,13 +157,51 @@ class BuildAPIClient {
    *
    * @param deviceId
    * @param {Date|string} [since=undefined] - start date (string in ISO 8601 format or Date instance)
+   * @returns {Promise}
    */
   getDeviceLogs(deviceId, since) {
     // convert since to ISO 8601 format
     since && (since instanceof Date) && (since = since.toISOString());
+    return this.request('GET', `/devices/${deviceId}/logs`, {since});
+  }
 
-    return this.request('GET', `/devices/${deviceId}/logs`, {
-      since
+  /**
+   *
+   * @param deviceID
+   * @param {Date|string} [since=undefined]
+   * @param {function(data)} [callback] Data callback. If it returns false, streaming stops
+   */
+  streamDeviceLogs(deviceId, since, callback) {
+    return new Promise((resolve, reject) => {
+      this.getDeviceLogs(deviceId, since)
+        .then((val) => {
+
+          let pollUrl = val.poll_url;
+
+          // remove version prefix
+          pollUrl = pollUrl.replace(/^\/v\d+/, '');
+
+          let stop = false;
+
+          promiseWhile(
+            () => !stop,
+            (() => this._readLogsStream(pollUrl).then((data) => {
+              this._debug(colors.blue('Streamed data: ') + data);
+              const res = callback(data);
+              this._debug(colors.blue('Callback result: ' + res));
+              stop = !res;
+            }).catch(reject)).bind(this)
+          ).then(resolve);
+
+        });
+    });
+  }
+
+  _readLogsStream(pollUrl) {
+    return new Promise((resolve, reject) => {
+      return this.request('GET', pollUrl, {}, {}, (data) => {
+        resolve(data);
+      });
     });
   }
 

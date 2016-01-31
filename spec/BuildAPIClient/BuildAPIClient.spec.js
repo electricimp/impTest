@@ -11,6 +11,10 @@ describe('BuildAPIClient test suite', () => {
     apiKey: config.build_api_key
   });
 
+  beforeEach(function() {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
+  });
+
   it('should get list a of devices', (done) => {
 
     client.request('GET', '/devices')
@@ -26,7 +30,7 @@ describe('BuildAPIClient test suite', () => {
     client.createRevision(
         config.model_id,
         `server.log("hi there from device @ ${(new Date()).toUTCString()}")`,
-        `server.log("hi there from agent @ ${(new Date()).toUTCString()}")`
+        `w <- function() { server.log("Now: " + time()); imp.wakeup(0.1, w); } w();`
       )
       .then(done)
       .catch((error) => {
@@ -57,6 +61,21 @@ describe('BuildAPIClient test suite', () => {
       .catch((error) => {
         done.fail(error);
       });
+
+  });
+
+
+  it('should stream device logs', (done) => {
+
+    const since = new Date((new Date()) - 1000 * 60 * 60 /* -1 day */);
+    let n = 0;
+
+    client.streamDeviceLogs(config.device_id, since, function (data) {
+      return ++n < 5;
+    }).then(() => {
+      expect(n).toBe(5);
+      done();
+    }).catch(done.fail);
 
   });
 
