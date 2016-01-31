@@ -44,6 +44,8 @@ class BuildAPIClient {
    * @returns {Promise}
    */
   request(method, path, query, headers, onData) {
+    let streamData = '';
+
     return new Promise((resolve, reject) => {
 
       method = method.toUpperCase();
@@ -112,8 +114,23 @@ class BuildAPIClient {
       // stream data
       if (onData) {
         r.on('data', (data) => {
+
           this._debug(colors.blue('STREAM: ') + colors.yellow(data));
-          onData(JSON.parse(data.toString()));
+
+          data = streamData + data.toString();
+          streamData = '';
+
+          try {
+            data = JSON.parse(data.toString());
+          } catch (e) {
+            // in case data chunk is not parseable, save it for later
+            if (e instanceof  SyntaxError) {
+              this._debug(colors.red('Incomplete data'));
+              streamData += data;
+            }
+          }
+
+          if (streamData.length === 0) onData(data);
         });
       }
 
