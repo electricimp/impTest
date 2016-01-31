@@ -1,3 +1,5 @@
+// test file
+
 i <- 0;
 
 function w() {
