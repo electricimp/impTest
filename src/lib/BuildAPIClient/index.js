@@ -113,7 +113,7 @@ class BuildAPIClient {
       if (onData) {
         r.on('data', (data) => {
           this._debug(colors.blue('STREAM: ') + colors.yellow(data));
-          onData(data);
+          onData(JSON.parse(data.toString()));
         });
       }
 
@@ -174,26 +174,39 @@ class BuildAPIClient {
   streamDeviceLogs(deviceId, since, callback) {
     return new Promise((resolve, reject) => {
       this.getDeviceLogs(deviceId, since)
-        .then((val) => {
+        .then((data) => {
 
-          let pollUrl = val.poll_url;
+          let stop = false;;
 
-          // remove version prefix
-          pollUrl = pollUrl.replace(/^\/v\d+/, '');
+          const streamHandler = (data) => {
 
-          let stop = false;
+            this._debug(colors.blue('Streamed data: ') + JSON.stringify(data));
+            const res = callback(data);
+            this._debug(colors.blue('Callback result: ' + res));
+            stop = !res;
 
-          promiseWhile(
-            () => !stop,
-            (() => this._readLogsStream(pollUrl).then((data) => {
-              this._debug(colors.blue('Streamed data: ') + data);
-              const res = callback(data);
-              this._debug(colors.blue('Callback result: ' + res));
-              stop = !res;
-            }).catch(reject)).bind(this)
-          ).then(resolve);
+          };
 
-        });
+          streamHandler(data);
+
+          if (stop) {
+            resolve(data);
+          } else {
+            // continue reading logs from poll url
+
+            // read poll url
+            let pollUrl = data.poll_url;
+            pollUrl = pollUrl.replace(/^\/v\d+/, ''); // remove version prefix
+
+            promiseWhile(
+              () => !stop,
+              (() => this._readLogsStream(pollUrl)
+                  .then(streamHandler, reject)
+              ).bind(this)
+            ).then(resolve);
+          }
+
+        }, reject);
     });
   }
 
