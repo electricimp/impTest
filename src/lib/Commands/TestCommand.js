@@ -204,11 +204,13 @@ class TestCommand extends AbstractCommand {
     /* [info] */
     this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
 
+    // create complete codebase
+
+    // test session id, unique per every test file run
+    const testSessionId = md5(Math.random().toString());
+
     // start timeout [s]
     const startTimeout = 1;
-
-    // create complete codebase
-    const testFileId = md5(Math.random().toString());
 
     // bootstrap code
     const bootstrapCode =
@@ -217,7 +219,7 @@ class TestCommand extends AbstractCommand {
 imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
-  t.sessionId = "${testFileId}";
+  t.sessionId = "${testSessionId}";
   t.timeout = ${parseFloat(this._config.values.timeout)};
   t.stopOnFailure = ${!!this._config.values.stopOnFailure};
   // poehali!
