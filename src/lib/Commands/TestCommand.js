@@ -301,36 +301,12 @@ imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
    * @private
    */
   _readLogs(testType, deviceId, since) {
-
     return this._client.streamDeviceLogs(deviceId, since, function (data) {
-
-      for (let log of data.logs) {
+      for (const log of data.logs) {
         console.log(colors.magenta(JSON.stringify(log)));
       }
 
-      return true;
-    });
-
-    this._client.getDeviceLogs(deviceId, since).then((res) => {
-
-
-      let log;
-      let logs = res.logs;
-
-      logs = logs.sort((a, b) => b.timestamp === a.timestamp ? 0 : (b.timestamp < a.timestamp ? -1 : 1));
-
-      while (log = logs.pop()) {
-        since = log.timestamp;
-        console.log(colors.cyan(JSON.stringify(log)));
-      }
-
-      setTimeout(() => {
-        this._readLogs(testType, deviceId, since);
-      }, 1000);
-
-      console.log('==');
-
-      //console.log(colors.yellow(JSON.stringify(res)));
+      return true; // continue
     });
   }
 
