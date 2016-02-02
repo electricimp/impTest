@@ -196,12 +196,10 @@ class BuildAPIClient {
           let stop = false;;
 
           const streamHandler = (data) => {
-
-            this._debug(colors.blue('Streamed data: ') + JSON.stringify(data));
-            const res = callback(data);
-            this._debug(colors.blue('Callback result: ' + res));
-            stop = !res;
-
+            if (data) {
+              this._debug(colors.blue('Streamed data: ') + JSON.stringify(data));
+              stop = !callback(data);
+            }
           };
 
           streamHandler(data);
@@ -217,9 +215,7 @@ class BuildAPIClient {
 
             promiseWhile(
               () => !stop,
-              (() => this._readLogsStream(pollUrl)
-                  .then(streamHandler, reject)
-              ).bind(this)
+              (() => this._readLogsStream(pollUrl.replace('&wait=1', 'aaa&wait=1')).then(streamHandler, reject)).bind(this)
             ).then(resolve);
           }
 
@@ -227,8 +223,27 @@ class BuildAPIClient {
     });
   }
 
+  /**
+   * Read logs stream
+   *
+   * @param {string} pollUrl
+   * @return {Promise}
+   * @private
+   */
   _readLogsStream(pollUrl) {
-    return this.request('GET', pollUrl);
+    return new Promise((resolve, reject) => {
+      this.request('GET', pollUrl)
+        .then(resolve)
+        .catch((error) => {
+          // timeout error
+          if (error.message.indexOf('InvalidLogToken') !== -1) {
+            // todo: acquire new poll url
+            reject(); // !!!
+          }
+          // todo: handle timeout (504, retry) and other errors
+        });
+    });
+
   }
 
   /**
