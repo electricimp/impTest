@@ -25,7 +25,7 @@ class TestCommand extends AbstractCommand {
       config: '.imptest',
       testFrameworkFile: '', // path to test framework main file
       testCaseFile: null, // path to test case file, of empty test cases will be searched automatically
-      startTimeout: 1 // [s]
+      startTimeout: 0 // [s]
     };
   }
 
@@ -171,7 +171,8 @@ class TestCommand extends AbstractCommand {
 
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8');
       } else {
-        this._deviceSource = '/* no device source provided */';;
+        this._deviceSource = '/* no device source provided */';
+        ;
       }
 
     }
@@ -263,7 +264,12 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
 
     const client = this._getBuildApiClient();
 
-    return client.createRevision(this._config.values.modelId, deviceCode, agentCode)
+    // start reading logs
+    this._readLogs(type, this._config.values.devices[0])
+
+      .then(() => {
+        return client.createRevision(this._config.values.modelId, deviceCode, agentCode);
+      })
 
       .then((body) => {
         this._revision = body.revision;
@@ -277,11 +283,6 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
         return client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
       })
 
-      // now read logs
-      .then(() => {
-        return this._readLogs(type, this._config.values.devices[0], this._revision.created_at);
-      })
-
       .catch((error) => {
         this._error(error.message);
       });
@@ -290,21 +291,27 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
   /**
    * Read device logs
    *
-   * @param {"agent"|"device"} testType
+   * @param {"agent"|"device"} test
    * @param {string} deviceId
-   * @param {string} since
-   * @returns {Promise}
+   * @returns {Promise} resolves after obtaining poll url
    *
    * @private
    */
-  _readLogs(testType, deviceId, since) {
-    return this._getBuildApiClient().streamDeviceLogs(deviceId, since, function (data) {
+  _readLogs(test, deviceId, since) {
+    return new Promise((resolve, reject) => {
+      this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
-      for (const log of data.logs) {
-        console.log(colors.magenta(JSON.stringify(log)));
-      }
+        if (data) {
+          for (const log of data.logs) {
+            console.log(colors.magenta(JSON.stringify(log)));
+          }
+        } else {
+          // empty data means we're connected
+          resolve();
+        }
 
-      return true; // continue
+        return true; // continue
+      }).catch(reject);
     });
   }
 

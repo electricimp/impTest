@@ -171,7 +171,8 @@ class BuildAPIClient {
   /**
    *
    * @param deviceID
-   * @param {function(data)} [callback] Data callback. If it returns false, streaming stops
+   * @param {function(data)} [callback] Data callback. If it returns false, streaming stops.
+   *  Callback with no data means we've obtained the poll url.
    */
   streamDeviceLogs(deviceId, callback) {
     return new Promise((resolve, reject) => {
@@ -183,6 +184,9 @@ class BuildAPIClient {
 
           let pollUrl = data.poll_url;
           pollUrl = pollUrl.replace(/^\/v\d+/, ''); // remove version prefix
+
+          // we've obtained the poll url
+          stop = !callback(null);
 
           promiseWhile(
             () => !stop,
