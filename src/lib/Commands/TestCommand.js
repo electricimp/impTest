@@ -24,27 +24,64 @@ class TestCommand extends AbstractCommand {
       debug: false,
       config: '.imptest',
       testFrameworkFile: '', // path to test framework main file
-      testCaseFile: null // path to test case file, of empty test cases will be searched automatically
+      testCaseFile: null, // path to test case file, of empty test cases will be searched automatically
+      startTimeout: 1 // [s]
     };
   }
 
   /**
    * Run command
+   * @return {Promise}
+   * @private
    */
   run() {
+
     super.run();
-    this._test();
+
+    /* [blank] */
+    this._blankLine();
+
+    // find test case files
+    const testFiles = this._findTestFiles();
+
+    /* [debug] */
+    this._debug(colors.blue('Test files found:'), testFiles);
+
+    /* [info] */
+    this._info(colors.blue('Found ') +
+               testFiles.length +
+               colors.blue(' test file' +
+               (testFiles.length === 1 ? '' : 's')) + ': '
+               + testFiles.map(e => e.name).join(', ')
+    );
+
+    // run test files
+
+    let i = 0;
+
+    return promiseWhile(
+      () => i++ < testFiles.length,
+      () => {
+        /* [blank] */
+        this._blankLine();
+        return this._runTestFile(testFiles[i - 1]);
+      }
+    );
   }
 
   /**
-   * @returns {BuildAPIClient}
+   * @return {BuildAPIClient}
    * @private
    */
-  _createBuildApiClient() {
-    return new BuildAPIClient({
-      debug: this._options.debug,
-      apiKey: this._config.values.apiKey
-    });
+  _getBuildApiClient() {
+    if (!this._client) {
+      this._client = new BuildAPIClient({
+        debug: this._options.debug,
+        apiKey: this._config.values.apiKey
+      });
+    }
+
+    return this._client;
   }
 
   /**
@@ -103,39 +140,46 @@ class TestCommand extends AbstractCommand {
    * @return {{agent, device}}
    * @private
    */
-  _readSoureCode() {
-    let sourceFilePath;
-    const result = {};
+  _getSourceCode() {
 
-    if (this._config.values.agentFile) {
-      sourceFilePath = path.resolve(this._config.dir, this._config.values.agentFile);
+    if (!this._agentSource || !this._deviceSource) {
 
-      /* [debug] */
-      this._debug(colors.blue('Agent source code file path: ') + sourceFilePath);
-      /* [info] */
-      this._info(colors.blue('Agent source: ')
-                 + this._config.values.agentFile);
+      let sourceFilePath;
 
-      result.agent = fs.readFileSync(sourceFilePath, 'utf-8');
-    } else {
-      result.agent = '';
+      if (this._config.values.agentFile) {
+        sourceFilePath = path.resolve(this._config.dir, this._config.values.agentFile);
+
+        /* [debug] */
+        this._debug(colors.blue('Agent source code file path: ') + sourceFilePath);
+        /* [info] */
+        this._info(colors.blue('Agent source: ')
+                   + this._config.values.agentFile);
+
+        this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8');
+      } else {
+        this._agentSource = '/* no agent source provided */';
+      }
+
+      if (this._config.values.deviceFile) {
+        sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
+
+        /* [debug] */
+        this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
+        /* [info] */
+        this._info(colors.blue('Device source: ')
+                   + this._config.values.deviceFile);
+
+        this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8');
+      } else {
+        this._deviceSource = '/* no device source provided */';;
+      }
+
     }
 
-    if (this._config.values.deviceFile) {
-      sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
-
-      /* [debug] */
-      this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
-      /* [info] */
-      this._info(colors.blue('Device source: ')
-                 + this._config.values.deviceFile);
-
-      result.device = fs.readFileSync(sourceFilePath, 'utf-8');
-    } else {
-      result.device = '';
-    }
-
-    return result;
+    return {
+      agent: this._agentSource,
+      device: this._deviceSource
+    };
   }
 
   /**
@@ -143,55 +187,13 @@ class TestCommand extends AbstractCommand {
    * @return {string}
    * @private
    */
-  _readFramework() {
-    return (new Bundler({debug: this._options.debug}))
-      .process(this._options.testFrameworkFile);
-  }
+  _getFrameworkCode() {
+    if (!this._frameworkCode) {
+      this._frameworkCode = (new Bundler({debug: this._options.debug}))
+        .process(this._options.testFrameworkFile);
+    }
 
-  /**
-   * Run tests
-   * @return {Promise}
-   * @private
-   */
-  _test() {
-
-    /* [blank] */
-    console.log('');
-
-    // find test case files
-    const testFiles = this._findTestFiles();
-
-    /* [debug] */
-    this._debug(colors.blue('Test files found:'), testFiles);
-
-    /* [info] */
-    this._info(colors.blue('Found ') +
-               testFiles.length +
-               colors.blue(' test file' +
-               (testFiles.length === 1 ? '' : 's')) + ': '
-               + testFiles.map(e => e.name).join(', ')
-    );
-
-    // read source code
-    this._sourceCode = this._readSoureCode();
-
-    // run framework code
-    this._frameworkCode = this._readFramework();
-
-    // run test files
-
-    let i = 0;
-
-    return promiseWhile(
-      () => {
-        return i++ < testFiles.length;
-      },
-      () => {
-        /* [blank] */
-        console.log('');
-        return this._runTestFile(testFiles[i - 1]);
-      }
-    );
+    return this._frameworkCode;
   }
 
   /**
@@ -207,19 +209,16 @@ class TestCommand extends AbstractCommand {
     // create complete codebase
 
     // test session id, unique per every test file run
-    const testSessionId = md5(Math.random().toString());
-
-    // start timeout [s]
-    const startTimeout = 1;
+    this._testSessionId = md5(Math.random().toString());
 
     // bootstrap code
     const bootstrapCode =
-`
+      `
 // run tests
-imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
+imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
-  t.sessionId = "${testSessionId}";
+  t.sessionId = "${this._testSessionId}";
   t.timeout = ${parseFloat(this._config.values.timeout)};
   t.stopOnFailure = ${!!this._config.values.stopOnFailure};
   // poehali!
@@ -230,17 +229,17 @@ imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
     let agentCode, deviceCode;
 
     if ('agent' === file.type) {
-      agentCode = this._frameworkCode + '\n\n' +
-                  this._sourceCode.agent + '\n\n' +
+      agentCode = this._getFrameworkCode() + '\n\n' +
+                  this._getSourceCode().agent + '\n\n' +
                   fs.readFileSync(file.path, 'utf-8') + '\n\n' +
                   bootstrapCode;
-      deviceCode = this._sourceCode.device;
+      deviceCode = this._getSourceCode().device;
     } else {
-      deviceCode = this._frameworkCode + '\n\n' +
-                   this._sourceCode.device + '\n\n' +
+      deviceCode = this._getFrameworkCode() + '\n\n' +
+                   this._getSourceCode().device + '\n\n' +
                    fs.readFileSync(file.path, 'utf-8') + '\n\n' +
                    bootstrapCode;
-      agentCode = this._sourceCode.agent;
+      agentCode = this._getSourceCode().agent;
     }
 
     /* [info] */
@@ -248,11 +247,11 @@ imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
     /* [info] */
     this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
 
-    return this._executeTest(deviceCode, agentCode, file.type);
+    return this._runTestSession(deviceCode, agentCode, file.type);
   }
 
   /**
-   * Execute test via BuildAPI
+   * Execute test via BuildAPI from prepared code
    *
    * @param {string} deviceCode
    * @param {string} agentCode
@@ -260,24 +259,22 @@ imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
    * @return {Promise}
    * @private
    */
-  _executeTest(deviceCode, agentCode, type) {
-    // run tests
+  _runTestSession(deviceCode, agentCode, type) {
 
-    this._client = this._createBuildApiClient();
-    this._logs = {/* ts: message */};
+    const client = this._getBuildApiClient();
 
-    return this._client.createRevision(this._config.values.modelId, deviceCode, agentCode)
+    return client.createRevision(this._config.values.modelId, deviceCode, agentCode)
 
       .then((body) => {
         this._revision = body.revision;
         /* [info] */
         this._info(colors.blue('Created revision: ') + this._revision.version);
-        return this._client.restartModel(this._config.values.modelId);
+        return client.restartModel(this._config.values.modelId);
       })
 
       .then(() => {
         // get logs since current revision was created
-        return this._client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
+        return client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
       })
 
       // now read logs
@@ -301,7 +298,8 @@ imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
    * @private
    */
   _readLogs(testType, deviceId, since) {
-    return this._client.streamDeviceLogs(deviceId, since, function (data) {
+    return this._getBuildApiClient().streamDeviceLogs(deviceId, since, function (data) {
+
       for (const log of data.logs) {
         console.log(colors.magenta(JSON.stringify(log)));
       }
@@ -318,11 +316,11 @@ imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
   _printLogLine(line) {
     if (line.type === 'STATUS') {
       if (line.message.indexOf('::setUp()') !== -1) {
-        this._testPrint(colors.blue('Setting up ') + line.message.replace(/::.*$/, ''));
+        this._testLine(colors.blue('Setting up ') + line.message.replace(/::.*$/, ''));
       } else if (line.message.indexOf('::tearDown()') !== -1) {
-        this._testPrint(colors.blue('Tearing down ') + line.message.replace(/::.*$/, ''));
+        this._testLine(colors.blue('Tearing down ') + line.message.replace(/::.*$/, ''));
       } else {
-        this._testPrint(line.message);
+        this._testLine(line.message);
       }
     }
   }
@@ -332,8 +330,16 @@ imp.wakeup(${startTimeout /* prevent log sessions mixing */}, function() {
    * @param {*} ...objects
    * @protected
    */
-  _testPrint() {
+  _testLine() {
     this._log('test', colors.grey, arguments);
+  }
+
+  /**
+   * Print blank line
+   * @private
+   */
+  _blankLine() {
+    console.log(colors.gray('........................'));
   }
 }
 
