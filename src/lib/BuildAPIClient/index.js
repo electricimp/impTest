@@ -215,8 +215,8 @@ class BuildAPIClient {
 
             promiseWhile(
               () => !stop,
-              () => this._readLogsStream(pollUrl).then(streamHandler, reject)
-            ).then(resolve);
+              () => this._readLogsStream(pollUrl).then(streamHandler)
+            ).then(resolve, reject);
           }
 
         }, reject);
@@ -238,9 +238,12 @@ class BuildAPIClient {
           // timeout error
           if (error.message.indexOf('InvalidLogToken') !== -1) {
             // todo: acquire new poll url
-            reject(); // !!!
+            reject(error); // !!!
+          } else if (0) {
+            // todo: handle timeout (504, do retry) and other errors
+          } else {
+            reject(error);
           }
-          // todo: handle timeout (504, retry) and other errors
         });
     });
 
