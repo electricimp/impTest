@@ -82,11 +82,12 @@ class BuildAPIClient {
         // debug output
         response && this._debug(colors.blue('Response code:'), response.statusCode);
         result && this._debug(colors.blue('Response:'), result);
-        error && this._debug(colors.blue('Error:'), error);
 
         // handle result
 
         if (error) {
+
+          this._debug(colors.red('Requst error:'), error);
 
           // we're completely screwed
           // error is produced by request libabry
@@ -94,11 +95,15 @@ class BuildAPIClient {
 
         } else if (!result.success) {
 
+
           // we have an error message from web server
 
           if (result.error) {
+            this._debug(colors.red('Error "' + result.error.code + '": ' + result.error.message_full));
             reject(new Error(result.error.code));
           } else {
+            // todo: can this ever happen?
+            this._debug(colors.red('Error: ' + result.message)); // !!!
             reject(new Error(result.message));
           }
 
