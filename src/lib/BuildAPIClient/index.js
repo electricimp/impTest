@@ -40,12 +40,9 @@ class BuildAPIClient {
    * @param {string} path
    * @param {string|{}} query
    * @param {{}} headers
-   * @param {function|null} [onData=null] data stream handler
    * @returns {Promise}
    */
   request(method, path, query, headers, onData) {
-    let streamData = '';
-
     return new Promise((resolve, reject) => {
 
       method = method.toUpperCase();
@@ -71,22 +68,24 @@ class BuildAPIClient {
       }
 
       // add headers passed
-
       Object.assign(options.headers, headers);
 
+      /* [debug] */
       this._debug(colors.blue('Doing the request with options:'), options);
 
       // do request to build api
-      const r = request(options, (error, response, result) => {
+      request(options, (error, response, result) => {
 
         // debug output
         response && this._debug(colors.blue('Response code:'), response.statusCode);
         result && this._debug(colors.blue('Response:'), result);
-        error && this._debug(colors.blue('Error:'), error);
 
         // handle result
 
         if (error) {
+
+          /* [debug] */
+          this._debug(colors.red('Request error:'), error);
 
           // we're completely screwed
           // error is produced by request libabry
@@ -94,13 +93,23 @@ class BuildAPIClient {
 
         } else if (!result.success) {
 
-          // we have an error message from web server
+          let err;
 
           if (result.error) {
-            reject(new Error(result.error.code));
+            // we have an error message from web server {error: {code, message_short, message_full}} response
+            err = new Error('Error "' + result.error.code + '": ' + result.error.message_full);
+          } else if (result.code && result.message) {
+            // we have bad HTTP status code and {code, message} response
+            err = new Error('Error "' + result.code + '": ' + result.message);
           } else {
-            reject(new Error(result.message));
+            // we have nothing but it's bad
+            err = new Error('Error HTTP/' + response.statusCode);
           }
+
+          /* [debug] */
+          this._debug(colors.red(err.message));
+
+          reject(err);
 
           // todo: handle rate limit hit
           // todo: produce custom error types
@@ -109,31 +118,8 @@ class BuildAPIClient {
           // we're cool
           resolve(result);
         }
+
       });
-
-      // stream data
-      if (onData) {
-        r.on('data', (data) => {
-
-          this._debug(colors.blue('STREAM: ') + colors.yellow(data));
-
-          data = streamData + data.toString();
-          streamData = '';
-
-          try {
-            data = JSON.parse(data.toString());
-          } catch (e) {
-            // in case data chunk is not parseable, save it for later
-            if (e instanceof  SyntaxError) {
-              this._debug(colors.red('Incomplete data'));
-              streamData += data;
-            }
-          }
-
-          if (streamData.length === 0) onData(data);
-        });
-      }
-
     });
   }
 
@@ -185,53 +171,42 @@ class BuildAPIClient {
   /**
    *
    * @param deviceID
-   * @param {Date|string} [since=undefined]
    * @param {function(data)} [callback] Data callback. If it returns false, streaming stops
    */
-  streamDeviceLogs(deviceId, since, callback) {
+  streamDeviceLogs(deviceId, callback) {
     return new Promise((resolve, reject) => {
-      this.getDeviceLogs(deviceId, since)
+
+      this.getDeviceLogs(deviceId, '3000-01-01T00:00:00.000+00:00' /* just get poll url */)
         .then((data) => {
 
-          let stop = false;;
+          let stop = false;
 
-          const streamHandler = (data) => {
+          let pollUrl = data.poll_url;
+          pollUrl = pollUrl.replace(/^\/v\d+/, ''); // remove version prefix
 
-            this._debug(colors.blue('Streamed data: ') + JSON.stringify(data));
-            const res = callback(data);
-            this._debug(colors.blue('Callback result: ' + res));
-            stop = !res;
+          promiseWhile(
+            () => !stop,
+            () => {
+              return new Promise((resolve, reject) => {
+                this.request('GET', pollUrl)
+                  .then((data) => {
+                    stop = !callback(data);
+                    resolve(); // next stream request
+                  })
+                  .catch((error) => {
+                    // todo: handle HTTP/504 (timeouts, call again)
+                    if (error.message.indexOf('InvalidLogToken') !== -1 /* timeout error */) {
+                      stop = true;
+                      resolve(this.streamDeviceLogs(deviceId, callback));
+                    } else {
+                      reject(error);
+                    }
+                  });
+              });
+            }
+          ).then(resolve, reject);
 
-          };
-
-          streamHandler(data);
-
-          if (stop) {
-            resolve(data);
-          } else {
-            // continue reading logs from poll url
-
-            // read poll url
-            let pollUrl = data.poll_url;
-            pollUrl = pollUrl.replace(/^\/v\d+/, ''); // remove version prefix
-
-            promiseWhile(
-              () => !stop,
-              (() => this._readLogsStream(pollUrl)
-                  .then(streamHandler, reject)
-              ).bind(this)
-            ).then(resolve);
-          }
-
-        }, reject);
-    });
-  }
-
-  _readLogsStream(pollUrl) {
-    return new Promise((resolve, reject) => {
-      return this.request('GET', pollUrl, {}, {}, (data) => {
-        resolve(data);
-      });
+        });
     });
   }
 

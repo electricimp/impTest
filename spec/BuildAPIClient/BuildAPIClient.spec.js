@@ -6,13 +6,14 @@ var parseBool = require('../../src/lib/utils/parseBool');
 
 describe('BuildAPIClient test suite', () => {
 
-  const client = new BuildAPIClient({
-    debug: parseBool(process.env.SPEC_DEBUG),
-    apiKey: config.build_api_key
-  });
+  let client;
 
-  beforeEach(function() {
+  beforeEach(() => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
+    client = new BuildAPIClient({
+      debug: parseBool(process.env.SPEC_DEBUG),
+      apiKey: config.build_api_key
+    });
   });
 
   it('should get list a of devices', (done) => {
@@ -30,7 +31,7 @@ describe('BuildAPIClient test suite', () => {
     client.createRevision(
         config.model_id,
         `server.log("hi there from device @ ${(new Date()).toUTCString()}")`,
-        `w <- function() { server.log("Now: " + time()); imp.wakeup(0.1, w); } w();`
+        `w <- function() { server.log("Now: " + time()); imp.wakeup(0.2, w); } w();`
       )
       .then(done)
       .catch((error) => {
@@ -64,13 +65,11 @@ describe('BuildAPIClient test suite', () => {
 
   });
 
-
   it('should stream device logs', (done) => {
 
-    const since = new Date((new Date()) - 1000 * 60 * 60 /* -1 day */);
     let n = 0;
 
-    client.streamDeviceLogs(config.device_id, since, function (data) {
+    client.streamDeviceLogs(config.device_id, function (data) {
       return ++n < 5;
     }).then(() => {
       expect(n).toBe(5);
