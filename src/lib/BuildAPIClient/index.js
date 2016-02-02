@@ -171,68 +171,43 @@ class BuildAPIClient {
   /**
    *
    * @param deviceID
-   * @param {Date|string} [since=undefined]
    * @param {function(data)} [callback] Data callback. If it returns false, streaming stops
    */
-  streamDeviceLogs(deviceId, since, callback) {
+  streamDeviceLogs(deviceId, callback) {
     return new Promise((resolve, reject) => {
-      this.getDeviceLogs(deviceId, since)
+
+      this.getDeviceLogs(deviceId, '3000-01-01T00:00:00.000+00:00' /* just get poll url */)
         .then((data) => {
 
-          let stop = false;;
+          let stop = false;
 
-          const streamHandler = (data) => {
-            if (data) {
-              this._debug(colors.blue('Streamed data: ') + JSON.stringify(data));
-              stop = !callback(data);
+          let pollUrl = data.poll_url;
+          pollUrl = pollUrl.replace(/^\/v\d+/, ''); // remove version prefix
+
+          promiseWhile(
+            () => !stop,
+            () => {
+              return new Promise((resolve, reject) => {
+                this.request('GET', pollUrl)
+                  .then((data) => {
+                    stop = !callback(data);
+                    resolve(); // next stream request
+                  })
+                  .catch((error) => {
+                    // todo: handle HTTP/504 (timeouts, call again)
+                    if (error.message.indexOf('InvalidLogToken') !== -1 /* timeout error */) {
+                      stop = true;
+                      resolve(this.streamDeviceLogs(deviceId, callback));
+                    } else {
+                      reject(error);
+                    }
+                  });
+              });
             }
-          };
+          ).then(resolve, reject);
 
-          streamHandler(data);
-
-          if (stop) {
-            resolve(data);
-          } else {
-            // continue reading logs from poll url
-
-            // read poll url
-            let pollUrl = data.poll_url;
-            pollUrl = pollUrl.replace(/^\/v\d+/, ''); // remove version prefix
-
-            promiseWhile(
-              () => !stop,
-              () => this._readLogsStream(pollUrl).then(streamHandler)
-            ).then(resolve, reject);
-          }
-
-        }, reject);
-    });
-  }
-
-  /**
-   * Read logs stream
-   *
-   * @param {string} pollUrl
-   * @return {Promise}
-   * @private
-   */
-  _readLogsStream(pollUrl) {
-    return new Promise((resolve, reject) => {
-      this.request('GET', pollUrl)
-        .then(resolve)
-        .catch((error) => {
-          // timeout error
-          if (error.message.indexOf('InvalidLogToken') !== -1) {
-            // todo: acquire new poll url
-            reject(error); // !!!
-          } else if (0) {
-            // todo: handle timeout (504, do retry) and other errors
-          } else {
-            reject(error);
-          }
         });
     });
-
   }
 
   /**
