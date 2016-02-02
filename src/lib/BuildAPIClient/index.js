@@ -215,7 +215,7 @@ class BuildAPIClient {
 
             promiseWhile(
               () => !stop,
-              (() => this._readLogsStream(pollUrl.replace('&wait=1', 'aaa&wait=1')).then(streamHandler, reject)).bind(this)
+              (() => this._readLogsStream(pollUrl).then(streamHandler, reject)).bind(this)
             ).then(resolve);
           }
 
