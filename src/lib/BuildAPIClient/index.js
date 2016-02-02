@@ -228,11 +228,7 @@ class BuildAPIClient {
   }
 
   _readLogsStream(pollUrl) {
-    return new Promise((resolve, reject) => {
-      return this.request('GET', pollUrl, {}, {}, (data) => {
-        resolve(data);
-      });
-    });
+    return this.request('GET', pollUrl);
   }
 
   /**
