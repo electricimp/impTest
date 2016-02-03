@@ -52,7 +52,7 @@ Options:
 ### test
 
 ```
-imptest test [options] [test_file]
+imptest test [options] [test_files_pattern]
 
 Options:
 
