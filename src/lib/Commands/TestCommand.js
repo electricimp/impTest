@@ -12,7 +12,7 @@ var AbstractCommand = require('./AbstractCommand');
 var BuildAPIClient = require('../BuildAPIClient');
 var Bundler = require('../Bundler');
 var promiseWhile = require('../utils/promiseWhile');
-var randomstring = require('randomstring');
+var randomWords = require('random-words');
 var TestCaseError = require('../Errors/TestCaseError');
 var TestStateError = require('../Errors/TestStateError');
 var SessionFailedError = require('../Errors/SessionFailedError');
@@ -248,7 +248,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    */
   _initTestSession() {
     this._session = {
-      id: require('random-words')(2).join('-'),
+      id: randomWords(2).join('-'),
       state: 'ready',
       failures: 0,
       assertions: 0,
