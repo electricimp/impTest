@@ -28,7 +28,7 @@ class TestCommand extends AbstractCommand {
       config: '.imptest',
       testFrameworkFile: '', // path to test framework main file
       testCaseFile: null, // path to test case file, of empty test cases will be searched automatically
-      startTimeout: 0 // [s]
+      startTimeout: 1.5 // [s]
     };
   }
 
@@ -207,7 +207,7 @@ class TestCommand extends AbstractCommand {
     const bootstrapCode =
       `
 // run tests
-imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixing */}, function() {
+imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.session = "${this._session.id}";
@@ -225,7 +225,8 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                   this._getSourceCode().agent + '\n\n' +
                   fs.readFileSync(file.path, 'utf-8') + '\n\n' +
                   bootstrapCode;
-      deviceCode = this._getSourceCode().device;
+      deviceCode = '__IMPUNIT_SESSSION__ <- "' + this._session.id + '"\n\n' + /* also triggers device code space usage message due to the change on code every time, takes 0.04% code space on imp001 */
+                   this._getSourceCode().device;
     } else {
       deviceCode = this._getFrameworkCode() + '\n\n' +
                    this._getSourceCode().device + '\n\n' +
@@ -301,44 +302,44 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     return new Promise((resolve, reject) => {
       this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
-        let stopSession = false;
+          let stopSession = false;
 
-        if (data) {
+          if (data) {
 
-          for (const log of data.logs) {
+            for (const log of data.logs) {
 
-            const message = log.message;
-            let m;
+              const message = log.message;
+              let m;
 
-            try {
+              try {
 
-              if (message.match(/Agent restarted/)) {
-                // agent restarted
-                stopSession = this._onLogMessage('AGENT_RESTARTED');
-              } else if (m = message.match(/([\d\.]+%) program storage used/)) {
-                // code space used
-                stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
-              } else if (message.match(/__IMPUNIT__/)) {
-                // impUnit message, decode it
-                stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
+                if (message.match(/Agent restarted/)) {
+                  // agent restarted
+                  stopSession = this._onLogMessage('AGENT_RESTARTED');
+                } else if (m = message.match(/([\d\.]+%) program storage used/)) {
+                  // code space used
+                  stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+                } else if (message.match(/__IMPUNIT__/)) {
+                  // impUnit message, decode it
+                  stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
+                }
+
+              } catch (e) {
+                // cannot reject, promise has been resolved already on getting poll url
+                this._error(e.message);
+                stopSession = true;
               }
 
-            } catch (e) {
-              // cannot reject, promise has been resolved already on getting poll url
-              this._error(e.message);
-              stopSession = true;
+              //console.log(c.magenta(JSON.stringify(log)));
             }
-
-            //console.log(c.magenta(JSON.stringify(log)));
+          } else {
+            // empty data means we're connected
+            resolve();
           }
-        } else {
-          // empty data means we're connected
-          resolve();
-        }
 
-        return !stopSession;
+          return !stopSession;
 
-      })
+        })
         .catch((e) => {
           this._onError(e);
           reject(e);
