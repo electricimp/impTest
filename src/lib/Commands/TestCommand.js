@@ -316,8 +316,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                 this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
               } else if (message.match(/__IMPUNIT__/)) {
                 // impUnit message, decode it
-                message = JSON.parse(message);
-                this._onLogMessage('IMPUNIT_' + message.type, message);
+                this._onLogMessage('IMPUNIT', JSON.parse(message));
               }
 
             } catch (e) {
@@ -343,71 +342,69 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    * Log output handler
    *
    * @param {string} type
-   * @param {*} [value=null]
+   * @param {*} [message=null]
    * @private
    */
-  _onLogMessage(type, value) {
+  _onLogMessage(type, message) {
+    let m;
+
     switch (type) {
 
       case 'AGENT_RESTARTED':
         break;
 
       case 'DEVICE_CODE_SPACE_USAGE':
-        this._info(c.blue('Device code space usage: ') + value);
+        this._info(c.blue('Device code space usage: ') + message);
         break;
 
-      case 'IMPUNIT_START':
+      case 'IMPUNIT':
 
-        if (this._testState !== 'ready') {
-          throw new Error('Invalid test session state');
+        if (message.session !== this._testSessionId) {
+          // skip messages not from the current session
+          // ??? should an error be thrown?
+          break;
         }
 
-        if (value.session !== this._testSessionId) {
-          throw new Error('Invalid session Id');
+        switch (message.type) {
+          case 'START':
+
+            if (this._testState !== 'ready') {
+              throw new Error('Invalid test session state');
+            }
+
+            this._testState = 'started';
+            break;
+
+          case 'STATUS':
+
+            if (this._testState !== 'started') {
+              throw new Error('Invalid test session state');
+            }
+
+            if (m = message.message.match(/(.+)::setUp\(\)$/)) {
+              // setup
+              this._testLine(c.blue('Setting up ') + m[1]);
+            }
+
+            break;
+
+          case 'RESULT':
+
+            if (this._testState !== 'started') {
+              throw new Error('Invalid test session state');
+            }
+
+            this._testState = 'finished';
+            break;
+
+          default:
+            break;
         }
 
-        this._testState = 'started';
-        break;
-
-      case 'IMPUNIT_STATUS':
-
-        if (this._testState !== 'started') {
-          throw new Error('Invalid test session state');
-        }
-
-        
-
-        break;
-
-      case 'IMPUNIT_RESULT':
-
-        if (this._testState !== 'started') {
-          throw new Error('Invalid test session state');
-        }
-
-        this._testState = 'finished';
         break;
 
       default:
-        //throw new Error('Unknown error');
         break;
-    }
-  }
-
-  /**
-   * Prints log message
-   * @param line
-   * @private
-   */
-  _printLogLine(line) {
-    if (line.type === 'STATUS') {
-      if (line.message.indexOf('::setUp()') !== -1) {
-        this._testLine(c.blue('Setting up ') + line.message.replace(/::.*$/, ''));
-      } else if (line.message.indexOf('::tearDown()') !== -1) {
-        this._testLine(c.blue('Tearing down ') + line.message.replace(/::.*$/, ''));
-      } else {
-        this._testLine(line.message);
-      }
     }
   }
 
