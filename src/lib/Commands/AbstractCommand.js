@@ -86,11 +86,15 @@ class AbstractCommand {
 
   /**
    * Error message
-   * @param {*} ...objects
+   * @param {*|Error} error
    * @protected
    */
-  _error() {
-    this._log('error', colors.red, arguments);
+  _error(error) {
+    if (error instanceof Error) {
+      error = error.message;
+    }
+
+    this._log('error', colors.red, [error]);
   }
 
   /**

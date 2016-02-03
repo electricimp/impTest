@@ -7,7 +7,7 @@
 var fs = require('fs');
 var path = require('path');
 var glob = require('glob');
-var colors = require('colors');
+var c = require('colors');
 var AbstractCommand = require('./AbstractCommand');
 var BuildAPIClient = require('../BuildAPIClient');
 var Bundler = require('../Bundler');
@@ -45,12 +45,12 @@ class TestCommand extends AbstractCommand {
     const testFiles = this._findTestFiles();
 
     /* [debug] */
-    this._debug(colors.blue('Test files found:'), testFiles);
+    this._debug(c.blue('Test files found:'), testFiles);
 
     /* [info] */
-    this._info(colors.blue('Found ') +
+    this._info(c.blue('Found ') +
                testFiles.length +
-               colors.blue(' test file' +
+               c.blue(' test file' +
                (testFiles.length === 1 ? '' : 's')) + ': '
                + testFiles.map(e => e.name).join(', ')
     );
@@ -150,9 +150,9 @@ class TestCommand extends AbstractCommand {
         sourceFilePath = path.resolve(this._config.dir, this._config.values.agentFile);
 
         /* [debug] */
-        this._debug(colors.blue('Agent source code file path: ') + sourceFilePath);
+        this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
         /* [info] */
-        this._info(colors.blue('Agent source: ')
+        this._info(c.blue('Agent source: ')
                    + this._config.values.agentFile);
 
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8');
@@ -164,9 +164,9 @@ class TestCommand extends AbstractCommand {
         sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
 
         /* [debug] */
-        this._debug(colors.blue('Device source code file path: ') + sourceFilePath);
+        this._debug(c.blue('Device source code file path: ') + sourceFilePath);
         /* [info] */
-        this._info(colors.blue('Device source: ')
+        this._info(c.blue('Device source: ')
                    + this._config.values.deviceFile);
 
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8');
@@ -205,7 +205,7 @@ class TestCommand extends AbstractCommand {
    */
   _runTestFile(file) {
     /* [info] */
-    this._info(colors.blue('Running ') + file.type + colors.blue(' test file ') + file.name);
+    this._info(c.blue('Running ') + file.type + c.blue(' test file ') + file.name);
 
     // create complete codebase
 
@@ -216,7 +216,7 @@ class TestCommand extends AbstractCommand {
     const bootstrapCode =
       `
 // run tests
-imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, function() {
+imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixing */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.sessionId = "${this._testSessionId}";
@@ -244,9 +244,9 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
     }
 
     /* [info] */
-    this._info(colors.blue('Agent code size: ') + agentCode.length + ' bytes');
+    this._info(c.blue('Agent code size: ') + agentCode.length + ' bytes');
     /* [info] */
-    this._info(colors.blue('Device code size: ') + deviceCode.length + ' bytes');
+    this._info(c.blue('Device code size: ') + deviceCode.length + ' bytes');
 
     return this._runTestSession(deviceCode, agentCode, file.type);
   }
@@ -264,6 +264,9 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
 
     const client = this._getBuildApiClient();
 
+    // initialize test state machine
+    this._testState = 'ready';
+
     // start reading logs
     this._readLogs(type, this._config.values.devices[0])
 
@@ -274,7 +277,7 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
       .then((body) => {
         this._revision = body.revision;
         /* [info] */
-        this._info(colors.blue('Created revision: ') + this._revision.version);
+        this._info(c.blue('Created revision: ') + this._revision.version);
         return client.restartModel(this._config.values.modelId);
       })
 
@@ -297,19 +300,33 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
       this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
         if (data) {
+
           for (const log of data.logs) {
 
+            let message = log.message;
             let m;
 
-            if (log.message.indexOf('Agent restarted') !== -1) {
-              // agent restarted
-              this._onLogMessage('AGENT_RESTARTED', log);
-            } else if (m = log.message.match(/([\d\.]+%) program storage used/)) {
-              // code space used
-              this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+            try {
+
+              if (message.match(/Agent restarted/)) {
+                // agent restarted
+                this._onLogMessage('AGENT_RESTARTED');
+              } else if (m = message.match(/([\d\.]+%) program storage used/)) {
+                // code space used
+                this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+              } else if (message.match(/__IMPUNIT__/)) {
+                // impUnit message, decode it
+                message = JSON.parse(message);
+                this._onLogMessage('IMPUNIT_' + message.type, message);
+              }
+
+            } catch (e) {
+              // cannot reject, promise has been resolved already on getting poll url
+              this._error(e.message);
+              return false;
             }
 
-            console.log(colors.magenta(JSON.stringify(log)));
+            console.log(c.magenta(JSON.stringify(log)));
           }
         } else {
           // empty data means we're connected
@@ -317,12 +334,41 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
         }
 
         return true; // continue
-      }).catch(reject);
+
+      });
     });
   }
 
-  _updateState(type, value) {
+  /**
+   * Log output handler
+   *
+   * @param {string} type
+   * @param {*} [value=null]
+   * @private
+   */
+  _onLogMessage(type, value) {
+    switch (type) {
 
+      case 'AGENT_RESTARTED':
+        break;
+
+      case 'DEVICE_CODE_SPACE_USAGE':
+        this._info(c.blue('Device code space usage: ') + value);
+        break;
+
+      case 'IMPUNIT_START':
+
+        if (this._testState !== 'ready') {
+          throw new Error('Invalid test session state');
+        }
+
+        this._testState = 'started';
+        break;
+
+      default:
+        throw new Error('Unknown error');
+        break;
+    }
   }
 
   /**
@@ -333,9 +379,9 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
   _printLogLine(line) {
     if (line.type === 'STATUS') {
       if (line.message.indexOf('::setUp()') !== -1) {
-        this._testLine(colors.blue('Setting up ') + line.message.replace(/::.*$/, ''));
+        this._testLine(c.blue('Setting up ') + line.message.replace(/::.*$/, ''));
       } else if (line.message.indexOf('::tearDown()') !== -1) {
-        this._testLine(colors.blue('Tearing down ') + line.message.replace(/::.*$/, ''));
+        this._testLine(c.blue('Tearing down ') + line.message.replace(/::.*$/, ''));
       } else {
         this._testLine(line.message);
       }
@@ -348,7 +394,7 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
    * @protected
    */
   _testLine() {
-    this._log('test', colors.grey, arguments);
+    this._log('test', c.grey, arguments);
   }
 
   /**
@@ -356,7 +402,7 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
    * @private
    */
   _blankLine() {
-    console.log(colors.gray('........................'));
+    console.log(c.gray('........................'));
   }
 }
 
