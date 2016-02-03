@@ -195,13 +195,13 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _runTestFile(file) {
-    /* [info] */
-    this._info(c.blue('Running ') + file.type + c.blue(' test file ') + file.name);
-
-    // create complete codebase
-
     // init test session
     this._initTestSession();
+
+    /* [info] */
+    this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
+
+    // create complete codebase
 
     // bootstrap code
     const bootstrapCode =
@@ -248,12 +248,14 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    */
   _initTestSession() {
     this._session = {
-      id: randomstring.generate(10),
+      id: require('random-words')(2).join('-'),
       state: 'ready',
       failures: 0,
       assertions: 0,
       tests: 0
     };
+
+    this._info(c.blue('Starting test session ') + this._session.id);
   }
 
   /**
@@ -427,6 +429,8 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
             if (this._session.failures) {
               this._testLine(c.red(sessionMessage));
               throw new SessionFailedError('Session failed');
+            } else {
+              this._testLine(c.green(sessionMessage));
             }
 
             stopSession = true;
