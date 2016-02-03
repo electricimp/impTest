@@ -278,11 +278,6 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
         return client.restartModel(this._config.values.modelId);
       })
 
-      .then(() => {
-        // get logs since current revision was created
-        return client.getDeviceLogs(this._config.values.devices[0], this._revision.created_at);
-      })
-
       .catch((error) => {
         this._error(error.message);
       });
@@ -303,6 +298,17 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
 
         if (data) {
           for (const log of data.logs) {
+
+            let m;
+
+            if (log.message.indexOf('Agent restarted') !== -1) {
+              // agent restarted
+              this._onLogMessage('AGENT_RESTARTED', log);
+            } else if (m = log.message.match(/([\d\.]+%) program storage used/)) {
+              // code space used
+              this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+            }
+
             console.log(colors.magenta(JSON.stringify(log)));
           }
         } else {
@@ -313,6 +319,10 @@ imp.wakeup(${this._options.startTimeout /* prevent log sessions mixing */}, func
         return true; // continue
       }).catch(reject);
     });
+  }
+
+  _updateState(type, value) {
+
   }
 
   /**
