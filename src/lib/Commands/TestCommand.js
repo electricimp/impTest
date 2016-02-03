@@ -13,6 +13,8 @@ var BuildAPIClient = require('../BuildAPIClient');
 var Bundler = require('../Bundler');
 var promiseWhile = require('../utils/promiseWhile');
 var randomstring = require('randomstring');
+var TestCaseError = require('../Errors/TestCaseError');
+var TestStateError = require('../Errors/TestStateError');
 
 class TestCommand extends AbstractCommand {
 
@@ -37,9 +39,6 @@ class TestCommand extends AbstractCommand {
   run() {
 
     super.run();
-
-    /* [blank] */
-    this._blankLine();
 
     // find test case files
     const testFiles = this._findTestFiles();
@@ -372,7 +371,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           case 'START':
 
             if (this._testState !== 'ready') {
-              throw new Error('Invalid test session state');
+              throw new TestStateError('Invalid test session state');
             }
 
             this._testState = 'started';
@@ -381,7 +380,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           case 'STATUS':
 
             if (this._testState !== 'started') {
-              throw new Error('Invalid test session state');
+              throw new TestStateError('Invalid test session state');
             }
 
             if (m = message.message.match(/(.+)::setUp\(\)$/)) {
@@ -403,14 +402,13 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               throw new Error('Invalid test session state');
             }
 
-            this._testLine(c.red('Error: ' + message.message));
-
+            this._onError(new TestCaseError(message.message));
             break;
 
           case 'RESULT':
 
             if (this._testState !== 'started') {
-              throw new Error('Invalid test session state');
+              throw new TestStateError('Invalid test session state');
             }
 
             this._testLine(message.message);
@@ -430,6 +428,31 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     }
 
     return stopSession;
+  }
+
+  /**
+   * Handle test error
+   * @param {Error|string} error
+   * @return {boolean} stop test session?
+   * @private
+   */
+  _onError(error) {
+    let stop = false;
+
+    if (error instanceof TestCaseError) {
+      error = 'Error: ' + error.message;
+      stop = false;
+    } else if (error instanceof TestStateError) {
+      error = error.message;
+      stop = !!this._config.values.stopOnFailure;
+    } else if (error instanceof Error) {
+      error = error.message;
+      stop = !!this._config.values.stopOnFailure;
+    }
+
+    this._testLine(c.red(error));
+
+    return stop;
   }
 
   /**
