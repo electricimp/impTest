@@ -45,7 +45,7 @@
     "new-parens": 2,
     "max-len": [
       2,
-      120,
+      160,
       2
     ],
     "no-multiple-empty-lines": [

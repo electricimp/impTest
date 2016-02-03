@@ -15,6 +15,7 @@ var promiseWhile = require('../utils/promiseWhile');
 var randomstring = require('randomstring');
 var TestCaseError = require('../Errors/TestCaseError');
 var TestStateError = require('../Errors/TestStateError');
+var SessionFailedError = require('../Errors/SessionFailedError');
 
 class TestCommand extends AbstractCommand {
 
@@ -163,7 +164,6 @@ class TestCommand extends AbstractCommand {
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8');
       } else {
         this._deviceSource = '/* no device source provided */';
-        ;
       }
 
     }
@@ -200,8 +200,8 @@ class TestCommand extends AbstractCommand {
 
     // create complete codebase
 
-    // test session id, unique per every test file run
-    this._testSessionId = randomstring.generate(10);
+    // init test session
+    this._initTestSession();
 
     // bootstrap code
     const bootstrapCode =
@@ -210,7 +210,7 @@ class TestCommand extends AbstractCommand {
 imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixing */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
-  t.session = "${this._testSessionId}";
+  t.session = "${this._session.id}";
   t.timeout = ${parseFloat(this._config.values.timeout)};
   t.stopOnFailure = ${!!this._config.values.stopOnFailure};
   // poehali!
@@ -243,6 +243,20 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   }
 
   /**
+   * Initialize test session
+   * @private
+   */
+  _initTestSession() {
+    this._session = {
+      id: randomstring.generate(10),
+      state: 'ready',
+      failures: 0,
+      assertions: 0,
+      tests: 0
+    };
+  }
+
+  /**
    * Execute test via BuildAPI from prepared code
    *
    * @param {string} deviceCode
@@ -255,9 +269,6 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     const client = this._getBuildApiClient();
 
-    // initialize test state machine
-    this._testState = 'ready';
-
     // start reading logs
     this._readLogs(type, this._config.values.devices[0])
 
@@ -266,14 +277,12 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       })
 
       .then((body) => {
-        this._revision = body.revision;
-        /* [info] */
-        this._info(c.blue('Created revision: ') + this._revision.version);
+        this._info(c.blue('Created revision: ') + body.revision.version);
         return client.restartModel(this._config.values.modelId);
       })
 
       .catch((error) => {
-        this._error(error.message);
+        this._onError(error);
       });
   }
 
@@ -286,7 +295,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    *
    * @private
    */
-  _readLogs(test, deviceId, since) {
+  _readLogs(test, deviceId) {
     return new Promise((resolve, reject) => {
       this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
@@ -327,7 +336,11 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
         return !stopSession;
 
-      });
+      })
+        .catch((e) => {
+          this._onError(e);
+          reject(e);
+        });
     });
   }
 
@@ -353,7 +366,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       case 'IMPUNIT':
 
-        if (message.session !== this._testSessionId) {
+        if (message.session !== this._session.id) {
           // skip messages not from the current session
           // ??? should an error be thrown?
           break;
@@ -362,16 +375,16 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         switch (message.type) {
           case 'START':
 
-            if (this._testState !== 'ready') {
+            if (this._session.state !== 'ready') {
               throw new TestStateError('Invalid test session state');
             }
 
-            this._testState = 'started';
+            this._session.state = 'started';
             break;
 
           case 'STATUS':
 
-            if (this._testState !== 'started') {
+            if (this._session.state !== 'started') {
               throw new TestStateError('Invalid test session state');
             }
 
@@ -390,7 +403,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
           case 'FAIL':
 
-            if (this._testState !== 'started') {
+            if (this._session.state !== 'started') {
               throw new Error('Invalid test session state');
             }
 
@@ -399,14 +412,24 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
           case 'RESULT':
 
-            if (this._testState !== 'started') {
+            if (this._session.state !== 'started') {
               throw new TestStateError('Invalid test session state');
             }
 
-            this._testLine(message.message);
+            this._session.tests = message.message.tests;
+            this._session.failures = message.message.failures;
+            this._session.assertions = message.message.assertions;
+            this._session.state = 'finished';
+
+            const sessionMessage =
+              `Tests: ${this._session.tests}, Assertions: ${this._session.assertions}, Failures: ${this._session.failures}`;
+
+            if (this._session.failures) {
+              this._testLine(c.red(sessionMessage));
+              throw new SessionFailedError('Session failed');
+            }
 
             stopSession = true;
-            this._testState = 'finished';
             break;
 
           default:
@@ -434,15 +457,19 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     if (error instanceof TestCaseError) {
       error = 'Error: ' + error.message;
       stop = false;
+      this._testLine(c.red(error));
     } else if (error instanceof TestStateError) {
       error = error.message;
       stop = !!this._config.values.stopOnFailure;
+      this._testLine(c.red(error));
     } else if (error instanceof Error) {
       error = error.message;
-      stop = !!this._config.values.stopOnFailure;
+      this._error(error);
+      process.exit(1);
+    } else {
+      this._error(error);
+      process.exit(1);
     }
-
-    this._testLine(c.red(error));
 
     return stop;
   }

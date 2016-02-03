@@ -210,7 +210,8 @@ class BuildAPIClient {
             }
           ).then(resolve, reject);
 
-        });
+        })
+        .catch(reject);
     });
   }
 
