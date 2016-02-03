@@ -9,7 +9,12 @@ function w() {
 
 class DeviceTestCase1 extends ImpUnitCase {
   function testSomethingSync() {
+    this.assertClose(10, 11, 0.5);
     w();
+  }
+
+  function testSomethingSync2() {
+    this.assertTrue(false);
   }
 }
 

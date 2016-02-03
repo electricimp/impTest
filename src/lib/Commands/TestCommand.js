@@ -299,40 +299,42 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     return new Promise((resolve, reject) => {
       this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
+        let stopSession = false;
+
         if (data) {
 
           for (const log of data.logs) {
 
-            let message = log.message;
+            const message = log.message;
             let m;
 
             try {
 
               if (message.match(/Agent restarted/)) {
                 // agent restarted
-                this._onLogMessage('AGENT_RESTARTED');
+                stopSession = this._onLogMessage('AGENT_RESTARTED');
               } else if (m = message.match(/([\d\.]+%) program storage used/)) {
                 // code space used
-                this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+                stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
               } else if (message.match(/__IMPUNIT__/)) {
                 // impUnit message, decode it
-                this._onLogMessage('IMPUNIT', JSON.parse(message));
+                stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
               }
 
             } catch (e) {
               // cannot reject, promise has been resolved already on getting poll url
               this._error(e.message);
-              return false;
+              stopSession = true;
             }
 
-            console.log(c.magenta(JSON.stringify(log)));
+            //console.log(c.magenta(JSON.stringify(log)));
           }
         } else {
           // empty data means we're connected
           resolve();
         }
 
-        return true; // continue
+        return !stopSession;
 
       });
     });
@@ -347,6 +349,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    */
   _onLogMessage(type, message) {
     let m;
+    let stopSession = false;
 
     switch (type) {
 
@@ -384,7 +387,23 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
             if (m = message.message.match(/(.+)::setUp\(\)$/)) {
               // setup
               this._testLine(c.blue('Setting up ') + m[1]);
+            } else if (m = message.message.match(/(.+)::tearDown\(\)$/)) {
+              // teardown
+              this._testLine(c.blue('Tearing down ') + m[1]);
+            } else {
+              // status message
+              this._testLine(message.message);
             }
+
+            break;
+
+          case 'FAIL':
+
+            if (this._testState !== 'started') {
+              throw new Error('Invalid test session state');
+            }
+
+            this._testLine(c.red('Error: ' + message.message));
 
             break;
 
@@ -394,6 +413,9 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               throw new Error('Invalid test session state');
             }
 
+            this._testLine(message.message);
+
+            stopSession = true;
             this._testState = 'finished';
             break;
 
@@ -406,6 +428,8 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       default:
         break;
     }
+
+    return stopSession;
   }
 
   /**
