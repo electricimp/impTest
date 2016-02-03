@@ -28,7 +28,7 @@ class TestCommand extends AbstractCommand {
       config: '.imptest',
       testFrameworkFile: '', // path to test framework main file
       testCaseFile: null, // path to test case file, of empty test cases will be searched automatically
-      startTimeout: 1.5 // [s]
+      startTimeout: 2 // [s]
     };
   }
 
@@ -220,19 +220,23 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     let agentCode, deviceCode;
 
+    const sessionDef = '_impUnitSession <- "' + this._session.id + '";\n\n';
+
     if ('agent' === file.type) {
       agentCode = this._getFrameworkCode() + '\n\n' +
                   this._getSourceCode().agent + '\n\n' +
+                  sessionDef +
                   fs.readFileSync(file.path, 'utf-8') + '\n\n' +
                   bootstrapCode;
-      deviceCode = '__IMPUNIT_SESSSION__ <- "' + this._session.id + '"\n\n' + /* also triggers device code space usage message due to the change on code every time, takes 0.04% code space on imp001 */
+      deviceCode = sessionDef + /* also triggers device code space usage message due to the change on code every time, takes 0.04% code space on imp001 */
                    this._getSourceCode().device;
     } else {
       deviceCode = this._getFrameworkCode() + '\n\n' +
                    this._getSourceCode().device + '\n\n' +
+                   sessionDef +
                    fs.readFileSync(file.path, 'utf-8') + '\n\n' +
                    bootstrapCode;
-      agentCode = this._getSourceCode().agent;
+      agentCode = sessionDef + this._getSourceCode().agent;
     }
 
     /* [info] */
