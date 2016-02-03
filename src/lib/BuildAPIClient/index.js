@@ -91,14 +91,14 @@ class BuildAPIClient {
           // error is produced by request libabry
           reject(error);
 
-        } else if (!result.success) {
+        } else if (!result || !result.success) {
 
           let err;
 
-          if (result.error) {
+          if (result && result.error) {
             // we have an error message from web server {error: {code, message_short, message_full}} response
             err = new Error('Error "' + result.error.code + '": ' + result.error.message_full);
-          } else if (result.code && result.message) {
+          } else if (result && result.code && result.message) {
             // we have bad HTTP status code and {code, message} response
             err = new Error('Error "' + result.code + '": ' + result.message);
           } else {
