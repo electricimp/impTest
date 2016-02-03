@@ -100,34 +100,26 @@ class TestCommand extends AbstractCommand {
       });
     };
 
-    if (this._options.testCaseFile) {
-      // test file is passed via cli
+    let searchPatterns = '';
 
+    // test file pattern is passed via cli
+    if (this._options.testCaseFile) {
       // look in the current path
       configCwd = path.resolve('.');
-
-      if (!fs.existsSync(this._options.testCaseFile)) {
-        throw new Error('File "' + this._options.testCaseFile + '" not found');
-      }
-
-      pushFile(this._options.testCaseFile);
-
+      searchPatterns = this._options.testCaseFile;
     } else {
-      // look through .imptest.tests glob(s)
-
       // look in config file directory
       configCwd = this._config.dir;
+      searchPatterns = this._config.values.tests;
+    }
 
-      let searchPatterns = this._config.values.tests;
+    if (typeof searchPatterns === 'string') {
+      searchPatterns = [searchPatterns];
+    }
 
-      if (typeof searchPatterns === 'string') {
-        searchPatterns = [searchPatterns];
-      }
-
-      for (const searchPattern of searchPatterns) {
-        for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
-          pushFile(file);
-        }
+    for (const searchPattern of searchPatterns) {
+      for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
+        pushFile(file);
       }
     }
 
