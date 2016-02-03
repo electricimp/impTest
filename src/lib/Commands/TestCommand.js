@@ -12,7 +12,7 @@ var AbstractCommand = require('./AbstractCommand');
 var BuildAPIClient = require('../BuildAPIClient');
 var Bundler = require('../Bundler');
 var promiseWhile = require('../utils/promiseWhile');
-var md5 = require('md5');
+var randomstring = require('randomstring');
 
 class TestCommand extends AbstractCommand {
 
@@ -210,7 +210,7 @@ class TestCommand extends AbstractCommand {
     // create complete codebase
 
     // test session id, unique per every test file run
-    this._testSessionId = md5(Math.random().toString());
+    this._testSessionId = randomstring.generate(10);
 
     // bootstrap code
     const bootstrapCode =
@@ -219,7 +219,7 @@ class TestCommand extends AbstractCommand {
 imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixing */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
-  t.sessionId = "${this._testSessionId}";
+  t.session = "${this._testSessionId}";
   t.timeout = ${parseFloat(this._config.values.timeout)};
   t.stopOnFailure = ${!!this._config.values.stopOnFailure};
   // poehali!
@@ -362,11 +362,34 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           throw new Error('Invalid test session state');
         }
 
+        if (value.session !== this._testSessionId) {
+          throw new Error('Invalid session Id');
+        }
+
         this._testState = 'started';
         break;
 
+      case 'IMPUNIT_STATUS':
+
+        if (this._testState !== 'started') {
+          throw new Error('Invalid test session state');
+        }
+
+        
+
+        break;
+
+      case 'IMPUNIT_RESULT':
+
+        if (this._testState !== 'started') {
+          throw new Error('Invalid test session state');
+        }
+
+        this._testState = 'finished';
+        break;
+
       default:
-        throw new Error('Unknown error');
+        //throw new Error('Unknown error');
         break;
     }
   }
