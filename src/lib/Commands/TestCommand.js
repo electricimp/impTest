@@ -4,19 +4,21 @@
 
 'use strict';
 
+//<editor-fold desc="imports">
 const fs = require('fs');
+const c = require('colors');
 const path = require('path');
 const glob = require('glob');
-const c = require('colors');
+const Bundler = require('../Bundler');
+const EventEmitter = require('events');
+const randomWords = require('random-words');
 const AbstractCommand = require('./AbstractCommand');
 const BuildAPIClient = require('../BuildAPIClient');
-const Bundler = require('../Bundler');
 const promiseWhile = require('../utils/promiseWhile');
-const randomWords = require('random-words');
 const TestCaseError = require('../Errors/TestCaseError');
 const TestStateError = require('../Errors/TestStateError');
 const SessionFailedError = require('../Errors/SessionFailedError');
-const EventEmitter = require('events');
+//</editor-fold>
 
 class TestCommand extends AbstractCommand {
 
