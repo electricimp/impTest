@@ -4,18 +4,19 @@
 
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var glob = require('glob');
-var c = require('colors');
-var AbstractCommand = require('./AbstractCommand');
-var BuildAPIClient = require('../BuildAPIClient');
-var Bundler = require('../Bundler');
-var promiseWhile = require('../utils/promiseWhile');
-var randomWords = require('random-words');
-var TestCaseError = require('../Errors/TestCaseError');
-var TestStateError = require('../Errors/TestStateError');
-var SessionFailedError = require('../Errors/SessionFailedError');
+const fs = require('fs');
+const path = require('path');
+const glob = require('glob');
+const c = require('colors');
+const AbstractCommand = require('./AbstractCommand');
+const BuildAPIClient = require('../BuildAPIClient');
+const Bundler = require('../Bundler');
+const promiseWhile = require('../utils/promiseWhile');
+const randomWords = require('random-words');
+const TestCaseError = require('../Errors/TestCaseError');
+const TestStateError = require('../Errors/TestStateError');
+const SessionFailedError = require('../Errors/SessionFailedError');
+const EventEmitter = require('events');
 
 class TestCommand extends AbstractCommand {
 
@@ -274,23 +275,35 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    */
   _runTestSession(deviceCode, agentCode, type) {
 
-    const client = this._getBuildApiClient();
+    return new Promise((resolve, reject) => {
 
-    // start reading logs
-    this._readLogs(type, this._config.values.devices[0])
+      const client = this._getBuildApiClient();
 
-      .then(() => {
-        return client.createRevision(this._config.values.modelId, deviceCode, agentCode);
-      })
+      // start reading logs
+      this._readLogs(type, this._config.values.devices[0])
+        .on('ready', () => {
 
-      .then((body) => {
-        this._info(c.blue('Created revision: ') + body.revision.version);
-        return client.restartModel(this._config.values.modelId);
-      })
+          client.createRevision(this._config.values.modelId, deviceCode, agentCode)
 
-      .catch((error) => {
-        this._onError(error);
-      });
+            .then((body) => {
+              this._info(c.blue('Created revision: ') + body.revision.version);
+              return client.restartModel(this._config.values.modelId);
+            })
+
+            .catch((error) => {
+              this._onError(error);
+              reject(error);
+            });
+
+        })
+
+        .on('error', (e) => {
+          reject(e.error);
+        })
+
+        .on('done', resolve);
+
+    });
   }
 
   /**
@@ -298,57 +311,63 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    *
    * @param {"agent"|"device"} test
    * @param {string} deviceId
-   * @returns {Promise} resolves after obtaining poll url
+   * @returns {EventEmitter} Events: ready, done, error
    *
    * @private
    */
   _readLogs(test, deviceId) {
-    return new Promise((resolve, reject) => {
-      this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
+    const ee = new EventEmitter();
 
-          let stopSession = false;
+    this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
-          if (data) {
+      let stopSession = false;
 
-            for (const log of data.logs) {
+      if (data) {
 
-              const message = log.message;
-              let m;
+        for (const log of data.logs) {
 
-              try {
+          const message = log.message;
+          let m;
 
-                if (message.match(/Agent restarted/)) {
-                  // agent restarted
-                  stopSession = this._onLogMessage('AGENT_RESTARTED');
-                } else if (m = message.match(/([\d\.]+%) program storage used/)) {
-                  // code space used
-                  stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
-                } else if (message.match(/__IMPUNIT__/)) {
-                  // impUnit message, decode it
-                  stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
-                }
+          try {
 
-              } catch (e) {
-                // cannot reject, promise has been resolved already on getting poll url
-                this._error(e.message);
-                stopSession = true;
-              }
-
-              //console.log(c.magenta(JSON.stringify(log)));
+            if (message.match(/Agent restarted/)) {
+              // agent restarted
+              stopSession = this._onLogMessage('AGENT_RESTARTED');
+            } else if (m = message.match(/([\d\.]+%) program storage used/)) {
+              // code space used
+              stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+            } else if (message.match(/__IMPUNIT__/)) {
+              // impUnit message, decode it
+              stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
             }
-          } else {
-            // empty data means we're connected
-            resolve();
+
+          } catch (e) {
+            this._error(e.message); // todo: convert to _onError
+            ee.emit('error', {error: e});
+            stopSession = true;
           }
 
-          return !stopSession;
+          //console.log(c.magenta(JSON.stringify(log)));
+        }
+      } else {
+        // we're connected
+        ee.emit('ready');
+      }
 
-        })
-        .catch((e) => {
-          this._onError(e);
-          reject(e);
-        });
+      if (stopSession) {
+        ee.emit('done');
+      }
+
+      return !stopSession;
+    })
+
+    .catch((e) => {
+      this._onError(e);
+      ee.emit('error', {error: e});
     });
+
+    return ee;
   }
 
   /**
