@@ -121,10 +121,10 @@ class AbstractCommand {
         dif2 = sprintf('%.2f', dif2);
         dateMessage += '+' +  dif1 + '/' + dif2 + 's ';
       } else {
-        this._logStartDate = new Date();
+        this._logStartDate = now;
       }
 
-      this._logDate = new Date();
+      this._logDate = now;
     }
 
     // convert params to true array (from arguments)
