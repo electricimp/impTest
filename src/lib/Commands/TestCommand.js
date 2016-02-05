@@ -58,6 +58,9 @@ class TestCommand extends AbstractCommand {
                + testFiles.map(e => e.name).join(', ')
     );
 
+    // pre-cache source code
+    this._getSourceCode();
+
     // run test files
 
     let i = 0;
@@ -147,7 +150,7 @@ class TestCommand extends AbstractCommand {
         /* [debug] */
         this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
         /* [info] */
-        this._info(c.blue('Agent source: ')
+        this._info(c.blue('Agent source file: ')
                    + this._config.values.agentFile);
 
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8');
@@ -161,7 +164,7 @@ class TestCommand extends AbstractCommand {
         /* [debug] */
         this._debug(c.blue('Device source code file path: ') + sourceFilePath);
         /* [info] */
-        this._info(c.blue('Device source: ')
+        this._info(c.blue('Device source file: ')
                    + this._config.values.deviceFile);
 
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8');
@@ -263,7 +266,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       tests: 0
     };
 
-    this._info(c.blue('Starting test session ') + this._session.id);
+    this._info(c.magenta('Starting test session ') + this._session.id);
   }
 
   /**
@@ -518,7 +521,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    * @private
    */
   _blankLine() {
-    console.log(c.gray('........................'));
+    console.log(c.gray(''));
   }
 }
 

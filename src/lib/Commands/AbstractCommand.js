@@ -48,8 +48,9 @@ class AbstractCommand {
    */
   constructor(options) {
     this.options = options;
-    this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
     this._info('impTest/' + this._options.version);
+    this._logStartDate = this._logDate = null;
+    this._info(colors.magenta('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
   }
 
   /**
@@ -111,15 +112,17 @@ class AbstractCommand {
       type += ':' + this.constructor.name;
     } else {
       const now = new Date();
-      dateMessage = dateformat(now, 'HH:MM:ss');
+      //dateMessage = dateformat(now, 'HH:MM:ss.l');
 
-      if (this._logDate) {
-        let dif =  (now - this._logDate) / 1000;
-        dif = sprintf('%.3f', dif);
-        dateMessage += ' (+' +  dif + ')';
+      if (this._logDate && this._logStartDate) {
+        let dif1 =  (now - this._logStartDate) / 1000;
+        let dif2 =  (now - this._logDate) / 1000;
+        dif1 = sprintf('%.2f', dif1);
+        dif2 = sprintf('%.2f', dif2);
+        dateMessage += '+' +  dif1 + '/' + dif2 + 's ';
+      } else {
+        this._logStartDate = new Date();
       }
-
-      dateMessage += ' ';
 
       this._logDate = new Date();
     }
