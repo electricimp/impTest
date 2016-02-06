@@ -315,14 +315,15 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   /**
    * Read device logs
    *
-   * @param {"agent"|"device"} test
+   * @param {"agent"|"device"} type
    * @param {string} deviceId
    * @returns {EventEmitter} Events: ready, done, error
    *
    * @private
    */
-  _readLogs(test, deviceId) {
+  _readLogs(type, deviceId) {
     const ee = new EventEmitter();
+    const typeFilter = {agent: 'agent.log', device: 'server.log'}[type];
 
     this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
@@ -337,13 +338,13 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
             try {
 
-              if (message.match(/Agent restarted/)) {
+              if ('status' === log.type && message.match(/Agent restarted/)) {
                 // agent restarted
                 stopSession = this._onLogMessage('AGENT_RESTARTED');
-              } else if (m = message.match(/([\d\.]+%) program storage used/)) {
+              } else if ('status' === log.type && (m = message.match(/([\d\.]+%) program storage used/))) {
                 // code space used
                 stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
-              } else if (message.match(/__IMPUNIT__/)) {
+              } else if (typeFilter === log.type && message.match(/__IMPUNIT__/)) {
                 // impUnit message, decode it
                 stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
               }
