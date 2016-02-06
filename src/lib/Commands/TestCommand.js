@@ -55,8 +55,8 @@ class TestCommand extends AbstractCommand {
       this._info(c.blue('Found ') +
                  testFiles.length +
                  c.blue(' test file' +
-                 (testFiles.length === 1 ? '' : 's')) + ': '
-                 + testFiles.map(e => e.name).join(', ')
+                 (testFiles.length === 1 ? ':' : 's:')) + '\n\t'
+                 + testFiles.map(e => e.name).join('\n\t')
       );
     } else {
       this._onError(new Error('No test files found'));
