@@ -489,18 +489,22 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     let stop = false;
 
     if (error instanceof TestCaseError) {
+      this._debug('error instanceof TestCaseError === true');
       error = 'Error: ' + error.message;
       stop = false;
       this._testLine(c.red(error));
     } else if (error instanceof TestStateError) {
+      this._debug('error instanceof TestStateError === true');
       error = error.message;
       stop = !!this._config.values.stopOnFailure;
       this._testLine(c.red(error));
     } else if (error instanceof Error) {
+      this._debug('error instanceof Error === true');
       error = error.message;
       this._error(error);
       process.exit(1);
     } else {
+      this._debug('Unknown error type');
       this._error(error);
       process.exit(1);
     }
