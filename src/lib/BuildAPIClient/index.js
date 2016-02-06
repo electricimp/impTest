@@ -97,13 +97,13 @@ class BuildAPIClient {
 
           if (result && result.error) {
             // we have an error message from web server {error: {code, message_short, message_full}} response
-            err = new Error('Error "' + result.error.code + '": ' + result.error.message_full);
+            err = new Error('Build API error "' + result.error.code + '": ' + result.error.message_short);
           } else if (result && result.code && result.message) {
             // we have bad HTTP status code and {code, message} response
-            err = new Error('Error "' + result.code + '": ' + result.message);
+            err = new Error('Build API error "' + result.code + '": ' + result.message);
           } else {
             // we have nothing but it's bad
-            err = new Error('Error HTTP/' + response.statusCode);
+            err = new Error('Build API error HTTP/' + response.statusCode);
           }
 
           /* [debug] */
