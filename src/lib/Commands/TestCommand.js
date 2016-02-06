@@ -50,13 +50,17 @@ class TestCommand extends AbstractCommand {
     /* [debug] */
     this._debug(c.blue('Test files found:'), testFiles);
 
-    /* [info] */
-    this._info(c.blue('Found ') +
-               testFiles.length +
-               c.blue(' test file' +
-               (testFiles.length === 1 ? '' : 's')) + ': '
-               + testFiles.map(e => e.name).join(', ')
-    );
+    if (testFiles.length) {
+      /* [info] */
+      this._info(c.blue('Found ') +
+                 testFiles.length +
+                 c.blue(' test file' +
+                 (testFiles.length === 1 ? '' : 's')) + ': '
+                 + testFiles.map(e => e.name).join(', ')
+      );
+    } else {
+      this._onError(new Error('No test files found'));
+    }
 
     // pre-cache source code
     this._getSourceCode();
