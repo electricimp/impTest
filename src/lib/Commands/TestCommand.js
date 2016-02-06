@@ -306,10 +306,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
         })
 
-        .on('error', (e) => {
-          reject(e.error);
-        })
-
+        .on('error', resolve)
         .on('done', resolve);
 
     });
