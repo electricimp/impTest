@@ -326,52 +326,52 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
-      let stopSession = false;
+        let stopSession = false;
 
-      if (data) {
+        if (data) {
 
-        for (const log of data.logs) {
+          for (const log of data.logs) {
 
-          const message = log.message;
-          let m;
+            const message = log.message;
+            let m;
 
-          try {
+            try {
 
-            if (message.match(/Agent restarted/)) {
-              // agent restarted
-              stopSession = this._onLogMessage('AGENT_RESTARTED');
-            } else if (m = message.match(/([\d\.]+%) program storage used/)) {
-              // code space used
-              stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
-            } else if (message.match(/__IMPUNIT__/)) {
-              // impUnit message, decode it
-              stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
+              if (message.match(/Agent restarted/)) {
+                // agent restarted
+                stopSession = this._onLogMessage('AGENT_RESTARTED');
+              } else if (m = message.match(/([\d\.]+%) program storage used/)) {
+                // code space used
+                stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+              } else if (message.match(/__IMPUNIT__/)) {
+                // impUnit message, decode it
+                stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
+              }
+
+            } catch (e) {
+              this._error(e.message); // todo: convert to _onError
+              ee.emit('error', {error: e});
+              stopSession = true;
             }
 
-          } catch (e) {
-            this._error(e.message); // todo: convert to _onError
-            ee.emit('error', {error: e});
-            stopSession = true;
+            //console.log(c.magenta(JSON.stringify(log)));
           }
-
-          //console.log(c.magenta(JSON.stringify(log)));
+        } else {
+          // we're connected
+          ee.emit('ready');
         }
-      } else {
-        // we're connected
-        ee.emit('ready');
-      }
 
-      if (stopSession) {
-        ee.emit('done');
-      }
+        if (stopSession) {
+          ee.emit('done');
+        }
 
-      return !stopSession;
-    })
+        return !stopSession;
+      })
 
-    .catch((e) => {
-      this._onError(e);
-      ee.emit('error', {error: e});
-    });
+      .catch((e) => {
+        this._onError(e);
+        ee.emit('error', {error: e});
+      });
 
     return ee;
   }
@@ -458,7 +458,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
             if (this._session.failures) {
               this._testLine(c.red(sessionMessage));
-              throw new SessionFailedError('Session failed');
+              this._onError(new SessionFailedError('Session failed'));
             } else {
               this._testLine(c.green(sessionMessage));
             }
@@ -490,18 +490,19 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     if (error instanceof TestCaseError) {
       this._debug('error instanceof TestCaseError === true');
-      error = 'Error: ' + error.message;
+      this._testLine(c.red('Error: ' + error.message));
       stop = false;
-      this._testLine(c.red(error));
     } else if (error instanceof TestStateError) {
       this._debug('error instanceof TestStateError === true');
-      error = error.message;
+      this._testLine(c.red(error.message));
       stop = !!this._config.values.stopOnFailure;
-      this._testLine(c.red(error));
+    } else if (error instanceof SessionFailedError) {
+      this._debug('error instanceof SessionFailedError === true');
+      this._testLine(c.red(error.message));
+      stop = false;
     } else if (error instanceof Error) {
       this._debug('error instanceof Error === true');
-      error = error.message;
-      this._error(error);
+      this._error(error.message);
       process.exit(1);
     } else {
       this._debug('Unknown error type');
