@@ -306,7 +306,6 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
         })
 
-        .on('error', resolve)
         .on('done', resolve);
 
     });
@@ -317,7 +316,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    *
    * @param {"agent"|"device"} type
    * @param {string} deviceId
-   * @returns {EventEmitter} Events: ready, done, error
+   * @returns {EventEmitter} Events: ready, done
    *
    * @private
    */
@@ -332,6 +331,8 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         if (data) {
 
           for (const log of data.logs) {
+
+            //console.log(c.yellow(JSON.stringify(log)));
 
             const message = log.message;
             let m;
@@ -350,20 +351,19 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               }
 
             } catch (e) {
-              this._error(e.message); // todo: convert to _onError
-              ee.emit('error', {error: e});
-              stopSession = true;
+              stopSession = this._onError(e);
             }
 
-            //console.log(c.magenta(JSON.stringify(log)));
+            // are we done?
+            if (stopSession) {
+              ee.emit('done');
+              break;
+            }
           }
+
         } else {
           // we're connected
           ee.emit('ready');
-        }
-
-        if (stopSession) {
-          ee.emit('done');
         }
 
         return !stopSession;
@@ -495,12 +495,12 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       stop = false;
     } else if (error instanceof TestStateError) {
       this._debug('error instanceof TestStateError === true');
-      this._testLine(c.red(error.message));
-      stop = !!this._config.values.stopOnFailure;
+      this._error(error);
+      stop = true;
     } else if (error instanceof SessionFailedError) {
       this._debug('error instanceof SessionFailedError === true');
       this._testLine(c.red(error.message));
-      stop = false;
+      stop = !!this._config.values.stopOnFailure;;
     } else if (error instanceof Error) {
       this._debug('error instanceof Error === true');
       this._error(error.message);
