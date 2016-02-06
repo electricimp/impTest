@@ -29,7 +29,6 @@
       "single",
       "avoid-escape"
     ],
-    "indent": [2, 2, {"SwitchCase": 1}],
     "comma-spacing": 2,
     "semi": 2,
     "space-infix-ops": 2,
