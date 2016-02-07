@@ -1,27 +1,19 @@
 // test file
 
-i <- 0;
-
-function w() {
-  server.log(++i);
-  imp.wakeup(1, w);
-}
-
 class DeviceTestCase1 extends ImpUnitCase {
   function testSomethingSync() {
-//    this.assertClose(10, 11, 0.5);
-    w();
+    this.assertTrue(true);
   }
 
   function testSomethingSync2() {
-//    this.assertTrue(false);
+    outOfMemory();
   }
 }
 
 // produce out of memory error
 function outOfMemory() {
   // 1k
-  a <- ""
+  local a = ""
   +"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   +"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   +"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -54,4 +46,4 @@ function outOfMemory() {
   sever.log(a);
 }
 
-outOfMemory();
+//outOfMemory();

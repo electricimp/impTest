@@ -266,7 +266,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   _initTestSession() {
     this._session = {
       id: randomWords(2).join('-'),
-      state: 'awaiting device code update',
+      state: 'inited',
       failures: 0,
       assertions: 0,
       tests: 0
@@ -298,7 +298,11 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
             .then((body) => {
               this._info(c.blue('Created revision: ') + body.revision.version);
-              return client.restartModel(this._config.values.modelId);
+              return client.restartModel(this._config.values.modelId)
+                .then(/* model restarted */() => {
+                  this._error('Model restarted');
+                  this._session.state = 'ready';
+                });
             })
 
             .catch((error) => {
@@ -407,16 +411,13 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       case 'AGENT_RESTARTED':
         break;
 
-      // this also means that new code is downloaded
-      // and triggers 'ready' state on the session
       case 'DEVICE_CODE_SPACE_USAGE':
-        this._session.state = 'ready';
-        this._info(c.blue('Device code space usage: ') + sprintf('%.0f%%', message));
+        this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', message));
         break;
 
       case 'LASTEXITCODE':
 
-        if (this._session.state === 'ready') {
+        if (this._session.state !== 'inited') {
           if (message.match(/imp restarted, reason: out of memory/)) {
             stopSession = this._onError(new ImpError('Device out of memory'));
           } else {
@@ -516,20 +517,24 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    * @private
    */
   _onError(error) {
-    let stop = false;
+    let stopSession = false;
 
     if (error instanceof TestMethodError) {
       this._debug('error instanceof TestCaseError === true');
       this._testLine(c.red('Error: ' + error.message));
-      stop = false;
+      stopSession = false;
     } else if (error instanceof TestStateError) {
       this._debug('error instanceof TestStateError === true');
       this._error(error);
-      stop = true;
+      stopSession = true;
     } else if (error instanceof SessionFailedError) {
       this._debug('error instanceof SessionFailedError === true');
       this._testLine(c.red(error.message));
-      stop = !!this._config.values.stopOnFailure;
+      stopSession = !!this._config.values.stopOnFailure;
+    } else if (error instanceof ImpError) {
+      this._debug('error instanceof ImpError === true');
+      this._testLine(c.red(error.message));
+      stopSession = true;
     } else if (error instanceof Error) {
       this._debug('error instanceof Error === true');
       this._error(error.message);
@@ -540,7 +545,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       process.exit(1);
     }
 
-    return stop;
+    return stopSession;
   }
 
   /**
