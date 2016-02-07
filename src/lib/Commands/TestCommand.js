@@ -15,7 +15,7 @@ const randomWords = require('random-words');
 const AbstractCommand = require('./AbstractCommand');
 const BuildAPIClient = require('../BuildAPIClient');
 const promiseWhile = require('../utils/promiseWhile');
-const TestCaseError = require('../Errors/TestCaseError');
+const TestMethodError = require('../Errors/TestMethodError');
 const TestStateError = require('../Errors/TestStateError');
 const SessionFailedError = require('../Errors/SessionFailedError');
 //</editor-fold>
@@ -440,7 +440,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               throw new Error('Invalid test session state');
             }
 
-            this._onError(new TestCaseError(message.message));
+            this._onError(new TestMethodError(message.message));
             break;
 
           case 'RESULT':
@@ -489,7 +489,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   _onError(error) {
     let stop = false;
 
-    if (error instanceof TestCaseError) {
+    if (error instanceof TestMethodError) {
       this._debug('error instanceof TestCaseError === true');
       this._testLine(c.red('Error: ' + error.message));
       stop = false;
