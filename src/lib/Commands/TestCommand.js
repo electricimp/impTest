@@ -251,10 +251,8 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       agentCode = sessionDef + this._getSourceCode().agent;
     }
 
-    /* [info] */
-    this._info(c.blue('Agent code size: ') + agentCode.length + ' bytes');
-    /* [info] */
-    this._info(c.blue('Device code size: ') + deviceCode.length + ' bytes');
+    this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
+    this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
 
     return this._runTestSession(deviceCode, agentCode, file.type);
   }
@@ -300,7 +298,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               this._info(c.blue('Created revision: ') + body.revision.version);
               return client.restartModel(this._config.values.modelId)
                 .then(/* model restarted */() => {
-                  this._error('Model restarted');
+                  this._debug(c.blue('Model ') +  this._config.values.modelId + c.blue(' restarted'));
                   this._session.state = 'ready';
                 });
             })
@@ -351,9 +349,15 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                 if (message.match(/Agent restarted/)) {
                   // agent restarted
                   stopSession = this._onLogMessage('AGENT_RESTARTED');
-                } else if (m = message.match(/([\d\.]+)% program storage used/)) {
+                } else if (m = message.match(/(Out of space)?.*?([\d\.]+)% program storage used/)) {
+
                   // code space used
-                  stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[1]));
+                  stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[2]));
+
+                  // out of code space
+                  if (m[1]) {
+                    stopSession = this._onLogMessage('DEVICE_OUT_OF_CODE_SPACE');
+                  }
                 }
 
               } else if ('lastexitcode' === log.type) {
@@ -400,10 +404,10 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    * Log output handler
    *
    * @param {string} type
-   * @param {*} [message=null]
+   * @param {*} [value=null]
    * @private
    */
-  _onLogMessage(type, message) {
+  _onLogMessage(type, value) {
     let m;
     let stopSession = false;
 
@@ -413,16 +417,20 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         break;
 
       case 'DEVICE_CODE_SPACE_USAGE':
-        this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', message));
+        this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
+        break;
+
+      case 'DEVICE_OUT_OF_CODE_SPACE':
+        stopSession = this._onError(new ImpError('Device out of code space'));
         break;
 
       case 'LASTEXITCODE':
 
         if (this._session.state !== 'inited') {
-          if (message.match(/imp restarted, reason: out of memory/)) {
+          if (value.match(/imp restarted, reason: out of memory/)) {
             stopSession = this._onError(new ImpError('Device out of memory'));
           } else {
-            stopSession = this._onError(new ImpError(message));
+            stopSession = this._onError(new ImpError(value));
           }
         }
 
@@ -430,13 +438,13 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       case 'IMPUNIT':
 
-        if (message.session !== this._session.id) {
+        if (value.session !== this._session.id) {
           // skip messages not from the current session
           // ??? should an error be thrown?
           break;
         }
 
-        switch (message.type) {
+        switch (value.type) {
           case 'START':
 
             if (this._session.state !== 'ready') {
@@ -452,15 +460,15 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               throw new TestStateError('Invalid test session state');
             }
 
-            if (m = message.message.match(/(.+)::setUp\(\)$/)) {
+            if (m = value.message.match(/(.+)::setUp\(\)$/)) {
               // setup
               this._testLine(c.blue('Setting up ') + m[1]);
-            } else if (m = message.message.match(/(.+)::tearDown\(\)$/)) {
+            } else if (m = value.message.match(/(.+)::tearDown\(\)$/)) {
               // teardown
               this._testLine(c.blue('Tearing down ') + m[1]);
             } else {
               // status message
-              this._testLine(message.message);
+              this._testLine(value.message);
             }
 
             break;
@@ -471,7 +479,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               throw new TestStateError('Invalid test session state');
             }
 
-            this._onError(new TestMethodError(message.message));
+            this._onError(new TestMethodError(value.message));
             break;
 
           case 'RESULT':
@@ -480,9 +488,9 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               throw new TestStateError('Invalid test session state');
             }
 
-            this._session.tests = message.message.tests;
-            this._session.failures = message.message.failures;
-            this._session.assertions = message.message.assertions;
+            this._session.tests = value.message.tests;
+            this._session.failures = value.message.failures;
+            this._session.assertions = value.message.assertions;
             this._session.state = 'finished';
 
             const sessionMessage =
