@@ -12,6 +12,7 @@ const glob = require('glob');
 const Bundler = require('../Bundler');
 const EventEmitter = require('events');
 const randomWords = require('random-words');
+const sprintf = require('sprintf-js').sprintf;
 const ImpError = require('../Errors/ImpError');
 const AbstractCommand = require('./AbstractCommand');
 const BuildAPIClient = require('../BuildAPIClient');
@@ -265,7 +266,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   _initTestSession() {
     this._session = {
       id: randomWords(2).join('-'),
-      state: 'ready',
+      state: 'awaiting device code update',
       failures: 0,
       assertions: 0,
       tests: 0
@@ -345,16 +346,14 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                 if (message.match(/Agent restarted/)) {
                   // agent restarted
                   stopSession = this._onLogMessage('AGENT_RESTARTED');
-                } else if (m = message.match(/([\d\.]+%) program storage used/)) {
+                } else if (m = message.match(/([\d\.]+)% program storage used/)) {
                   // code space used
-                  stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+                  stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[1]));
                 }
 
               } else if ('lastexitcode' === log.type) {
 
-                if (message.match(/imp restarted, reason: out of memory/)) {
-                  stopSession = this._onError(new ImpError('Device out of memory'));
-                }
+                stopSession = this._onLogMessage('LASTEXITCODE', message);
 
               } else if (typeFilter === log.type /* agent.log || server.log */) {
 
@@ -408,8 +407,23 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       case 'AGENT_RESTARTED':
         break;
 
+      // this also means that new code is downloaded
+      // and triggers 'ready' state on the session
       case 'DEVICE_CODE_SPACE_USAGE':
-        this._info(c.blue('Device code space usage: ') + message);
+        this._session.state = 'ready';
+        this._info(c.blue('Device code space usage: ') + sprintf('%.0f%%', message));
+        break;
+
+      case 'LASTEXITCODE':
+
+        if (this._session.state === 'ready') {
+          if (message.match(/imp restarted, reason: out of memory/)) {
+            stopSession = this._onError(new ImpError('Device out of memory'));
+          } else {
+            stopSession = this._onError(new ImpError(message));
+          }
+        }
+
         break;
 
       case 'IMPUNIT':
@@ -515,7 +529,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     } else if (error instanceof SessionFailedError) {
       this._debug('error instanceof SessionFailedError === true');
       this._testLine(c.red(error.message));
-      stop = !!this._config.values.stopOnFailure;;
+      stop = !!this._config.values.stopOnFailure;
     } else if (error instanceof Error) {
       this._debug('error instanceof Error === true');
       this._error(error.message);
