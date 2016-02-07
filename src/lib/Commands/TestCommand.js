@@ -12,6 +12,7 @@ const glob = require('glob');
 const Bundler = require('../Bundler');
 const EventEmitter = require('events');
 const randomWords = require('random-words');
+const ImpError = require('../Errors/ImpError');
 const AbstractCommand = require('./AbstractCommand');
 const BuildAPIClient = require('../BuildAPIClient');
 const promiseWhile = require('../utils/promiseWhile');
@@ -339,15 +340,29 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
             try {
 
-              if ('status' === log.type && message.match(/Agent restarted/)) {
-                // agent restarted
-                stopSession = this._onLogMessage('AGENT_RESTARTED');
-              } else if ('status' === log.type && (m = message.match(/([\d\.]+%) program storage used/))) {
-                // code space used
-                stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
-              } else if (typeFilter === log.type && message.match(/__IMPUNIT__/)) {
-                // impUnit message, decode it
-                stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
+              if ('status' === log.type) {
+
+                if (message.match(/Agent restarted/)) {
+                  // agent restarted
+                  stopSession = this._onLogMessage('AGENT_RESTARTED');
+                } else if (m = message.match(/([\d\.]+%) program storage used/)) {
+                  // code space used
+                  stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', m[1]);
+                }
+
+              } else if ('lastexitcode' === log.type) {
+
+                if (message.match(/imp restarted, reason: out of memory/)) {
+                  stopSession = this._onError(new ImpError('Device out of memory'));
+                }
+
+              } else if (typeFilter === log.type /* agent.log || server.log */) {
+
+                if (message.match(/__IMPUNIT__/)) {
+                  // impUnit message, decode it
+                  stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
+                }
+
               }
 
             } catch (e) {
@@ -437,7 +452,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           case 'FAIL':
 
             if (this._session.state !== 'started') {
-              throw new Error('Invalid test session state');
+              throw new TestStateError('Invalid test session state');
             }
 
             this._onError(new TestMethodError(message.message));
