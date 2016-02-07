@@ -338,6 +338,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
           for (const log of data.logs) {
 
+            // xxx
             //console.log(c.yellow(JSON.stringify(log)));
 
             const message = log.message;
