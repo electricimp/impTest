@@ -50,7 +50,7 @@ class AbstractCommand {
     this.options = options;
     this._info('impTest/' + this._options.version);
     this._logStartDate = this._logDate = null;
-    this._info(colors.magenta('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
+    this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
   }
 
   /**

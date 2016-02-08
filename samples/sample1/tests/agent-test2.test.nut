@@ -14,7 +14,7 @@ class DeviceTestCase1 extends ImpUnitCase {
   }
 
   function testSomethingSync2() {
-//    this.assertTrue(false);
+    this.assertTrue(false);
   }
 }
 

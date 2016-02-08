@@ -46,6 +46,9 @@ class TestCommand extends AbstractCommand {
 
     super.run();
 
+    // overall success
+    this._success = true;
+
     // find test case files
     const testFiles = this._findTestFiles();
 
@@ -78,7 +81,13 @@ class TestCommand extends AbstractCommand {
         this._blankLine();
         return this._runTestFile(testFiles[i - 1]);
       }
-    );
+    ).then(() => {
+      // !!! ??? extract this?
+      // we're done with test command
+      if (!this._success) {
+        process.exit(1);
+      }
+    });
   }
 
   /**
@@ -267,10 +276,11 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       state: 'inited',
       failures: 0,
       assertions: 0,
-      tests: 0
+      tests: 0,
+      error: null // overall error
     };
 
-    this._info(c.magenta('Starting test session ') + this._session.id);
+    this._info(c.blue('Starting test session ') + this._session.id);
   }
 
   /**
@@ -310,7 +320,18 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
         })
 
-        .on('done', resolve);
+        // session is over
+        .on('done', () => {
+
+          if (this._session.error) {
+            this._testLine(c.red('Session ') + this._session.id + c.red(' failed'));
+          } else {
+            this._testLine(c.green('Session ') + this._session.id + c.green(' succeeded'));
+          }
+
+          // proceed to next session
+          resolve();
+        });
 
     });
   }
@@ -527,30 +548,44 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    */
   _onError(error) {
     let stopSession = false;
+    let stopTesting = false;
 
     if (error instanceof TestMethodError) {
       this._debug('error instanceof TestCaseError === true');
       this._testLine(c.red('Error: ' + error.message));
       stopSession = false;
+      stopTesting = false;
     } else if (error instanceof TestStateError) {
       this._debug('error instanceof TestStateError === true');
       this._error(error);
+      this._session.error = true;
       stopSession = true;
+      stopTesting = true;
     } else if (error instanceof SessionFailedError) {
       this._debug('error instanceof SessionFailedError === true');
-      this._testLine(c.red(error.message));
       stopSession = !!this._config.values.stopOnFailure;
+      stopTesting = false;
     } else if (error instanceof ImpError) {
       this._debug('error instanceof ImpError === true');
       this._testLine(c.red(error.message));
       stopSession = true;
+      stopTesting = false;
     } else if (error instanceof Error) {
       this._debug('error instanceof Error === true');
       this._error(error.message);
-      process.exit(1);
+      stopSession = true;
+      stopTesting = true;
     } else {
       this._debug('Unknown error type');
       this._error(error);
+      stopSession = true;
+      stopTesting = true;
+    }
+
+    this._session.error = true;
+    this._success = false;
+
+    if (stopTesting) {
       process.exit(1);
     }
 
