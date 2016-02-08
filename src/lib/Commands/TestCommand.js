@@ -55,40 +55,42 @@ class TestCommand extends AbstractCommand {
     /* [debug] */
     this._debug(c.blue('Test files found:'), testFiles);
 
-    if (testFiles.length) {
-      /* [info] */
+    if (testFiles.length === 0) {
+
+      this._onError(new Error('No test files found'));
+      this._finish();
+
+    } else {
+
       this._info(c.blue('Found ') +
                  testFiles.length +
                  c.blue(' test file' +
                  (testFiles.length === 1 ? ':' : 's:')) + '\n\t'
                  + testFiles.map(e => e.name).join('\n\t')
       );
-    } else {
-      this._onError(new Error('No test files found'));
+
+      // pre-cache source code
+      this._getSourceCode();
+
+      // run test files
+      let i = 0;
+
+      promiseWhile(
+        () => i++ < testFiles.length,
+        () => {
+          this._blankLine();
+          return this._runTestFile(testFiles[i - 1]);
+        }
+      ).then(() => this._finish(), () => this._finish());
     }
-
-    // pre-cache source code
-    this._getSourceCode();
-
-    // run test files
-
-    let i = 0;
-
-    return promiseWhile(
-      () => i++ < testFiles.length,
-      () => {
-        /* [blank] */
-        this._blankLine();
-        return this._runTestFile(testFiles[i - 1]);
-      }
-    ).then(this._onDone.bind(this), this._onDone.bind(this));
+    ;
   }
 
   /**
    * We're done with testing
    * @private
    */
-  _onDone() {
+  _finish() {
     // !!! ??? extract this?
     if (!this._success) {
       process.exit(1);
@@ -278,8 +280,14 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    * @private
    */
   _initTestSession() {
+    let sessionId = null;
+
+    while (null === sessionId || (this._session && sessionId === this._session.id)) {
+      sessionId = randomWords(2).join('-');
+    }
+
     this._session = {
-      id: randomWords(2).join('-'),
+      id: sessionId,
       state: 'inited',
       failures: 0,
       assertions: 0,
@@ -315,8 +323,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               this._info(c.blue('Created revision: ') + body.revision.version);
               return client.restartModel(this._config.values.modelId)
                 .then(/* model restarted */() => {
-                  this._debug(c.blue('Model ') +  this._config.values.modelId + c.blue(' restarted'));
-                  this._session.state = 'ready';
+                  this._debug(c.blue('Model ') + this._config.values.modelId + c.blue(' restarted'));
                 });
             })
 
@@ -451,6 +458,9 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       case 'DEVICE_CODE_SPACE_USAGE':
         this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
+        // also serves as an indicator that current code actually started to run
+        // and previous revision was replaced
+        this._session.state = 'ready';
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
@@ -575,7 +585,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       stopSession = !!this._config.values.stopOnFailure;
     } else if (error instanceof ImpError) {
       this._debug('error instanceof ImpError === true');
-      this._testLine(c.red(error.message));
+      this._testLine(c.red('Error: ' + error.message));
       stopSession = true;
     } else if (error instanceof Error) {
       this._debug('error instanceof Error === true');
