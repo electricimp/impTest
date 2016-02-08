@@ -12,6 +12,7 @@ const glob = require('glob');
 const Bundler = require('../Bundler');
 const EventEmitter = require('events');
 const randomWords = require('random-words');
+const randomstring = require("randomstring");
 const sprintf = require('sprintf-js').sprintf;
 const ImpError = require('../Errors/ImpError');
 const AbstractCommand = require('./AbstractCommand');
@@ -91,6 +92,9 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _finish() {
+
+    this._debug(c.blue('Command success: ') + this._success);
+
     // !!! ??? extract this?
     if (!this._success) {
       process.exit(1);
@@ -177,7 +181,7 @@ class TestCommand extends AbstractCommand {
         this._info(c.blue('Agent source file: ')
                    + this._config.values.agentFile);
 
-        this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8');
+        this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
       } else {
         this._agentSource = '/* no agent source provided */';
       }
@@ -191,7 +195,7 @@ class TestCommand extends AbstractCommand {
         this._info(c.blue('Device source file: ')
                    + this._config.values.deviceFile);
 
-        this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8');
+        this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
       } else {
         this._deviceSource = '/* no device source provided */';
       }
@@ -215,7 +219,7 @@ class TestCommand extends AbstractCommand {
         .process(this._options.testFrameworkFile);
     }
 
-    return this._frameworkCode;
+    return this._frameworkCode.trim();
   }
 
   /**
@@ -235,8 +239,7 @@ class TestCommand extends AbstractCommand {
 
     // bootstrap code
     const bootstrapCode =
-      `
-// run tests
+`// bootstrap tests
 imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
@@ -245,28 +248,27 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   t.stopOnFailure = ${!!this._config.values.stopOnFailure};
   // poehali!
   t.run();
-});
-`;
+});`;
 
     let agentCode, deviceCode;
 
-    const sessionDef = '_impUnitSession <- "' + this._session.id + '";\n\n';
+    // triggers device code space usage message, which also serves as revision launch indicator for device
+    const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
     if ('agent' === file.type) {
       agentCode = this._getFrameworkCode() + '\n\n' +
                   this._getSourceCode().agent + '\n\n' +
-                  sessionDef +
-                  fs.readFileSync(file.path, 'utf-8') + '\n\n' +
+                  fs.readFileSync(file.path, 'utf-8').trim() + '\n\n' +
                   bootstrapCode;
-      deviceCode = sessionDef + /* also triggers device code space usage message due to the change on code every time, takes 0.04% code space on imp001 */
-                   this._getSourceCode().device;
+      deviceCode = this._getSourceCode().device + '\n\n' +
+                   reloadTrigger;
     } else {
       deviceCode = this._getFrameworkCode() + '\n\n' +
                    this._getSourceCode().device + '\n\n' +
-                   sessionDef +
-                   fs.readFileSync(file.path, 'utf-8') + '\n\n' +
-                   bootstrapCode;
-      agentCode = sessionDef + this._getSourceCode().agent;
+                   fs.readFileSync(file.path, 'utf-8').trim() + '\n\n' +
+                   bootstrapCode + '\n\n' +
+                   reloadTrigger;
+      agentCode = this._getSourceCode().agent;
     }
 
     this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
@@ -323,7 +325,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               this._info(c.blue('Created revision: ') + body.revision.version);
               return client.restartModel(this._config.values.modelId)
                 .then(/* model restarted */() => {
-                  this._debug(c.blue('Model ') + this._config.values.modelId + c.blue(' restarted'));
+                  this._debug(c.blue('Model restarted'));
                 });
             })
 
@@ -338,9 +340,9 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         .on('done', () => {
 
           if (this._session.error) {
-            this._testLine(c.red('Session ') + this._session.id + c.red(' failed'));
+            this._info(c.red('Session ') + this._session.id + c.red(' failed'));
           } else {
-            this._testLine(c.green('Session ') + this._session.id + c.green(' succeeded'));
+            this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
           }
 
           if (this._session.error && !!this._config.values.stopOnFailure) {
