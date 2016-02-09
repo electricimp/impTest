@@ -199,9 +199,11 @@ class BuildAPIClient {
                   })
                   .catch((error) => {
                     // todo: handle HTTP/504 (timeouts, call again)
-                    if (error.message.indexOf('InvalidLogToken') !== -1 /* timeout error */) {
+                    if (error.message.indexOf('InvalidLogToken') !== -1 /* we need to refresh token */) {
                       stop = true;
                       resolve(this.streamDeviceLogs(deviceId, callback));
+                    } else if (error.message.indexOf('HTTP/504') !== -1 /* timeout error */) {
+                      resolve();
                     } else {
                       reject(error);
                     }
