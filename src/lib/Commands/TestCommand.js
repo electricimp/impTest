@@ -422,8 +422,6 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
         if (data) {
 
-          // this._onError(new DeviceDisconnectedError()); // xxx
-
           for (const log of data.logs) {
 
             // xxx
@@ -496,7 +494,6 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                   this._onLogMessage('UNKNOWN', log);
                   break;
               }
-
 
             } catch (e) {
 
