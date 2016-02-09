@@ -7,6 +7,8 @@ var parseBool = require('../../src/lib/utils/parseBool');
 describe('BuildAPIClient test suite', () => {
 
   let client;
+  let modelId;
+  let deviceId;
 
   beforeEach(() => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
@@ -18,8 +20,52 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get list a of devices', (done) => {
 
-    client.request('GET', '/devices')
-      .then(done)
+    client.getDevices()
+      .then((res) => {
+        expect(res.devices.length).toBeGreaterThan(0);
+        deviceId = res.devices[0].id;
+        done();
+      })
+      .catch((error) => {
+        done.fail(error);
+      });
+
+  });
+
+  it('should get a device', (done) => {
+
+    client.getDevice(deviceId)
+      .then((res) => {
+        expect(res.device.id).toBe(deviceId);
+        done();
+      })
+      .catch((error) => {
+        done.fail(error);
+      });
+
+  });
+
+  it('should get list a of models', (done) => {
+
+    client.getModels()
+      .then((res) => {
+        expect(res.models.length).toBeGreaterThan(0);
+        modelId = res.models[0].id;
+        done();
+      })
+      .catch((error) => {
+        done.fail(error);
+      });
+
+  });
+
+  it('should get a model', (done) => {
+
+    client.getModel(modelId)
+      .then((res) => {
+        expect(res.model.id).toBe(modelId);
+        done();
+      })
       .catch((error) => {
         done.fail(error);
       });

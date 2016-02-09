@@ -42,7 +42,7 @@ class BuildAPIClient {
    * @param {{}} headers
    * @returns {Promise}
    */
-  request(method, path, query, headers, onData) {
+  request(method, path, query, headers) {
     return new Promise((resolve, reject) => {
 
       method = method.toUpperCase();
@@ -124,6 +124,58 @@ class BuildAPIClient {
   }
 
   /**
+   * Get list of devices
+   *
+   * @see https://electricimp.com/docs/buildapi/device/list/
+   * @param {string} [name] - List devices whose name contains the supplied string fragment (case-insensitive)
+   * @param {string} [deviceId] - List the device whose device ID exactly matches the supplied string
+   * @param {string} [modelId] - List devices whose model ID exactly matches the supplied string
+   * @return {Promise}
+   */
+  getDevices(name, deviceId, modelId) {
+    return this.request('GET', '/devices', {
+      device_id: deviceId,
+      model_id: modelId,
+      name: name
+    });
+  }
+
+  /**
+   * Get device info
+   *
+   * @see https://electricimp.com/docs/buildapi/device/get/
+   * @param {string} deviceId
+   * @return {Promise}
+   */
+  getDevice(deviceId) {
+    return this.request('GET', '/devices/' + deviceId);
+  }
+
+  /**
+   * Get models
+   *
+   * @see https://electricimp.com/docs/buildapi/model/list/
+   * @param {string} [name] - List models whose name contains the supplied string fragment (case-insensitive)
+   * @return {Promise}
+   */
+  getModels(name) {
+    return this.request('GET', '/models', {
+      name: name
+    });
+  }
+
+  /**
+   * Get model
+   *
+   * @see https://electricimp.com/docs/buildapi/model/get/
+   * @param {string} modelId
+   * @return {Promise}
+   */
+  getModel(modelId) {
+    return this.request('GET', '/models/' + modelId);
+  }
+
+  /**
    * Upload a new code revision
    * @see https://electricimp.com/docs/buildapi/coderev/upload/
    *
@@ -134,7 +186,6 @@ class BuildAPIClient {
    * @returns {Promise}
    */
   createRevision(modelId, deviceCode, agentCode, releaseNotes) {
-    // todo: check for extra parameters (tag, etc.)
     return this.request('POST', `/models/${modelId}/revisions`, {
       device_code: deviceCode,
       agent_code: agentCode,
@@ -198,7 +249,6 @@ class BuildAPIClient {
                     resolve(); // next stream request
                   })
                   .catch((error) => {
-                    // todo: handle HTTP/504 (timeouts, call again)
                     if (error.message.indexOf('InvalidLogToken') !== -1 /* we need to refresh token */) {
                       stop = true;
                       resolve(this.streamDeviceLogs(deviceId, callback));
