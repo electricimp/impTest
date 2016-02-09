@@ -521,7 +521,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       case 'LASTEXITCODE':
 
         if (this._session.state !== 'initialized') {
-          if (value.match(/imp restarted, reason: out of memory/)) {
+          if (value.match(/out of memory/)) {
             stopSession = this._onError(new DeviceError('Out of memory'));
           } else {
             stopSession = this._onError(new DeviceError(value));
