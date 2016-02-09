@@ -301,7 +301,8 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       failures: 0,
       assertions: 0,
       tests: 0,
-      error: null // overall error
+      stop: false,
+      error: false // overall error
     };
 
     this._info(c.blue('Starting test session ') + this._session.id);
@@ -381,8 +382,6 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
-        let stopSession = false;
-
         if (data) {
 
           for (const log of data.logs) {
@@ -401,28 +400,28 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
                   if (message.match(/Agent restarted/)) {
                     // agent restarted
-                    stopSession = this._onLogMessage('AGENT_RESTARTED');
+                    this._onLogMessage('AGENT_RESTARTED');
                   } else if (m = message.match(/(Out of space)?.*?([\d\.]+)% program storage used/)) {
                     // code space used
-                    stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[2]));
+                    this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[2]));
 
                     // out of code space
                     if (m[1]) {
-                      stopSession = this._onLogMessage('DEVICE_OUT_OF_CODE_SPACE');
+                      this._onLogMessage('DEVICE_OUT_OF_CODE_SPACE');
                     }
                   } else if (message.match(/Device disconnected/)) {
-                    stopSession = this._onLogMessage('DEVICE_DISCONNECTED');
+                    this._onLogMessage('DEVICE_DISCONNECTED');
                   } else if (message.match(/Device connected/)) {
-                    stopSession = this._onLogMessage('DEVICE_CONNECTED');
+                    this._onLogMessage('DEVICE_CONNECTED');
                   } else {
-                    stopSession = this._onLogMessage('UNKNOWN', log);
+                    this._onLogMessage('UNKNOWN', log);
                   }
 
                   break;
 
                 // error
                 case 'lastexitcode':
-                  stopSession = this._onLogMessage('LASTEXITCODE', message);
+                  this._onLogMessage('LASTEXITCODE', message);
                   break;
 
                 case 'server.log':
@@ -431,43 +430,42 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                   if (log.type.replace(/\.log$/, '') === apiType) {
                     if (message.match(/__IMPUNIT__/)) {
                       // impUnit message, decode it
-                      stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
+                      this._onLogMessage('IMPUNIT', JSON.parse(message));
                     }
                   }
 
                   break;
 
                 case 'server.error':
-                  stopSession = this._onLogMessage('AGENT_ERROR', message);
+                  this._onLogMessage('AGENT_ERROR', message);
                   break;
 
                 case 'device.error':
-                  stopSession = this._onLogMessage('DEVICE_ERROR', message);
+                  this._onLogMessage('DEVICE_ERROR', message);
                   break;
 
                 case 'powerstate':
-                  stopSession = this._onLogMessage('POWERSTATE', message);
+                  this._onLogMessage('POWERSTATE', message);
                   break;
 
                 case 'firmware':
-                  stopSession = this._onLogMessage('FIRMWARE', message);
+                  this._onLogMessage('FIRMWARE', message);
                   break;
 
                 default:
-                  stopSession = this._onLogMessage('UNKNOWN', log);
-
+                  this._onLogMessage('UNKNOWN', log);
                   break;
               }
 
 
             } catch (e) {
 
-              stopSession = this._onError(e);
+              this._onError(e);
 
             }
 
             // are we done?
-            if (stopSession) {
+            if (this._session.stop) {
               ee.emit('done');
               break;
             }
@@ -478,7 +476,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           ee.emit('ready');
         }
 
-        return !stopSession;
+        return !this._session.stop;
       })
 
       .catch((e) => {
@@ -498,7 +496,6 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    */
   _onLogMessage(type, value) {
     let m;
-    let stopSession = false;
 
     switch (type) {
 
@@ -515,31 +512,31 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        stopSession = this._onError(new DeviceError('Out of code space'));
+        this._onError(new DeviceError('Out of code space'));
         break;
 
       case 'LASTEXITCODE':
 
         if (this._session.state !== 'initialized') {
           if (value.match(/out of memory/)) {
-            stopSession = this._onError(new DeviceError('Out of memory'));
+            this._onError(new DeviceError('Out of memory'));
           } else {
-            stopSession = this._onError(new DeviceError(value));
+            this._onError(new DeviceError(value));
           }
         }
 
         break;
 
       case 'DEVICE_ERROR':
-        stopSession = this._onError(new DeviceRuntimeError(value));
+        this._onError(new DeviceRuntimeError(value));
         break;
 
       case 'DEVICE_DISCONNECTED':
-        stopSession = this._onError(new DeviceDisconnectedError());
+        this._onError(new DeviceDisconnectedError());
         break;
 
       case 'AGENT_ERROR':
-        stopSession = this._onError(new AgentRuntimeError(value));
+        this._onError(new AgentRuntimeError(value));
         break;
 
       case 'POWERSTATE':
@@ -619,7 +616,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
               this._testLine(c.green(sessionMessage));
             }
 
-            stopSession = true;
+            this._session.stop = true;
             break;
 
         }
@@ -630,8 +627,6 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         this._info(c.blue('Message of type ') + value.type + c.blue(': ') + value.message);
         break;
     }
-
-    return stopSession;
   }
 
   /**
@@ -641,64 +636,61 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    * @private
    */
   _onError(error) {
-    let stopSession = false;
-
     this._debug('Error type: ' + error.constructor.name);
 
     if (error instanceof TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
-      stopSession = false;
+      this._session.stop = false;
 
     } else if (error instanceof TestStateError) {
 
       this._error(error);
       this._session.error = true;
-      stopSession = true;
+      this._session.stop = true;
 
     } else if (error instanceof SessionFailedError) {
 
-      stopSession = !!this._config.values.stopOnFailure;
+      this._session.stop = !!this._config.values.stopOnFailure;
 
     } else if (error instanceof DeviceDisconnectedError) {
 
       this._testLine(c.red('Device disconnected'));
 
+      // todo: proceed to next device
       this._testingAbort = true; // global abort
       this._testingAbortReason = 'Device disconnected';
-      stopSession = true;
+      this._session.stop = true;
 
     } else if (error instanceof DeviceRuntimeError) {
 
       this._testLine(c.red('Device Runtime Error: ' + error.message));
-      stopSession = true;
+      this._session.stop = true;
 
     } else if (error instanceof AgentRuntimeError) {
 
       this._testLine(c.red('Agent Runtime Error: ' + error.message));
-      stopSession = true;
+      this._session.stop = true;
 
     } else if (error instanceof DeviceError) {
 
       this._testLine(c.red('Device Error: ' + error.message));
-      stopSession = true;
+      this._session.stop = true;
 
     } else if (error instanceof Error) {
 
       this._error(error.message);
-      stopSession = true;
+      this._session.stop = true;
 
     } else {
 
       this._error(error);
-      stopSession = true;
+      this._session.stop = true;
 
     }
 
     this._session.error = true;
     this._success = false;
-
-    return stopSession;
   }
 
   /**
