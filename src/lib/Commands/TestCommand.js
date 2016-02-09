@@ -290,7 +290,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     this._session = {
       id: sessionId,
-      state: 'inited',
+      state: 'initialized',
       failures: 0,
       assertions: 0,
       tests: 0,
@@ -460,8 +460,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       case 'DEVICE_CODE_SPACE_USAGE':
 
-        if (this._session.state === 'inited') {
-          console.log(this._session.state);
+        if (this._session.state === 'initialized') {
           this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
           // also serves as an indicator that current code actually started to run
           // and previous revision was replaced
@@ -476,7 +475,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       case 'LASTEXITCODE':
 
-        if (this._session.state !== 'inited') {
+        if (this._session.state !== 'initialized') {
           if (value.match(/imp restarted, reason: out of memory/)) {
             stopSession = this._onError(new ImpError('Out of memory'));
           } else {
