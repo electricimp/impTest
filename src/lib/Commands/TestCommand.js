@@ -59,22 +59,28 @@ class TestCommand extends AbstractCommand {
         let d = 0;
 
         return promiseWhile(
-          () => d++ < this._config.values.devices.length,
-          () => {
-            return this._runDevice(d - 1, testFiles);
-          }
+          () => d++ < this._config.values.devices.length && !this._testingAbort,
+          () => this._runDevice(d - 1, testFiles).catch(() => {
+            this._debug(c.red('Device #' + d + ' run failed'));
+          })
         );
 
       });
   }
 
+  /**
+   * Run test files on single device
+   *
+   * @param {number} deviceIndex
+   * @param {[]} testFiles
+   * @return {Priomise}
+   * @private
+   */
   _runDevice(deviceIndex, testFiles) {
     let t = 0;
     return promiseWhile(
       () => t++ < testFiles.length,
-      () => {
-        return this._runTestFile(testFiles[t - 1], deviceIndex);
-      }
+      () => { return this._runTestFile(testFiles[t - 1], deviceIndex); }
     );
   }
 
@@ -85,7 +91,7 @@ class TestCommand extends AbstractCommand {
   finish() {
     if (this._testingAbort) {
       // testing was aborted
-      this._error('Testing Aborted: ' + this._testingAbortReason);
+      this._error('Testing Aborted' + (this._testingAbortReason ? (': ' + this._testingAbortReason) : ''));
     }
 
     super.finish();
@@ -391,6 +397,8 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
         if (data) {
 
+          // this._onError(new DeviceDisconnectedError()); // xxx
+
           for (const log of data.logs) {
 
             // xxx
@@ -653,7 +661,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     if (error instanceof TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
-      if (this._session) this._session.stop = false;
+      if (this._session) this._session.stop = this._config.values.stopOnFailure;
 
     } else if (error instanceof TestStateError) {
 
@@ -662,15 +670,12 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     } else if (error instanceof SessionFailedError) {
 
-      if (this._session) this._session.stop = !!this._config.values.stopOnFailure;
+      // do nothing, produced at the end of session anyway
 
     } else if (error instanceof DeviceDisconnectedError) {
 
       this._testLine(c.red('Device disconnected'));
 
-      // todo: proceed to next device
-      this._testingAbort = true; // global abort
-      this._testingAbortReason = 'Device disconnected';
       if (this._session) this._session.stop = true;
 
     } else if (error instanceof DeviceRuntimeError) {
@@ -700,8 +705,22 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     }
 
-    if (this._session) this._session.error = true;
     this._success = false;
+
+    if (this._session) {
+      this._session.error = true;
+
+      // abort completely?
+      // _session.stop==true means the error is
+      // big enough to interrupt the session.
+      // in combination w/stopOnFailure it makes sense
+      // to abort the entire testing
+      if (!this._testingAbort && this._session.stop && this._config.values.stopOnFailure) {
+        this._testingAbort = true;
+        // this._testingAbortReason = 'stopOnFailure config value is set to "true"';
+      }
+    }
+
   }
 
   /**
