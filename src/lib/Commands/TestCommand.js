@@ -20,9 +20,11 @@ const AbstractCommand = require('./AbstractCommand');
 const promiseWhile = require('../utils/promiseWhile');
 const TestStateError = require('../Errors/TestStateError');
 const TestMethodError = require('../Errors/TestMethodError');
+const WrongModelError = require('../Errors/WrongModelError');
 const AgentRuntimeError = require('../Errors/AgentRuntimeError');
 const DeviceRuntimeError = require('../Errors/DeviceRuntimeError');
 const SessionFailedError = require('../Errors/SessionFailedError');
+const DevicePowerstateError = require('../Errors/DevicePowerstateError');
 const DeviceDisconnectedError = require('../Errors/DeviceDisconnectedError');
 //</editor-fold>
 
@@ -78,9 +80,12 @@ class TestCommand extends AbstractCommand {
    */
   _runDevice(deviceIndex, testFiles) {
     let t = 0;
+
+    this._stopDevice = false;
+
     return promiseWhile(
-      () => t++ < testFiles.length,
-      () => { return this._runTestFile(testFiles[t - 1], deviceIndex); }
+      () => t++ < testFiles.length && !this._stopDevice,
+      () => this._runTestFile(testFiles[t - 1], deviceIndex)
     );
   }
 
@@ -248,11 +253,6 @@ class TestCommand extends AbstractCommand {
     // determine device
     const deviceId = this._config.values.devices[deviceIndex];
 
-    this._info(c.blue('Using device ') +
-               (deviceIndex + 1) + ' of ' +
-               this._config.values.devices.length
-               + c.blue(', id: ') + deviceId);
-
     /* [info] */
     this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
 
@@ -295,7 +295,32 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
     this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
 
-    return this._runTestSession(deviceCode, agentCode, file.type);
+    // resolve device info
+    return this._getBuildApiClient().getDevice(deviceId)
+
+      .then((res) => {
+        this._info(c.blue('Using device ' +
+                   (deviceIndex + 1) + ' of ' +
+                   this._config.values.devices.length +  ': ')
+                   + res.device.name + c.blue(' / ') + deviceId);
+
+        // check model
+        if (res.device.model_id !== this._config.values.modelId) {
+          throw new WrongModelError('Device is assigned to a wrong model');
+        }
+
+        // check online state
+        if (res.device.powerstate !== 'online') {
+          throw new DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
+        }
+      })
+
+      // run test session
+      .then(() => this._runTestSession(deviceCode, agentCode, file.type))
+
+      .catch((error) => {
+        this._onError(error);
+      });
   }
 
   /**
@@ -677,6 +702,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       this._testLine(c.red('Device disconnected'));
 
       if (this._session) this._session.stop = true;
+      this._stopDevice = true;
 
     } else if (error instanceof DeviceRuntimeError) {
 
@@ -692,6 +718,18 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       this._testLine(c.red('Device Error: ' + error.message));
       if (this._session) this._session.stop = true;
+
+    } else if (error instanceof WrongModelError) {
+
+      this._error(error.message);
+      if (this._session) this._session.stop = true;
+      this._stopDevice = true;
+
+    } else if (error instanceof DevicePowerstateError) {
+
+      this._error(error.message);
+      if (this._session) this._session.stop = true;
+      this._stopDevice = true;
 
     } else if (error instanceof Error) {
 
