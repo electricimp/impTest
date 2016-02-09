@@ -471,14 +471,14 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        stopSession = this._onError(new ImpError('Device out of code space'));
+        stopSession = this._onError(new ImpError('Out of code space'));
         break;
 
       case 'LASTEXITCODE':
 
         if (this._session.state !== 'inited') {
           if (value.match(/imp restarted, reason: out of memory/)) {
-            stopSession = this._onError(new ImpError('Device out of memory'));
+            stopSession = this._onError(new ImpError('Out of memory'));
           } else {
             stopSession = this._onError(new ImpError(value));
           }
@@ -580,7 +580,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     if (error instanceof TestMethodError) {
       this._debug('error instanceof TestCaseError === true');
-      this._testLine(c.red('Error: ' + error.message));
+      this._testLine(c.red('Test Error: ' + error.message));
       stopSession = false;
     } else if (error instanceof TestStateError) {
       this._debug('error instanceof TestStateError === true');
@@ -592,7 +592,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       stopSession = !!this._config.values.stopOnFailure;
     } else if (error instanceof ImpError) {
       this._debug('error instanceof ImpError === true');
-      this._testLine(c.red('Error: ' + error.message));
+      this._testLine(c.red('Device Error: ' + error.message));
       stopSession = true;
     } else if (error instanceof Error) {
       this._debug('error instanceof Error === true');
