@@ -298,6 +298,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     this._session = {
       id: sessionId,
       state: 'initialized',
+      deviceCodespaceUsage: 0,
       failures: 0,
       assertions: 0,
       tests: 0,
@@ -508,7 +509,12 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         break;
 
       case 'DEVICE_CODE_SPACE_USAGE':
-        this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
+
+        if (!this._session.deviceCodespaceUsage !== value) {
+          this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
+          this._session.deviceCodespaceUsage = value; // avoid duplicate messages
+        }
+
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
