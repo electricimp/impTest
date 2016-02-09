@@ -301,7 +301,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       .then((res) => {
         this._info(c.blue('Using device ' +
                    (deviceIndex + 1) + ' of ' +
-                   this._config.values.devices.length +  ': ')
+                   this._config.values.devices.length + ': ')
                    + res.device.name + c.blue(' / ') + deviceId);
 
         // check model
