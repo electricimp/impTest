@@ -434,6 +434,10 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                   stopSession = this._onLogMessage('DEVICE_ERROR', message);
                   break;
 
+                case 'powerstate':
+                  stopSession = this._onLogMessage('POWERSTATE', message);
+                  break;
+
                 default:
                   break;
               }
@@ -517,6 +521,11 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       case 'AGENT_ERROR':
         stopSession = this._onError(new AgentRuntimeError(value));
+        break;
+
+      case 'POWERSTATE':
+        // todo: researh when this is sent and if any actiones needed
+        this._testLine(c.blue('Powerstate: ') + value);
         break;
 
       case 'IMPUNIT':
