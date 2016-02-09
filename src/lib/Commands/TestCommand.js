@@ -576,6 +576,9 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         this._onError(new DeviceRuntimeError(value));
         break;
 
+      case 'DEVICE_CONNECTED':
+        break;
+
       case 'DEVICE_DISCONNECTED':
         this._onError(new DeviceDisconnectedError());
         break;
