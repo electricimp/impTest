@@ -459,10 +459,15 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         break;
 
       case 'DEVICE_CODE_SPACE_USAGE':
-        this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
-        // also serves as an indicator that current code actually started to run
-        // and previous revision was replaced
-        this._session.state = 'ready';
+
+        if (this._session.state === 'inited') {
+          console.log(this._session.state);
+          this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
+          // also serves as an indicator that current code actually started to run
+          // and previous revision was replaced
+          this._session.state = 'ready';
+        }
+
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
