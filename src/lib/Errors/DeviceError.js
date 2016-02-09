@@ -4,6 +4,6 @@
 
 'use strict';
 
-class ImpError extends Error {}
+class DeviceError extends Error {}
 
-module.exports = ImpError;
+module.exports = DeviceError;

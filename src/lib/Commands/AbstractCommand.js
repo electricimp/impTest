@@ -95,7 +95,7 @@ class AbstractCommand {
       error = error.message;
     }
 
-    this._log('error', colors.red, [error]);
+    this._log('error', colors.red, [colors.red(error)]);
   }
 
   /**

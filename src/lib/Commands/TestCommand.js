@@ -14,8 +14,8 @@ const EventEmitter = require('events');
 const randomWords = require('random-words');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
-const ImpError = require('../Errors/ImpError');
 const BuildAPIClient = require('../BuildAPIClient');
+const DeviceError = require('../Errors/DeviceError');
 const AbstractCommand = require('./AbstractCommand');
 const promiseWhile = require('../utils/promiseWhile');
 const TestStateError = require('../Errors/TestStateError');
@@ -23,6 +23,7 @@ const TestMethodError = require('../Errors/TestMethodError');
 const AgentRuntimeError = require('../Errors/AgentRuntimeError');
 const DeviceRuntimeError = require('../Errors/DeviceRuntimeError');
 const SessionFailedError = require('../Errors/SessionFailedError');
+const DeviceDisconnectedError = require('../Errors/DeviceDisconnectedError');
 //</editor-fold>
 
 class TestCommand extends AbstractCommand {
@@ -86,7 +87,6 @@ class TestCommand extends AbstractCommand {
         }
       ).then(() => this._finish(), () => this._finish());
     }
-    ;
   }
 
   /**
@@ -96,6 +96,11 @@ class TestCommand extends AbstractCommand {
   _finish() {
 
     this._debug(c.blue('Command success: ') + this._success);
+
+    if (this._testingAbort) {
+      // testing was aborted
+      this._error('Testing Aborted: ' + this._testingAbortReason);
+    }
 
     // !!! ??? extract this?
     if (!this._success) {
@@ -347,7 +352,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
             this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
           }
 
-          if (this._session.error && !!this._config.values.stopOnFailure) {
+          if (this._testingAbort || this._session.error && !!this._config.values.stopOnFailure) {
             // stop testing cycle
             reject();
           } else {
@@ -498,30 +503,28 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     switch (type) {
 
       case 'AGENT_RESTARTED':
-        break;
-
-      case 'DEVICE_CODE_SPACE_USAGE':
-
         if (this._session.state === 'initialized') {
-          this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
           // also serves as an indicator that current code actually started to run
           // and previous revision was replaced
           this._session.state = 'ready';
         }
+        break;
 
+      case 'DEVICE_CODE_SPACE_USAGE':
+        this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        stopSession = this._onError(new ImpError('Out of code space'));
+        stopSession = this._onError(new DeviceError('Out of code space'));
         break;
 
       case 'LASTEXITCODE':
 
         if (this._session.state !== 'initialized') {
           if (value.match(/imp restarted, reason: out of memory/)) {
-            stopSession = this._onError(new ImpError('Out of memory'));
+            stopSession = this._onError(new DeviceError('Out of memory'));
           } else {
-            stopSession = this._onError(new ImpError(value));
+            stopSession = this._onError(new DeviceError(value));
           }
         }
 
@@ -532,7 +535,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         break;
 
       case 'DEVICE_DISCONNECTED':
-        stopSession = this._onError(new ImpError(value));
+        stopSession = this._onError(new DeviceDisconnectedError());
         break;
 
       case 'AGENT_ERROR':
@@ -657,6 +660,14 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       stopSession = !!this._config.values.stopOnFailure;
 
+    } else if (error instanceof DeviceDisconnectedError) {
+
+      this._testLine(c.red('Device disconnected'));
+
+      this._testingAbort = true; // global abort
+      this._testingAbortReason = 'Device disconnected';
+      stopSession = true;
+
     } else if (error instanceof DeviceRuntimeError) {
 
       this._testLine(c.red('Device Runtime Error: ' + error.message));
@@ -667,7 +678,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       this._testLine(c.red('Agent Runtime Error: ' + error.message));
       stopSession = true;
 
-    } else if (error instanceof ImpError) {
+    } else if (error instanceof DeviceError) {
 
       this._testLine(c.red('Device Error: ' + error.message));
       stopSession = true;
