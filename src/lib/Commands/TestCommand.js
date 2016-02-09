@@ -438,7 +438,13 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                   stopSession = this._onLogMessage('POWERSTATE', message);
                   break;
 
+                case 'firmware':
+                  stopSession = this._onLogMessage('FIRMWARE', message);
+                  break;
+
                 default:
+                  stopSession = this._onLogMessage('UNKNOWN', log);
+
                   break;
               }
 
@@ -524,8 +530,13 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         break;
 
       case 'POWERSTATE':
-        // todo: researh when this is sent and if any actiones needed
-        this._testLine(c.blue('Powerstate: ') + value);
+        // todo: researh if any actiones needed
+        this._info(c.blue('Powerstate: ') + value);
+        break;
+
+      case 'FIRMWARE':
+        // todo: researh if any actiones needed
+        this._info(c.blue('Firmware: ') + value);
         break;
 
       case 'IMPUNIT':
@@ -598,13 +609,12 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
             stopSession = true;
             break;
 
-          default:
-            break;
         }
 
         break;
 
       default:
+        this._info(c.blue('Message of type ') + value.type + c.blue(': ') + value.message);
         break;
     }
 

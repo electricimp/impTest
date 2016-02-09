@@ -1,6 +1,6 @@
 // test file
 
-a = 0;
+//a = 0;
 
 class DeviceTestCase extends ImpUnitCase {
   function testSomethingSync() {
