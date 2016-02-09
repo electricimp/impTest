@@ -12,12 +12,19 @@ class AbstractCommand {
    * Sets the return code to 1 in  case of error.
    */
   tryRun() {
+
     try {
-      this.run();
+      this.run()
+        .then(() => this.finish())
+        .catch((error) => {
+          throw error;
+        });
     } catch (e) {
+      this._success = false;
       this._error(e);
-      process.exit(1);
+      this.finish();
     }
+
   }
 
   /**
@@ -47,6 +54,7 @@ class AbstractCommand {
    * @param {{}} options
    */
   constructor(options) {
+    this._success = true;
     this.options = options;
     this._info('impTest/' + this._options.version);
     this._logStartDate = this._logDate = null;
@@ -55,14 +63,33 @@ class AbstractCommand {
 
   /**
    * Run command
+   *
+   * @return {Promise}
    */
   run() {
-    this._debug(
-      colors.blue('Using options:'),
-      this._options
-    );
+    return new Promise((resolve, reject) => {
+      this._debug(
+        colors.blue('Using options:'),
+        this._options
+      );
 
-    this._readConfig();
+      this._readConfig();
+
+      resolve();
+    });
+  }
+
+  /**
+   * Finish command
+   */
+  finish() {
+    this._debug(colors.blue('Command success: ') + this._success);
+
+    if (this._success) {
+      process.exit(0);
+    } else {
+      process.exit(1);
+    }
   }
 
   /**

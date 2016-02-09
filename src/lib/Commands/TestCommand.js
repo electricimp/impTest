@@ -47,67 +47,48 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   run() {
+    return super.run()
+      .then(() => {
 
-    super.run();
+        // find test case files
+        const testFiles = this._findTestFiles();
 
-    // overall success
-    this._success = true;
+        // pre-cache source code
+        this._getSourceCode();
 
-    // find test case files
-    const testFiles = this._findTestFiles();
+        let d = 0;
 
-    /* [debug] */
-    this._debug(c.blue('Test files found:'), testFiles);
+        return promiseWhile(
+          () => d++ < this._config.values.devices.length,
+          () => {
+            return this._runDevice(d - 1, testFiles);
+          }
+        );
 
-    if (testFiles.length === 0) {
+      });
+  }
 
-      this._onError(new Error('No test files found'));
-      this._finish();
-
-    } else {
-
-      this._info(c.blue('Found ') +
-                 testFiles.length +
-                 c.blue(' test file' +
-                 (testFiles.length === 1 ? ':' : 's:')) + '\n\t'
-                 + testFiles.map(e => e.name).join('\n\t')
-      );
-
-      // pre-cache source code
-      this._getSourceCode();
-
-      // run test files
-      let i = 0;
-
-      promiseWhile(
-        () => i++ < testFiles.length,
-        () => {
-          this._blankLine();
-          return this._runTestFile(testFiles[i - 1]);
-        }
-      ).then(() => this._finish(), () => this._finish());
-    }
+  _runDevice(deviceIndex, testFiles) {
+    let t = 0;
+    return promiseWhile(
+      () => t++ < testFiles.length,
+      () => {
+        return this._runTestFile(testFiles[t - 1], deviceIndex);
+      }
+    );
   }
 
   /**
    * We're done with testing
    * @private
    */
-  _finish() {
-
-    this._debug(c.blue('Command success: ') + this._success);
-
+  finish() {
     if (this._testingAbort) {
       // testing was aborted
       this._error('Testing Aborted: ' + this._testingAbortReason);
     }
 
-    // !!! ??? extract this?
-    if (!this._success) {
-      process.exit(1);
-    } else {
-      process.exit(0);
-    }
+    super.finish();
   }
 
   /**
@@ -164,6 +145,19 @@ class TestCommand extends AbstractCommand {
         pushFile(file);
       }
     }
+
+    if (files.length === 0) {
+      throw new Error('No test files found');
+    }
+
+    this._debug(c.blue('Test files found:'), files);
+
+    this._info(c.blue('Found ') +
+               files.length +
+               c.blue(' test file' +
+               (files.length === 1 ? ':' : 's:')) + '\n\t'
+               + files.map(e => e.name).join('\n\t')
+    );
 
     return files;
   }
@@ -232,12 +226,26 @@ class TestCommand extends AbstractCommand {
   /**
    * Run test file
    * @param {name, path, type} file
+   * @param {name, path, type} deviceIndex
    * @returns {Promise}
    * @private
    */
-  _runTestFile(file) {
+  _runTestFile(file, deviceIndex) {
+
+    this._blankLine();
+
     // init test session
     this._initTestSession();
+
+    this._info(c.blue('Starting test session ') + this._session.id);
+
+    // determine device
+    const deviceId = this._config.values.devices[deviceIndex];
+
+    this._info(c.blue('Using device ') +
+               (deviceIndex + 1) + ' of ' +
+               this._config.values.devices.length
+               + c.blue(', id: ') + deviceId);
 
     /* [info] */
     this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
@@ -305,8 +313,6 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       stop: false,
       error: false // overall error
     };
-
-    this._info(c.blue('Starting test session ') + this._session.id);
   }
 
   /**
@@ -647,17 +653,16 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     if (error instanceof TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
-      this._session.stop = false;
+      if (this._session) this._session.stop = false;
 
     } else if (error instanceof TestStateError) {
 
       this._error(error);
-      this._session.error = true;
-      this._session.stop = true;
+      if (this._session) this._session.stop = true;
 
     } else if (error instanceof SessionFailedError) {
 
-      this._session.stop = !!this._config.values.stopOnFailure;
+      if (this._session) this._session.stop = !!this._config.values.stopOnFailure;
 
     } else if (error instanceof DeviceDisconnectedError) {
 
@@ -666,36 +671,36 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       // todo: proceed to next device
       this._testingAbort = true; // global abort
       this._testingAbortReason = 'Device disconnected';
-      this._session.stop = true;
+      if (this._session) this._session.stop = true;
 
     } else if (error instanceof DeviceRuntimeError) {
 
       this._testLine(c.red('Device Runtime Error: ' + error.message));
-      this._session.stop = true;
+      if (this._session) this._session.stop = true;
 
     } else if (error instanceof AgentRuntimeError) {
 
       this._testLine(c.red('Agent Runtime Error: ' + error.message));
-      this._session.stop = true;
+      if (this._session) this._session.stop = true;
 
     } else if (error instanceof DeviceError) {
 
       this._testLine(c.red('Device Error: ' + error.message));
-      this._session.stop = true;
+      if (this._session) this._session.stop = true;
 
     } else if (error instanceof Error) {
 
       this._error(error.message);
-      this._session.stop = true;
+      if (this._session) this._session.stop = true;
 
     } else {
 
       this._error(error);
-      this._session.stop = true;
+      if (this._session) this._session.stop = true;
 
     }
 
-    this._session.error = true;
+    if (this._session) this._session.error = true;
     this._success = false;
   }
 
