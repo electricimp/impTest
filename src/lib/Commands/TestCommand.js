@@ -12,14 +12,16 @@ const glob = require('glob');
 const Bundler = require('../Bundler');
 const EventEmitter = require('events');
 const randomWords = require('random-words');
-const randomstring = require("randomstring");
+const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
 const ImpError = require('../Errors/ImpError');
-const AbstractCommand = require('./AbstractCommand');
 const BuildAPIClient = require('../BuildAPIClient');
+const AbstractCommand = require('./AbstractCommand');
 const promiseWhile = require('../utils/promiseWhile');
-const TestMethodError = require('../Errors/TestMethodError');
 const TestStateError = require('../Errors/TestStateError');
+const TestMethodError = require('../Errors/TestMethodError');
+const AgentRuntimeError = require('../Errors/AgentRuntimeError');
+const DeviceRuntimeError = require('../Errors/DeviceRuntimeError');
 const SessionFailedError = require('../Errors/SessionFailedError');
 //</editor-fold>
 
@@ -239,7 +241,7 @@ class TestCommand extends AbstractCommand {
 
     // bootstrap code
     const bootstrapCode =
-`// bootstrap tests
+      `// bootstrap tests
 imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
@@ -358,7 +360,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   }
 
   /**
-   * Read device logs
+   * Read device logs, convert them to predefined types
    *
    * @param {"agent"|"device"} type
    * @param {string} deviceId
@@ -368,7 +370,9 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
    */
   _readLogs(type, deviceId) {
     const ee = new EventEmitter();
-    const typeFilter = {agent: 'agent.log', device: 'server.log'}[type];
+
+    // for historical reasons, device produce server.* messages
+    const apiType = {agent: 'agent', device: 'server'}[type];
 
     this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
 
@@ -381,42 +385,64 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
             // xxx
             //console.log(c.yellow(JSON.stringify(log)));
 
-            const message = log.message;
             let m;
+            const message = log.message;
 
             try {
 
-              if ('status' === log.type) {
+              switch (log.type) {
 
-                if (message.match(/Agent restarted/)) {
-                  // agent restarted
-                  stopSession = this._onLogMessage('AGENT_RESTARTED');
-                } else if (m = message.match(/(Out of space)?.*?([\d\.]+)% program storage used/)) {
+                case 'status':
 
-                  // code space used
-                  stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[2]));
+                  if (message.match(/Agent restarted/)) {
+                    // agent restarted
+                    stopSession = this._onLogMessage('AGENT_RESTARTED');
+                  } else if (m = message.match(/(Out of space)?.*?([\d\.]+)% program storage used/)) {
+                    // code space used
+                    stopSession = this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[2]));
 
-                  // out of code space
-                  if (m[1]) {
-                    stopSession = this._onLogMessage('DEVICE_OUT_OF_CODE_SPACE');
+                    // out of code space
+                    if (m[1]) {
+                      stopSession = this._onLogMessage('DEVICE_OUT_OF_CODE_SPACE');
+                    }
                   }
-                }
 
-              } else if ('lastexitcode' === log.type) {
+                  break;
 
-                stopSession = this._onLogMessage('LASTEXITCODE', message);
+                // error
+                case 'lastexitcode':
+                  stopSession = this._onLogMessage('LASTEXITCODE', message);
+                  break;
 
-              } else if (typeFilter === log.type /* agent.log || server.log */) {
+                case 'server.log':
+                case 'agent.log':
 
-                if (message.match(/__IMPUNIT__/)) {
-                  // impUnit message, decode it
-                  stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
-                }
+                  if (log.type.replace(/\.log$/, '') === apiType) {
+                    if (message.match(/__IMPUNIT__/)) {
+                      // impUnit message, decode it
+                      stopSession = this._onLogMessage('IMPUNIT', JSON.parse(message));
+                    }
+                  }
 
+                  break;
+
+                case 'server.error':
+                  stopSession = this._onLogMessage('AGENT_ERROR', message);
+                  break;
+
+                case 'device.error':
+                  stopSession = this._onLogMessage('DEVICE_ERROR', message);
+                  break;
+
+                default:
+                  break;
               }
 
+
             } catch (e) {
+
               stopSession = this._onError(e);
+
             }
 
             // are we done?
@@ -483,6 +509,14 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           }
         }
 
+        break;
+
+      case 'DEVICE_ERROR':
+        stopSession = this._onError(new DeviceRuntimeError(value));
+        break;
+
+      case 'AGENT_ERROR':
+        stopSession = this._onError(new AgentRuntimeError(value));
         break;
 
       case 'IMPUNIT':
@@ -577,30 +611,48 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   _onError(error) {
     let stopSession = false;
 
+    this._debug('Error type: ' + error.constructor.name);
+
     if (error instanceof TestMethodError) {
-      this._debug('error instanceof TestCaseError === true');
+
       this._testLine(c.red('Test Error: ' + error.message));
       stopSession = false;
+
     } else if (error instanceof TestStateError) {
-      this._debug('error instanceof TestStateError === true');
+
       this._error(error);
       this._session.error = true;
       stopSession = true;
+
     } else if (error instanceof SessionFailedError) {
-      this._debug('error instanceof SessionFailedError === true');
+
       stopSession = !!this._config.values.stopOnFailure;
+
+    } else if (error instanceof DeviceRuntimeError) {
+
+      this._testLine(c.red('Device Runtime Error: ' + error.message));
+      stopSession = true;
+
+    } else if (error instanceof AgentRuntimeError) {
+
+      this._testLine(c.red('Agent Runtime Error: ' + error.message));
+      stopSession = true;
+
     } else if (error instanceof ImpError) {
-      this._debug('error instanceof ImpError === true');
+
       this._testLine(c.red('Device Error: ' + error.message));
       stopSession = true;
+
     } else if (error instanceof Error) {
-      this._debug('error instanceof Error === true');
+
       this._error(error.message);
       stopSession = true;
+
     } else {
-      this._debug('Unknown error type');
+
       this._error(error);
       stopSession = true;
+
     }
 
     this._session.error = true;

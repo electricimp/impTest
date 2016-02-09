@@ -1,5 +1,7 @@
 // test file
 
+a = 0;
+
 class DeviceTestCase extends ImpUnitCase {
   function testSomethingSync() {
     this.assertTrue(true);
