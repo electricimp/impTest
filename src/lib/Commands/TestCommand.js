@@ -405,6 +405,12 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
                     if (m[1]) {
                       stopSession = this._onLogMessage('DEVICE_OUT_OF_CODE_SPACE');
                     }
+                  } else if (message.match(/Device disconnected/)) {
+                    stopSession = this._onLogMessage('DEVICE_DISCONNECTED');
+                  } else if (message.match(/Device connected/)) {
+                    stopSession = this._onLogMessage('DEVICE_CONNECTED');
+                  } else {
+                    stopSession = this._onLogMessage('UNKNOWN', log);
                   }
 
                   break;
@@ -523,6 +529,10 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
       case 'DEVICE_ERROR':
         stopSession = this._onError(new DeviceRuntimeError(value));
+        break;
+
+      case 'DEVICE_DISCONNECTED':
+        stopSession = this._onError(new ImpError(value));
         break;
 
       case 'AGENT_ERROR':
