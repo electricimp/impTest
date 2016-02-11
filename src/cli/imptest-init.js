@@ -4,10 +4,10 @@
 
 'use strict';
 
-var commander = require('commander');
-var InitCommand = require('../lib/Commands/InitCommand');
-var parseBool = require('../lib/utils/parseBool');
-var packageJson = require('../../package.json');
+const commander = require('commander');
+const packageJson = require('../../package.json');
+const parseBool = require('../lib/utils/parseBool');
+const InitCommand = require('../lib/Commands/InitCommand');
 
 commander
   .option('-d, --debug', 'debug output')

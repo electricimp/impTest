@@ -4,10 +4,10 @@
 
 'use strict';
 
-var commander = require('commander');
-var TestCommand = require('../lib/Commands/TestCommand');
-var parseBool = require('../lib/utils/parseBool');
-var packageJson = require('../../package.json');
+const commander = require('commander');
+const packageJson = require('../../package.json');
+const parseBool = require('../lib/utils/parseBool');
+const TestCommand = require('../lib/Commands/TestCommand');
 
 commander
   .usage('[options] <test case file>')
