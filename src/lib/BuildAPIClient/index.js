@@ -12,25 +12,10 @@ var promiseWhile = require('../utils/promiseWhile');
  */
 class BuildAPIClient {
 
-  /**
-   * @param {{}} val
-   */
-  set options(val) {
-    this._options = Object.assign(this._options, val);
-  }
-
-  /**
-   * @param {{}} options
-   */
-  constructor(options) {
-    // default options
-    this._options = {
-      debug: false,
-      apiKey: null,
-      apiEndpoint: 'https://build.electricimp.com/v4'
-    };
-
-    this.options = options;
+  constructor() {
+    this._isDebug = false;
+    this._apiKey = null;
+    this._apiEndpoint = 'https://build.electricimp.com/v4';
   }
 
   /**
@@ -52,11 +37,11 @@ class BuildAPIClient {
       const options = {
         method,
         json: true,
-        url: this._options.apiEndpoint + path,
+        url: this.apiEndpoint + path,
         headers: {
           'User-agent': 'impTest',
           'Content-type': 'application/json',
-          'Authorization': 'Basic ' + new Buffer(this._options.apiKey || '').toString('base64')
+          'Authorization': 'Basic ' + new Buffer(this.apiKey || '').toString('base64')
         }
       };
 
@@ -273,11 +258,35 @@ class BuildAPIClient {
    * @protected
    */
   _debug() {
-    if (this._options.debug) {
+    if (this.debug) {
       const args = Array.prototype.slice.call(arguments);
       args.unshift(colors.green('[debug:' + this.constructor.name + ']'));
       console.log.apply(this, args);
     }
+  }
+
+  set apiKey(value) {
+    this._apiKey = value;
+  }
+
+  get apiKey() {
+    return this._apiKey;
+  }
+
+  get debug() {
+    return this._isDebug;
+  }
+
+  set debug(value) {
+    this._isDebug = value;
+  }
+
+  get apiEndpoint() {
+    return this._apiEndpoint;
+  }
+
+  set apiEndpoint(value) {
+    this._apiEndpoint = value;
   }
 }
 

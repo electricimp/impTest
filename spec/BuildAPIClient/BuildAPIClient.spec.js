@@ -12,10 +12,9 @@ describe('BuildAPIClient test suite', () => {
 
   beforeEach(() => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
-    client = new BuildAPIClient({
-      debug: parseBool(process.env.SPEC_DEBUG),
-      apiKey: config.build_api_key
-    });
+    client = new BuildAPIClient();
+    client.apiKey = config.build_api_key;
+    client.debug = parseBool(process.env.SPEC_DEBUG);
   });
 
   it('should get list a of devices', (done) => {
