@@ -8,6 +8,7 @@ var stripJsonComments = require('strip-json-comments');
  * Config file abstraction
  */
 class ImpTestFile {
+
   /**
    * @param {string} configPath
    */
@@ -66,11 +67,12 @@ class ImpTestFile {
     return path.dirname(this._path);
   }
 
-  /**
-   * Write config to file
-   */
-  write() {
+  get debug() {
+    return this._debug;
+  }
 
+  set debug(value) {
+    this._debug = value;
   }
 }
 
