@@ -14,18 +14,6 @@ class ImpTestFile {
    * @param {string} configPath
    */
   constructor(configPath) {
-
-    this._defaultValues = {
-      apiKey: '',
-      modelId: '',
-      devices: [],
-      agentFile: 'agent.nut',
-      deviceFile: 'device.nut',
-      stopOnFailure: false,
-      timeout: 10,
-      tests: ['*.test.nut', 'tests/**/*.test.nut']
-    };
-
     this._path = path.resolve(configPath);
   }
 
@@ -34,6 +22,19 @@ class ImpTestFile {
    */
   exists() {
     return fs.existsSync(this._path);
+  }
+
+  get defaultValues() {
+    return {
+      apiKey: '',
+        modelId: '',
+      devices: [],
+      agentFile: 'agent.nut',
+      deviceFile: 'device.nut',
+      stopOnFailure: false,
+      timeout: 10,
+      tests: ['*.test.nut', 'tests/**/*.test.nut']
+    };
   }
 
   /**
@@ -49,7 +50,7 @@ class ImpTestFile {
       values = fs.readFileSync(this.path).toString();
       values = stripJsonComments(values);
       values = JSON.parse(values);
-      values = Object.assign(this._defaultValues, values);
+      values = Object.assign(this.defaultValues, values);
       this._debug(colors.blue('Config values:'), values);
     } else {
       this._debug(colors.red('Config file not found'));
