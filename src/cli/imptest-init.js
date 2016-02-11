@@ -7,7 +7,9 @@
 const commander = require('commander');
 const packageJson = require('../../package.json');
 const parseBool = require('../lib/utils/parseBool');
+const BuildAPIClient = require('../lib/BuildAPIClient');
 const InitCommand = require('../lib/Commands/InitCommand');
+const ImpTestFile = require('../lib/ImpTestFile');
 
 commander
   .option('-d, --debug', 'debug output')
@@ -15,10 +17,23 @@ commander
   .option('-f, --force', 'overwrite existing configuration')
   .parse(process.argv);
 
-// run command
-(new InitCommand({
-  debug: parseBool(commander.debug),
-  force: parseBool(commander.force),
+// bootstrap command
+
+const buildAPIClient = new BuildAPIClient();
+buildAPIClient.debug = parseBool(commander.debug);
+
+const impTestFile = new ImpTestFile(commander.config);
+impTestFile.debug = parseBool(commander.debug);
+
+const command = new InitCommand({
   config: commander.config,
+  testFrameworkFile: __dirname + '/../impUnit/bundle.nut',
+  testCaseFile: commander.args[0] || null,
   version: packageJson.version
-})).tryRun();
+});
+
+command.buildAPIClient = buildAPIClient;
+command.impTestFile = impTestFile;
+
+// go
+command.tryRun();
