@@ -9,23 +9,23 @@ const fs = require('fs');
 const c = require('colors');
 const path = require('path');
 const glob = require('glob');
-const Bundler = require('../Bundler');
+const Bundler = require('./Bundler');
 const EventEmitter = require('events');
 const randomWords = require('random-words');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
-const BuildAPIClient = require('../BuildAPIClient');
-const DeviceError = require('../Errors/DeviceError');
-const AbstractCommand = require('./AbstractCommand');
-const promiseWhile = require('../utils/promiseWhile');
-const TestStateError = require('../Errors/TestStateError');
-const TestMethodError = require('../Errors/TestMethodError');
-const WrongModelError = require('../Errors/WrongModelError');
-const AgentRuntimeError = require('../Errors/AgentRuntimeError');
-const DeviceRuntimeError = require('../Errors/DeviceRuntimeError');
-const SessionFailedError = require('../Errors/SessionFailedError');
-const DevicePowerstateError = require('../Errors/DevicePowerstateError');
-const DeviceDisconnectedError = require('../Errors/DeviceDisconnectedError');
+const BuildAPIClient = require('../../BuildAPIClient');
+const DeviceError = require('./Errors/DeviceError');
+const AbstractCommand = require('../AbstractCommand');
+const promiseWhile = require('../../utils/promiseWhile');
+const TestStateError = require('./Errors/TestStateError');
+const TestMethodError = require('./Errors/TestMethodError');
+const WrongModelError = require('./Errors/WrongModelError');
+const AgentRuntimeError = require('./Errors/AgentRuntimeError');
+const DeviceRuntimeError = require('./Errors/DeviceRuntimeError');
+const SessionFailedError = require('./Errors/SessionFailedError');
+const DevicePowerstateError = require('./Errors/DevicePowerstateError');
+const DeviceDisconnectedError = require('./Errors/DeviceDisconnectedError');
 //</editor-fold>
 
 class TestCommand extends AbstractCommand {

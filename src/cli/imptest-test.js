@@ -5,7 +5,7 @@
 'use strict';
 
 var commander = require('commander');
-var TestCommand = require('../lib/Commands/TestCommand');
+var TestCommand = require('../lib/Commands/TestCommand/TestCommand');
 var parseBool = require('../lib/utils/parseBool');
 var packageJson = require('../../package.json');
 
