@@ -68,13 +68,9 @@ class AbstractCommand {
    */
   run() {
     return new Promise((resolve, reject) => {
-      this._debug(
-        colors.blue('Using options:'),
-        this._options
-      );
+      this._debug(colors.blue('Using options:'), this._options);
 
-      this._readConfig();
-      this.buildAPIClient.apiKey = this._config.values.apiKey;
+      this.buildAPIClient.apiKey = this.impTestFile.values.apiKey;
 
       resolve();
     });
@@ -99,7 +95,7 @@ class AbstractCommand {
    * @protected
    */
   _debug() {
-    if (this._options.debug) {
+    if (this.debug) {
       this._log('debug', colors.green, arguments);
     }
   }
@@ -143,11 +139,11 @@ class AbstractCommand {
       //dateMessage = dateformat(now, 'HH:MM:ss.l');
 
       if (this._logDate && this._logStartDate) {
-        let dif1 =  (now - this._logStartDate) / 1000;
-        let dif2 =  (now - this._logDate) / 1000;
+        let dif1 = (now - this._logStartDate) / 1000;
+        let dif2 = (now - this._logDate) / 1000;
         dif1 = sprintf('%.2f', dif1);
         dif2 = sprintf('%.2f', dif2);
-        dateMessage += '+' +  dif1 + '/' + dif2 + 's ';
+        dateMessage += '+' + dif1 + '/' + dif2 + 's ';
       } else {
         this._logStartDate = now;
       }
@@ -161,22 +157,6 @@ class AbstractCommand {
     console.log.apply(this, params);
   }
 
-  /**
-   * Read config file
-   * @protected
-   */
-  _readConfig() {
-    this._config = new ImpTestFile(this._options.config);
-
-    this._debug(colors.blue('Using config file:'), this._config.path);
-
-    if (!this._config.exists()) {
-      this._debug(colors.yellow('Config file not found'));
-    }
-
-    this._debug(colors.blue('Config:'), this._config.values);
-  }
-
   // <editor-fold desc="Accessors" defaultstate="collapsed">
 
   set buildAPIClient(value) {
@@ -185,6 +165,22 @@ class AbstractCommand {
 
   get buildAPIClient() {
     return this._buildAPIClient;
+  }
+
+  set impTestFile(value) {
+    this._impTestFile = value;
+  }
+
+  get impTestFile() {
+    return this._impTestFile;
+  }
+
+  get debug() {
+    return this._debug;
+  }
+
+  set debug(value) {
+    this._debug = value;
   }
 
   // </editor-fold>

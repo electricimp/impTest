@@ -13,7 +13,6 @@ class InitCommand extends AbstractCommand {
    */
   get defaultOptions() {
     return {
-      debug: false,
       force: false,
       config: '.imptest'
     };
@@ -24,7 +23,7 @@ class InitCommand extends AbstractCommand {
    */
   run() {
     // todo: initialize config
-    super.run();
+    return super.run();
   }
 
 }
