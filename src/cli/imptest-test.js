@@ -8,6 +8,7 @@ const commander = require('commander');
 const packageJson = require('../../package.json');
 const parseBool = require('../lib/utils/parseBool');
 const TestCommand = require('../lib/Commands/TestCommand');
+const BuildAPIClient = require('../lib/BuildAPIClient');
 
 commander
   .usage('[options] <test case file>')
@@ -15,8 +16,12 @@ commander
   .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
   .parse(process.argv);
 
-// run command
-(new TestCommand({
+// bootstrap command
+
+const buildAPIClient = new BuildAPIClient();
+buildAPIClient.debug = parseBool(commander.debug);
+
+const command = new TestCommand({
   debug: parseBool(commander.debug),
   config: commander.config,
   agent: parseBool(commander.agent),
@@ -24,4 +29,9 @@ commander
   testFrameworkFile: __dirname + '/../impUnit/bundle.nut',
   testCaseFile: commander.args[0] || null,
   version: packageJson.version
-})).tryRun();
+});
+
+command.buildAPIClient = buildAPIClient;
+
+// go
+command.tryRun();

@@ -16,7 +16,6 @@ const randomWords = require('random-words');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
 const AbstractCommand = require('../AbstractCommand');
-const BuildAPIClient = require('../../BuildAPIClient');
 const promiseWhile = require('../../utils/promiseWhile');
 //</editor-fold>
 
@@ -92,21 +91,6 @@ class TestCommand extends AbstractCommand {
     }
 
     super.finish();
-  }
-
-  /**
-   * @return {BuildAPIClient}
-   * @private
-   */
-  _getBuildApiClient() {
-    if (!this._client) {
-      this._client = new BuildAPIClient({
-        debug: this._options.debug,
-        apiKey: this._config.values.apiKey
-      });
-    }
-
-    return this._client;
   }
 
   /**
@@ -288,7 +272,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
 
     // resolve device info
-    return this._getBuildApiClient().getDevice(deviceId)
+    return this.buildAPIClient.getDevice(deviceId)
 
       .then((res) => {
         this._info(c.blue('Using device ' +
@@ -351,17 +335,17 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
     return new Promise((resolve, reject) => {
 
-      const client = this._getBuildApiClient();
-
       // start reading logs
       this._readLogs(type, this._config.values.devices[0])
         .on('ready', () => {
 
-          client.createRevision(this._config.values.modelId, deviceCode, agentCode)
+          this.buildAPIClient
+            .createRevision(this._config.values.modelId, deviceCode, agentCode)
 
             .then((body) => {
               this._info(c.blue('Created revision: ') + body.revision.version);
-              return client.restartModel(this._config.values.modelId)
+              return this.buildAPIClient
+                .restartModel(this._config.values.modelId)
                 .then(/* model restarted */() => {
                   this._debug(c.blue('Model restarted'));
                 });
@@ -410,7 +394,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     // for historical reasons, device produce server.* messages
     const apiType = {agent: 'agent', device: 'server'}[type];
 
-    this._getBuildApiClient().streamDeviceLogs(deviceId, (data) => {
+    this.buildAPIClient.streamDeviceLogs(deviceId, (data) => {
 
         if (data) {
 

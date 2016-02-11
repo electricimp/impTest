@@ -74,6 +74,7 @@ class AbstractCommand {
       );
 
       this._readConfig();
+      this.buildAPIClient.apiKey = this._config.values.apiKey;
 
       resolve();
     });
@@ -175,6 +176,18 @@ class AbstractCommand {
 
     this._debug(colors.blue('Config:'), this._config.values);
   }
+
+  // <editor-fold desc="Accessors" defaultstate="collapsed">
+
+  set buildAPIClient(value) {
+    this._buildAPIClient = value;
+  }
+
+  get buildAPIClient() {
+    return this._buildAPIClient;
+  }
+
+  // </editor-fold>
 }
 
 module.exports = AbstractCommand;
