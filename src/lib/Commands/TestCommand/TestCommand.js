@@ -9,23 +9,15 @@ const fs = require('fs');
 const c = require('colors');
 const path = require('path');
 const glob = require('glob');
+const errors = require('./Errors');
 const Bundler = require('./Bundler');
 const EventEmitter = require('events');
 const randomWords = require('random-words');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
-const BuildAPIClient = require('../../BuildAPIClient');
-const DeviceError = require('./Errors/DeviceError');
 const AbstractCommand = require('../AbstractCommand');
+const BuildAPIClient = require('../../BuildAPIClient');
 const promiseWhile = require('../../utils/promiseWhile');
-const TestStateError = require('./Errors/TestStateError');
-const TestMethodError = require('./Errors/TestMethodError');
-const WrongModelError = require('./Errors/WrongModelError');
-const AgentRuntimeError = require('./Errors/AgentRuntimeError');
-const DeviceRuntimeError = require('./Errors/DeviceRuntimeError');
-const SessionFailedError = require('./Errors/SessionFailedError');
-const DevicePowerstateError = require('./Errors/DevicePowerstateError');
-const DeviceDisconnectedError = require('./Errors/DeviceDisconnectedError');
 //</editor-fold>
 
 class TestCommand extends AbstractCommand {
@@ -306,12 +298,12 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
         // check model
         if (res.device.model_id !== this._config.values.modelId) {
-          throw new WrongModelError('Device is assigned to a wrong model');
+          throw new errors.WrongModelError('Device is assigned to a wrong model');
         }
 
         // check online state
         if (res.device.powerstate !== 'online') {
-          throw new DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
+          throw new errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
         }
       })
 
@@ -554,34 +546,34 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        this._onError(new DeviceError('Out of code space'));
+        this._onError(new errors.DeviceError('Out of code space'));
         break;
 
       case 'LASTEXITCODE':
 
         if (this._session.state !== 'initialized') {
           if (value.match(/out of memory/)) {
-            this._onError(new DeviceError('Out of memory'));
+            this._onError(new errors.DeviceError('Out of memory'));
           } else {
-            this._onError(new DeviceError(value));
+            this._onError(new errors.DeviceError(value));
           }
         }
 
         break;
 
       case 'DEVICE_ERROR':
-        this._onError(new DeviceRuntimeError(value));
+        this._onError(new errors.DeviceRuntimeError(value));
         break;
 
       case 'DEVICE_CONNECTED':
         break;
 
       case 'DEVICE_DISCONNECTED':
-        this._onError(new DeviceDisconnectedError());
+        this._onError(new errors.DeviceDisconnectedError());
         break;
 
       case 'AGENT_ERROR':
-        this._onError(new AgentRuntimeError(value));
+        this._onError(new errors.AgentRuntimeError(value));
         break;
 
       case 'POWERSTATE':
@@ -606,7 +598,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           case 'START':
 
             if (this._session.state !== 'ready') {
-              throw new TestStateError('Invalid test session state');
+              throw new errors.TestStateError('Invalid test session state');
             }
 
             this._session.state = 'started';
@@ -615,7 +607,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           case 'STATUS':
 
             if (this._session.state !== 'started') {
-              throw new TestStateError('Invalid test session state');
+              throw new errors.TestStateError('Invalid test session state');
             }
 
             if (m = value.message.match(/(.+)::setUp\(\)$/)) {
@@ -634,16 +626,16 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
           case 'FAIL':
 
             if (this._session.state !== 'started') {
-              throw new TestStateError('Invalid test session state');
+              throw new errors.TestStateError('Invalid test session state');
             }
 
-            this._onError(new TestMethodError(value.message));
+            this._onError(new errors.TestMethodError(value.message));
             break;
 
           case 'RESULT':
 
             if (this._session.state !== 'started') {
-              throw new TestStateError('Invalid test session state');
+              throw new errors.TestStateError('Invalid test session state');
             }
 
             this._session.tests = value.message.tests;
@@ -656,7 +648,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
 
             if (this._session.failures) {
               this._testLine(c.red(sessionMessage));
-              this._onError(new SessionFailedError('Session failed'));
+              this._onError(new errors.SessionFailedError('Session failed'));
             } else {
               this._testLine(c.green(sessionMessage));
             }
@@ -683,49 +675,49 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   _onError(error) {
     this._debug('Error type: ' + error.constructor.name);
 
-    if (error instanceof TestMethodError) {
+    if (error instanceof errors.TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
       if (this._session) this._session.stop = this._config.values.stopOnFailure;
 
-    } else if (error instanceof TestStateError) {
+    } else if (error instanceof errors.TestStateError) {
 
       this._error(error);
       if (this._session) this._session.stop = true;
 
-    } else if (error instanceof SessionFailedError) {
+    } else if (error instanceof errors.SessionFailedError) {
 
       // do nothing, produced at the end of session anyway
 
-    } else if (error instanceof DeviceDisconnectedError) {
+    } else if (error instanceof errors.DeviceDisconnectedError) {
 
       this._testLine(c.red('Device disconnected'));
 
       if (this._session) this._session.stop = true;
       this._stopDevice = true;
 
-    } else if (error instanceof DeviceRuntimeError) {
+    } else if (error instanceof errors.DeviceRuntimeError) {
 
       this._testLine(c.red('Device Runtime Error: ' + error.message));
       if (this._session) this._session.stop = true;
 
-    } else if (error instanceof AgentRuntimeError) {
+    } else if (error instanceof errors.AgentRuntimeError) {
 
       this._testLine(c.red('Agent Runtime Error: ' + error.message));
       if (this._session) this._session.stop = true;
 
-    } else if (error instanceof DeviceError) {
+    } else if (error instanceof errors.DeviceError) {
 
       this._testLine(c.red('Device Error: ' + error.message));
       if (this._session) this._session.stop = true;
 
-    } else if (error instanceof WrongModelError) {
+    } else if (error instanceof errors.WrongModelError) {
 
       this._error(error.message);
       if (this._session) this._session.stop = true;
       this._stopDevice = true;
 
-    } else if (error instanceof DevicePowerstateError) {
+    } else if (error instanceof errors.DevicePowerstateError) {
 
       this._error(error.message);
       if (this._session) this._session.stop = true;
