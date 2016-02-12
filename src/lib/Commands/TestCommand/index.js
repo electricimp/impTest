@@ -734,11 +734,11 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
    * @private
    */
   get _frameworkCode() {
-    if (!this._frameworkCode) {
-      this._frameworkCode = this.bundler.process(this.testFrameworkFile);
+    if (!this.__frameworkCode) {
+      this.__frameworkCode = this.bundler.process(this.testFrameworkFile);
     }
 
-    return this._frameworkCode;
+    return this.__frameworkCode;
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
