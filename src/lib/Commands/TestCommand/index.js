@@ -479,6 +479,10 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
         this._onError(new errors.DeviceRuntimeError(value));
         break;
 
+      case 'AGENT_ERROR':
+        this._onError(new errors.AgentRuntimeError(value));
+        break;
+
       case 'DEVICE_CONNECTED':
         break;
 
