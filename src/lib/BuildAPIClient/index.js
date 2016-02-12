@@ -13,7 +13,7 @@ var promiseWhile = require('../utils/promiseWhile');
 class BuildAPIClient {
 
   constructor() {
-    this._isDebug = false;
+    this.__debug = false;
     this._apiKey = null;
     this._apiEndpoint = 'https://build.electricimp.com/v4';
   }
@@ -274,11 +274,11 @@ class BuildAPIClient {
   }
 
   get debug() {
-    return this._isDebug;
+    return this.__debug;
   }
 
   set debug(value) {
-    this._isDebug = value;
+    this.__debug = value;
   }
 
   get apiEndpoint() {
