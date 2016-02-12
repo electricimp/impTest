@@ -53,6 +53,19 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
+   * We're done with testing
+   * @private
+   */
+  finish() {
+    if (this._testingAbort) {
+      // testing was aborted
+      this._error('Testing Aborted' + (this._testingAbortReason ? (': ' + this._testingAbortReason) : ''));
+    }
+
+    super.finish();
+  }
+
+  /**
    * Run test files on single device
    *
    * @param {number} deviceIndex
@@ -69,19 +82,6 @@ class TestCommand extends AbstractCommand {
       () => t++ < testFiles.length && !this._stopDevice,
       () => this._runTestFile(testFiles[t - 1], deviceIndex)
     );
-  }
-
-  /**
-   * We're done with testing
-   * @private
-   */
-  finish() {
-    if (this._testingAbort) {
-      // testing was aborted
-      this._error('Testing Aborted' + (this._testingAbortReason ? (': ' + this._testingAbortReason) : ''));
-    }
-
-    super.finish();
   }
 
   /**
