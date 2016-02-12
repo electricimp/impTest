@@ -1,8 +1,8 @@
 'use strict';
 
-var request = require('request');
-var colors = require('colors');
-var promiseWhile = require('../utils/promiseWhile');
+const c = require('colors');
+const request = require('request');
+const promiseWhile = require('../utils/promiseWhile');
 
 /**
  * Electric Imp Build API client.
@@ -56,21 +56,21 @@ class BuildAPIClient {
       Object.assign(options.headers, headers);
 
       /* [debug] */
-      this._debug(colors.blue('Doing the request with options:'), options);
+      this._debug(c.blue('Doing the request with options:'), options);
 
       // do request to build api
       request(options, (error, response, result) => {
 
         // debug output
-        response && this._debug(colors.blue('Response code:'), response.statusCode);
-        result && this._debug(colors.blue('Response:'), result);
+        response && this._debug(c.blue('Response code:'), response.statusCode);
+        result && this._debug(c.blue('Response:'), result);
 
         // handle result
 
         if (error) {
 
           /* [debug] */
-          this._debug(colors.red('Request error:'), error);
+          this._debug(c.red('Request error:'), error);
 
           // we're completely screwed
           // error is produced by request libabry
@@ -92,7 +92,7 @@ class BuildAPIClient {
           }
 
           /* [debug] */
-          this._debug(colors.red(err.message));
+          this._debug(c.red(err.message));
 
           reject(err);
 
@@ -260,7 +260,7 @@ class BuildAPIClient {
   _debug() {
     if (this.debug) {
       const args = Array.prototype.slice.call(arguments);
-      args.unshift(colors.green('[debug:' + this.constructor.name + ']'));
+      args.unshift(c.green('[debug:' + this.constructor.name + ']'));
       console.log.apply(this, args);
     }
   }
