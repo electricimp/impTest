@@ -146,11 +146,11 @@ class AbstractCommand {
   }
 
   get debug() {
-    return this._debug;
+    return this.__debug;
   }
 
   set debug(value) {
-    this._debug = value;
+    this.__debug = value;
   }
 
   get version() {

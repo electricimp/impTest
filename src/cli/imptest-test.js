@@ -25,16 +25,14 @@ buildAPIClient.debug = parseBool(commander.debug);
 const impTestFile = new ImpTestFile(commander.config);
 impTestFile.debug = parseBool(commander.debug);
 
-const command = new TestCommand({
-  debug: parseBool(commander.debug),
-  config: commander.config,
-  testFrameworkFile: __dirname + '/../impUnit/bundle.nut',
-  testCaseFile: commander.args[0] || null,
-  version: packageJson.version
-});
+const command = new TestCommand();
 
-command.buildAPIClient = buildAPIClient;
+command.version = packageJson.version;
+command.debug = parseBool(commander.debug);
 command.impTestFile = impTestFile;
+command.buildAPIClient = buildAPIClient;
+command.testFrameworkFile = __dirname + '/../impUnit/bundle.nut';
+command.testCaseFile = commander.args[0] || null;
 
 // go
 command.tryRun();

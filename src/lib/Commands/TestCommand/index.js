@@ -21,17 +21,9 @@ const promiseWhile = require('../../utils/promiseWhile');
 
 class TestCommand extends AbstractCommand {
 
-  /**
-   * @returns {{}}
-   */
-  get defaultOptions() {
-    return {
-      debug: false,
-      config: '.imptest',
-      testFrameworkFile: '', // path to test framework main file
-      testCaseFile: null, // path to test case file, of empty test cases will be searched automatically
-      startTimeout: 2 // [s]
-    };
+  constructor() {
+    super();
+    this.startTimeout = 2;
   }
 
   /**
@@ -52,7 +44,7 @@ class TestCommand extends AbstractCommand {
         let d = 0;
 
         return promiseWhile(
-          () => d++ < this._config.values.devices.length && !this._testingAbort,
+          () => d++ < this.impTestFile.values.devices.length && !this._testingAbort,
           () => this._runDevice(d - 1, testFiles).catch(() => {
             this._debug(c.red('Device #' + d + ' run failed'));
           })
@@ -113,14 +105,14 @@ class TestCommand extends AbstractCommand {
     let searchPatterns = '';
 
     // test file pattern is passed via cli
-    if (this._options.testCaseFile) {
+    if (this.testCaseFile) {
       // look in the current path
       configCwd = path.resolve('.');
-      searchPatterns = this._options.testCaseFile;
+      searchPatterns = this.testCaseFile;
     } else {
       // look in config file directory
-      configCwd = this._config.dir;
-      searchPatterns = this._config.values.tests;
+      configCwd = this.impTestFile.dir;
+      searchPatterns = this.impTestFile.values.tests;
     }
 
     if (typeof searchPatterns === 'string') {
@@ -160,28 +152,25 @@ class TestCommand extends AbstractCommand {
 
       let sourceFilePath;
 
-      if (this._config.values.agentFile) {
-        sourceFilePath = path.resolve(this._config.dir, this._config.values.agentFile);
+      if (this.impTestFile.values.agentFile) {
+        sourceFilePath = path.resolve(this.impTestFile.dir, this.impTestFile.values.agentFile);
 
         /* [debug] */
         this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
         /* [info] */
         this._info(c.blue('Agent source file: ')
-                   + this._config.values.agentFile);
+                   + this.impTestFile.values.agentFile);
 
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
       } else {
         this._agentSource = '/* no agent source provided */';
       }
 
-      if (this._config.values.deviceFile) {
-        sourceFilePath = path.resolve(this._config.dir, this._config.values.deviceFile);
+      if (this.impTestFile.values.deviceFile) {
+        sourceFilePath = path.resolve(this.impTestFile.dir, this.impTestFile.values.deviceFile);
 
-        /* [debug] */
         this._debug(c.blue('Device source code file path: ') + sourceFilePath);
-        /* [info] */
-        this._info(c.blue('Device source file: ')
-                   + this._config.values.deviceFile);
+        this._info(c.blue('Device source file: ') + this.impTestFile.values.deviceFile);
 
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
       } else {
@@ -203,8 +192,8 @@ class TestCommand extends AbstractCommand {
    */
   _getFrameworkCode() {
     if (!this._frameworkCode) {
-      this._frameworkCode = (new Bundler({debug: this._options.debug}))
-        .process(this._options.testFrameworkFile);
+      this._frameworkCode = (new Bundler({debug: this.debug}))
+        .process(this.testFrameworkFile);
     }
 
     return this._frameworkCode.trim();
@@ -227,7 +216,7 @@ class TestCommand extends AbstractCommand {
     this._info(c.blue('Starting test session ') + this._session.id);
 
     // determine device
-    const deviceId = this._config.values.devices[deviceIndex];
+    const deviceId = this.impTestFile.values.devices[deviceIndex];
 
     /* [info] */
     this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
@@ -237,12 +226,12 @@ class TestCommand extends AbstractCommand {
     // bootstrap code
     const bootstrapCode =
       `// bootstrap tests
-imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
+imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.session = "${this._session.id}";
-  t.timeout = ${parseFloat(this._config.values.timeout)};
-  t.stopOnFailure = ${!!this._config.values.stopOnFailure};
+  t.timeout = ${parseFloat(this.impTestFile.values.timeout)};
+  t.stopOnFailure = ${!!this.impTestFile.values.stopOnFailure};
   // poehali!
   t.run();
 });`;
@@ -277,11 +266,11 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       .then((res) => {
         this._info(c.blue('Using device ' +
                    (deviceIndex + 1) + ' of ' +
-                   this._config.values.devices.length + ': ')
+                   this.impTestFile.values.devices.length + ': ')
                    + res.device.name + c.blue(' / ') + deviceId);
 
         // check model
-        if (res.device.model_id !== this._config.values.modelId) {
+        if (res.device.model_id !== this.impTestFile.values.modelId) {
           throw new errors.WrongModelError('Device is assigned to a wrong model');
         }
 
@@ -336,16 +325,16 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     return new Promise((resolve, reject) => {
 
       // start reading logs
-      this._readLogs(type, this._config.values.devices[0])
+      this._readLogs(type, this.impTestFile.values.devices[0])
         .on('ready', () => {
 
           this.buildAPIClient
-            .createRevision(this._config.values.modelId, deviceCode, agentCode)
+            .createRevision(this.impTestFile.values.modelId, deviceCode, agentCode)
 
             .then((body) => {
               this._info(c.blue('Created revision: ') + body.revision.version);
               return this.buildAPIClient
-                .restartModel(this._config.values.modelId)
+                .restartModel(this.impTestFile.values.modelId)
                 .then(/* model restarted */() => {
                   this._debug(c.blue('Model restarted'));
                 });
@@ -367,7 +356,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
             this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
           }
 
-          if (this._testingAbort || this._session.error && !!this._config.values.stopOnFailure) {
+          if (this._testingAbort || this._session.error && !!this.impTestFile.values.stopOnFailure) {
             // stop testing cycle
             reject();
           } else {
@@ -662,7 +651,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
     if (error instanceof errors.TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
-      if (this._session) this._session.stop = this._config.values.stopOnFailure;
+      if (this._session) this._session.stop = this.impTestFile.values.stopOnFailure;
 
     } else if (error instanceof errors.TestStateError) {
 
@@ -729,7 +718,7 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
       // big enough to interrupt the session.
       // in combination w/stopOnFailure it makes sense
       // to abort the entire testing
-      if (!this._testingAbort && this._session.stop && this._config.values.stopOnFailure) {
+      if (!this._testingAbort && this._session.stop && this.impTestFile.values.stopOnFailure) {
         this._testingAbort = true;
         // this._testingAbortReason = 'stopOnFailure config value is set to "true"';
       }
@@ -753,6 +742,34 @@ imp.wakeup(${parseFloat(this._options.startTimeout) /* prevent log sessions mixi
   _blankLine() {
     console.log(c.gray(''));
   }
+
+  // <editor-fold desc="Accessors" defaultstate="collapsed">
+
+  get testFrameworkFile() {
+    return this._testFrameworkFile;
+  }
+
+  set testFrameworkFile(value) {
+    this._testFrameworkFile = value;
+  }
+
+  get testCaseFile() {
+    return this._testCaseFile;
+  }
+
+  set testCaseFile(value) {
+    this._testCaseFile = value;
+  }
+
+  get startTimeout() {
+    return this._startTimeout;
+  }
+
+  set startTimeout(value) {
+    this._startTimeout = value;
+  }
+
+// </editor-fold>
 }
 
 module.exports = TestCommand;
