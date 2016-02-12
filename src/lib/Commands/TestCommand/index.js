@@ -38,7 +38,7 @@ class TestCommand extends AbstractCommand {
         const testFiles = this._findTestFiles();
 
         // pre-cache source code
-        this._getSourceCode();
+        this._sourceCode;
 
         let d = 0;
 
@@ -141,63 +141,6 @@ class TestCommand extends AbstractCommand {
   }
 
   /**
-   * Read source code
-   * @return {{agent, device}}
-   * @private
-   */
-  _getSourceCode() {
-
-    if (!this._agentSource || !this._deviceSource) {
-
-      let sourceFilePath;
-
-      if (this.impTestFile.values.agentFile) {
-        sourceFilePath = path.resolve(this.impTestFile.dir, this.impTestFile.values.agentFile);
-
-        /* [debug] */
-        this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
-        /* [info] */
-        this._info(c.blue('Agent source file: ')
-                   + this.impTestFile.values.agentFile);
-
-        this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
-      } else {
-        this._agentSource = '/* no agent source provided */';
-      }
-
-      if (this.impTestFile.values.deviceFile) {
-        sourceFilePath = path.resolve(this.impTestFile.dir, this.impTestFile.values.deviceFile);
-
-        this._debug(c.blue('Device source code file path: ') + sourceFilePath);
-        this._info(c.blue('Device source file: ') + this.impTestFile.values.deviceFile);
-
-        this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
-      } else {
-        this._deviceSource = '/* no device source provided */';
-      }
-
-    }
-
-    return {
-      agent: this._agentSource,
-      device: this._deviceSource
-    };
-  }
-
-  /**
-   * Read framework code
-   * @return {string}
-   * @private
-   */
-  get frameworkSource() {
-    if (!this._frameworkSource) {
-      this._frameworkSource = this.bundler.process(this.testFrameworkFile);
-    }
-
-    return this._frameworkSource;
-  }
-
-  /**
    * Run test file
    * @param {name, path, type} file
    * @param {name, path, type} deviceIndex
@@ -240,19 +183,19 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
     if ('agent' === file.type) {
-      agentCode = this.frameworkSource + '\n\n' +
-                  this._getSourceCode().agent + '\n\n' +
+      agentCode = this._frameworkCode + '\n\n' +
+                  this._sourceCode.agent + '\n\n' +
                   fs.readFileSync(file.path, 'utf-8').trim() + '\n\n' +
                   bootstrapCode;
-      deviceCode = this._getSourceCode().device + '\n\n' +
+      deviceCode = this._sourceCode.device + '\n\n' +
                    reloadTrigger;
     } else {
-      deviceCode = this.frameworkSource + '\n\n' +
-                   this._getSourceCode().device + '\n\n' +
+      deviceCode = this._frameworkCode + '\n\n' +
+                   this._sourceCode.device + '\n\n' +
                    fs.readFileSync(file.path, 'utf-8').trim() + '\n\n' +
                    bootstrapCode + '\n\n' +
                    reloadTrigger;
-      agentCode = this._getSourceCode().agent;
+      agentCode = this._sourceCode.agent;
     }
 
     this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
@@ -739,6 +682,63 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
    */
   _blankLine() {
     console.log(c.gray(''));
+  }
+
+  /**
+   * Read source code
+   * @return {{agent, device}}
+   * @private
+   */
+  get _sourceCode() {
+
+    if (!this._agentSource || !this._deviceSource) {
+
+      let sourceFilePath;
+
+      if (this.impTestFile.values.agentFile) {
+        sourceFilePath = path.resolve(this.impTestFile.dir, this.impTestFile.values.agentFile);
+
+        /* [debug] */
+        this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
+        /* [info] */
+        this._info(c.blue('Agent source file: ')
+                   + this.impTestFile.values.agentFile);
+
+        this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
+      } else {
+        this._agentSource = '/* no agent source provided */';
+      }
+
+      if (this.impTestFile.values.deviceFile) {
+        sourceFilePath = path.resolve(this.impTestFile.dir, this.impTestFile.values.deviceFile);
+
+        this._debug(c.blue('Device source code file path: ') + sourceFilePath);
+        this._info(c.blue('Device source file: ') + this.impTestFile.values.deviceFile);
+
+        this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
+      } else {
+        this._deviceSource = '/* no device source provided */';
+      }
+
+    }
+
+    return {
+      agent: this._agentSource,
+      device: this._deviceSource
+    };
+  }
+
+  /**
+   * Read framework code
+   * @return {string}
+   * @private
+   */
+  get _frameworkCode() {
+    if (!this._frameworkCode) {
+      this._frameworkCode = this.bundler.process(this.testFrameworkFile);
+    }
+
+    return this._frameworkCode;
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
