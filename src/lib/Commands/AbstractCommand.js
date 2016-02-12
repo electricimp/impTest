@@ -38,8 +38,8 @@ class AbstractCommand {
   run() {
     return new Promise((resolve, reject) => {
       this._info('impTest/' + this.version);
+      this.logTiming = true; // enable log timing
       this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
-      this._logStartDate = this._logDate = null;
 
       this.buildAPIClient.apiKey = this.impTestFile.values.apiKey;
       resolve();
@@ -104,13 +104,13 @@ class AbstractCommand {
 
     if (type === 'debug') {
       type += ':' + this.constructor.name;
-    } else {
+    } else if (this.logTiming) {
       const now = new Date();
       //dateMessage = dateformat(now, 'HH:MM:ss.l');
 
-      if (this._logDate && this._logStartDate) {
+      if (this._lastLogDate && this._logStartDate) {
         let dif1 = (now - this._logStartDate) / 1000;
-        let dif2 = (now - this._logDate) / 1000;
+        let dif2 = (now - this._lastLogDate) / 1000;
         dif1 = sprintf('%.2f', dif1);
         dif2 = sprintf('%.2f', dif2);
         dateMessage += '+' + dif1 + '/' + dif2 + 's ';
@@ -118,7 +118,7 @@ class AbstractCommand {
         this._logStartDate = now;
       }
 
-      this._logDate = now;
+      this._lastLogDate = now;
     }
 
     // convert params to true array (from arguments)
@@ -128,6 +128,14 @@ class AbstractCommand {
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
+
+  get logTiming() {
+    return this._logTiming;
+  }
+
+  set logTiming(value) {
+    this._logTiming = value;
+  }
 
   set buildAPIClient(value) {
     this._buildAPIClient = value;
