@@ -10,7 +10,6 @@ const c = require('colors');
 const path = require('path');
 const glob = require('glob');
 const errors = require('./Errors');
-const Bundler = require('./Bundler');
 const EventEmitter = require('events');
 const randomWords = require('random-words');
 const randomstring = require('randomstring');
@@ -190,13 +189,12 @@ class TestCommand extends AbstractCommand {
    * @return {string}
    * @private
    */
-  _getFrameworkCode() {
-    if (!this._frameworkCode) {
-      this._frameworkCode = (new Bundler({debug: this.debug}))
-        .process(this.testFrameworkFile);
+  get frameworkSource() {
+    if (!this._frameworkSource) {
+      this._frameworkSource = this.bundler.process(this.testFrameworkFile);
     }
 
-    return this._frameworkCode.trim();
+    return this._frameworkSource;
   }
 
   /**
@@ -242,14 +240,14 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
     if ('agent' === file.type) {
-      agentCode = this._getFrameworkCode() + '\n\n' +
+      agentCode = this.frameworkSource + '\n\n' +
                   this._getSourceCode().agent + '\n\n' +
                   fs.readFileSync(file.path, 'utf-8').trim() + '\n\n' +
                   bootstrapCode;
       deviceCode = this._getSourceCode().device + '\n\n' +
                    reloadTrigger;
     } else {
-      deviceCode = this._getFrameworkCode() + '\n\n' +
+      deviceCode = this.frameworkSource + '\n\n' +
                    this._getSourceCode().device + '\n\n' +
                    fs.readFileSync(file.path, 'utf-8').trim() + '\n\n' +
                    bootstrapCode + '\n\n' +
@@ -767,6 +765,14 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
 
   set startTimeout(value) {
     this._startTimeout = value;
+  }
+
+  get bundler() {
+    return this._bundler;
+  }
+
+  set bundler(value) {
+    this._bundler = value;
   }
 
 // </editor-fold>

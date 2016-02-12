@@ -10,6 +10,7 @@ const parseBool = require('../lib/utils/parseBool');
 const TestCommand = require('../lib/Commands/TestCommand');
 const BuildAPIClient = require('../lib/BuildAPIClient');
 const ImpTestFile = require('../lib/ImpTestFile');
+const Bundler = require('../lib/Bundler');
 
 commander
   .usage('[options] <test case file>')
@@ -25,6 +26,9 @@ buildAPIClient.debug = parseBool(commander.debug);
 const impTestFile = new ImpTestFile(commander.config);
 impTestFile.debug = parseBool(commander.debug);
 
+const bundler = new Bundler();
+bundler.debug = parseBool(commander.debug);
+
 const command = new TestCommand();
 
 command.version = packageJson.version;
@@ -33,6 +37,7 @@ command.impTestFile = impTestFile;
 command.buildAPIClient = buildAPIClient;
 command.testFrameworkFile = __dirname + '/../impUnit/bundle.nut';
 command.testCaseFile = commander.args[0] || null;
+command.bundler = bundler;
 
 // go
 command.tryRun();

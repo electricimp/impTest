@@ -11,31 +11,8 @@ var colors = require('colors');
 
 class Bundler {
 
-  constructor(options) {
-    // default options
-    this._options = {
-      debug: false
-    };
-
-    this.options = options;
-  }
-
-  /**
-   * @param {{}} options
-   */
-  set options(options) {
-    // mix default options with val
-    this._options = Object.assign(
-      this._options,
-      options
-    );
-  }
-
-  /**
-   * @return {{}}
-   */
-  get options() {
-    return this._options;
+  constructor() {
+    this.debug = false;
   }
 
   /**
@@ -54,11 +31,19 @@ class Bundler {
    * @protected
    */
   _debug() {
-    if (this._options.debug) {
+    if (this.debug) {
       const args = Array.prototype.slice.call(arguments);
       args.unshift(colors.green('[debug:' + this.constructor.name + ']'));
       console.log.apply(this, args);
     }
+  }
+
+  get debug() {
+    return this.__debug;
+  }
+
+  set debug(value) {
+    this.__debug = value;
   }
 }
 
