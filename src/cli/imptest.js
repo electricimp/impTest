@@ -6,8 +6,8 @@
 
 'use strict';
 
-var commander = require('commander');
-var packageJson = require('../../package.json');
+const commander = require('commander');
+const packageJson = require('../../package.json');
 
 commander
   .version(packageJson.version)

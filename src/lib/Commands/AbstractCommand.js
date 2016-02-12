@@ -1,11 +1,14 @@
 'use strict';
 
-var ImpTestFile = require('../ImpTestFile');
-var colors = require('colors');
-var dateformat = require('dateformat');
-var sprintf = require('sprintf-js').sprintf;
+const colors = require('colors');
+const dateformat = require('dateformat');
+const sprintf = require('sprintf-js').sprintf;
 
 class AbstractCommand {
+
+  constructor() {
+    this._success = true;
+  }
 
   /**
    * Run command with error handling and exit.
@@ -28,53 +31,17 @@ class AbstractCommand {
   }
 
   /**
-   * Default options
-   * @returns {{}}
-   */
-  get defaultOptions() {
-    return {
-      debug: false,
-      config: '.imptest',
-      version: null
-    };
-  }
-
-  /**
-   * @param {{}} val
-   */
-  set options(val) {
-    // mix default options with val
-    this._options = Object.assign(
-      this._options || this.defaultOptions,
-      val
-    );
-  }
-
-  /**
-   * @param {{}} options
-   */
-  constructor(options) {
-    this._success = true;
-    this.options = options;
-    this._info('impTest/' + this._options.version);
-    this._logStartDate = this._logDate = null;
-    this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
-  }
-
-  /**
    * Run command
    *
    * @return {Promise}
    */
   run() {
     return new Promise((resolve, reject) => {
-      this._debug(
-        colors.blue('Using options:'),
-        this._options
-      );
+      this._info('impTest/' + this.version);
+      this.logTiming = true; // enable log timing
+      this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
 
-      this._readConfig();
-
+      this.buildAPIClient.apiKey = this.impTestFile.values.apiKey;
       resolve();
     });
   }
@@ -98,7 +65,7 @@ class AbstractCommand {
    * @protected
    */
   _debug() {
-    if (this._options.debug) {
+    if (this.debug) {
       this._log('debug', colors.green, arguments);
     }
   }
@@ -137,21 +104,21 @@ class AbstractCommand {
 
     if (type === 'debug') {
       type += ':' + this.constructor.name;
-    } else {
+    } else if (this.logTiming) {
       const now = new Date();
       //dateMessage = dateformat(now, 'HH:MM:ss.l');
 
-      if (this._logDate && this._logStartDate) {
-        let dif1 =  (now - this._logStartDate) / 1000;
-        let dif2 =  (now - this._logDate) / 1000;
+      if (this._lastLogDate && this._logStartDate) {
+        let dif1 = (now - this._logStartDate) / 1000;
+        let dif2 = (now - this._lastLogDate) / 1000;
         dif1 = sprintf('%.2f', dif1);
         dif2 = sprintf('%.2f', dif2);
-        dateMessage += '+' +  dif1 + '/' + dif2 + 's ';
+        dateMessage += '+' + dif1 + '/' + dif2 + 's ';
       } else {
         this._logStartDate = now;
       }
 
-      this._logDate = now;
+      this._lastLogDate = now;
     }
 
     // convert params to true array (from arguments)
@@ -160,21 +127,49 @@ class AbstractCommand {
     console.log.apply(this, params);
   }
 
-  /**
-   * Read config file
-   * @protected
-   */
-  _readConfig() {
-    this._config = new ImpTestFile(this._options.config);
+  // <editor-fold desc="Accessors" defaultstate="collapsed">
 
-    this._debug(colors.blue('Using config file:'), this._config.path);
-
-    if (!this._config.exists()) {
-      this._debug(colors.yellow('Config file not found'));
-    }
-
-    this._debug(colors.blue('Config:'), this._config.values);
+  get logTiming() {
+    return this._logTiming;
   }
+
+  set logTiming(value) {
+    this._logTiming = value;
+  }
+
+  set buildAPIClient(value) {
+    this._buildAPIClient = value;
+  }
+
+  get buildAPIClient() {
+    return this._buildAPIClient;
+  }
+
+  set impTestFile(value) {
+    this._impTestFile = value;
+  }
+
+  get impTestFile() {
+    return this._impTestFile;
+  }
+
+  get debug() {
+    return this.__debug;
+  }
+
+  set debug(value) {
+    this.__debug = value;
+  }
+
+  get version() {
+    return this._version;
+  }
+
+  set version(value) {
+    this._version = value;
+  }
+
+// </editor-fold>
 }
 
 module.exports = AbstractCommand;

@@ -7,26 +7,18 @@
 var AbstractCommand = require('./AbstractCommand');
 
 class InitCommand extends AbstractCommand {
-
-  /**
-   * @returns {{}}
-   */
-  get defaultOptions() {
-    return {
-      debug: false,
-      force: false,
-      config: '.imptest'
-    };
-  }
-
-  /**
-   * Run command
-   */
   run() {
     // todo: initialize config
-    super.run();
+    return super.run();
   }
 
+  get force() {
+    return this._force;
+  }
+
+  set force(value) {
+    this._force = value;
+  }
 }
 
 module.exports = InitCommand;

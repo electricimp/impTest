@@ -3,27 +3,17 @@
 var path = require('path');
 var fs = require('fs');
 var stripJsonComments = require('strip-json-comments');
+var colors = require('colors');
 
 /**
  * Config file abstraction
  */
 class ImpTestFile {
+
   /**
    * @param {string} configPath
    */
   constructor(configPath) {
-
-    this._defaultValues = {
-      apiKey: '',
-      modelId: '',
-      devices: [],
-      agentFile: 'agent.nut',
-      deviceFile: 'device.nut',
-      stopOnFailure: false,
-      timeout: 10,
-      tests: ['*.test.nut', 'tests/**/*.test.nut']
-    };
-
     this._path = path.resolve(configPath);
   }
 
@@ -34,19 +24,60 @@ class ImpTestFile {
     return fs.existsSync(this._path);
   }
 
+  get defaultValues() {
+    return {
+      apiKey: '',
+        modelId: '',
+      devices: [],
+      agentFile: 'agent.nut',
+      deviceFile: 'device.nut',
+      stopOnFailure: false,
+      timeout: 10,
+      tests: ['*.test.nut', 'tests/**/*.test.nut']
+    };
+  }
+
+  /**
+   * Read values
+   * @return {{}}
+   * @private
+   */
+  _read() {
+    let values = {};
+    this._debug(colors.blue('Using config file:'), this.path);
+
+    if (this.exists()) {
+      values = fs.readFileSync(this.path).toString();
+      values = stripJsonComments(values);
+      values = JSON.parse(values);
+      values = Object.assign(this.defaultValues, values);
+      this._debug(colors.blue('Config values:'), values);
+    } else {
+      this._debug(colors.red('Config file not found'));
+    }
+
+    return values;
+  }
+
+  /**
+   * Debug print
+   * @param {*} ...objects
+   * @protected
+   */
+  _debug() {
+    if (this.debug) {
+      const args = Array.prototype.slice.call(arguments);
+      args.unshift(colors.green('[debug:' + this.constructor.name + ']'));
+      console.log.apply(this, args);
+    }
+  }
+
   /**
    * @returns {{}}
    */
   get values() {
     if (!this._values) {
-      this._values = {};
-
-      if (this.exists()) {
-        this._values = fs.readFileSync(this._path).toString();
-        this._values = stripJsonComments(this._values);
-        this._values = JSON.parse(this._values);
-        this._values = Object.assign(this._defaultValues, this._values);
-      }
+      this._values = this._read();
     }
 
     return this._values;
@@ -66,11 +97,12 @@ class ImpTestFile {
     return path.dirname(this._path);
   }
 
-  /**
-   * Write config to file
-   */
-  write() {
+  get debug() {
+    return this.__debug;
+  }
 
+  set debug(value) {
+    this.__debug = value;
   }
 }
 
