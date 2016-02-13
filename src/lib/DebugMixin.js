@@ -25,7 +25,7 @@ function DebugMixin() {
    * @param {*} ...objects
    * @protected
    */
-  this._debug = () => {
+  this._debug = function () {
     if (this.debug) {
       const args = Array.prototype.slice.call(arguments);
       args.unshift(c.green('[debug:' + this.constructor.name + ']'));

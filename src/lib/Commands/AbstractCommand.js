@@ -2,11 +2,13 @@
 
 const colors = require('colors');
 const dateformat = require('dateformat');
+const DebugMixin = require('../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
 
 class AbstractCommand {
 
   constructor() {
+    DebugMixin.call(this);
     this._success = true;
   }
 
@@ -60,17 +62,6 @@ class AbstractCommand {
   }
 
   /**
-   * Debug print
-   * @param {*} ...objects
-   * @protected
-   */
-  _debug() {
-    if (this.debug) {
-      this._log('debug', colors.green, arguments);
-    }
-  }
-
-  /**
    * Log info message
    * @param {*} ...objects
    * @protected
@@ -102,9 +93,7 @@ class AbstractCommand {
 
     let dateMessage = '';
 
-    if (type === 'debug') {
-      type += ':' + this.constructor.name;
-    } else if (this.logTiming) {
+    if (this.logTiming) {
       const now = new Date();
       //dateMessage = dateformat(now, 'HH:MM:ss.l');
 
@@ -151,14 +140,6 @@ class AbstractCommand {
 
   get impTestFile() {
     return this._impTestFile;
-  }
-
-  get debug() {
-    return this.__debug;
-  }
-
-  set debug(value) {
-    this.__debug = value;
   }
 
   get version() {
