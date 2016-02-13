@@ -738,7 +738,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    */
   get _frameworkCode() {
     if (!this.__frameworkCode) {
-      this.__frameworkCode = this.bundler.process(this.testFrameworkFile);
+      this.__frameworkCode = this.bundler.process(this.testFrameworkFile).trim();
     }
 
     return this.__frameworkCode;
