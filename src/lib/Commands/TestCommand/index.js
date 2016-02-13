@@ -492,10 +492,6 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
         this._onError(new errors.DeviceDisconnectedError());
         break;
 
-      case 'AGENT_ERROR':
-        this._onError(new errors.AgentRuntimeError(value));
-        break;
-
       case 'POWERSTATE':
         // todo: researh if any actiones needed
         this._info(c.blue('Powerstate: ') + value);
