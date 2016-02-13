@@ -263,6 +263,8 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
    */
   _runTestSession(deviceCode, agentCode, type) {
 
+    this._stopSession = false;
+
     return new Promise((resolve, reject) => {
 
       // start reading logs
@@ -380,11 +382,11 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
 
                   break;
 
-                case 'server.error':
+                case 'agent.error':
                   this._onLogMessage('AGENT_ERROR', message);
                   break;
 
-                case 'device.error':
+                case 'server.error':
                   this._onLogMessage('DEVICE_ERROR', message);
                   break;
 
@@ -408,7 +410,7 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
             }
 
             // are we done?
-            if (this._session.stop) {
+            if (this._stopSession) {
               ee.emit('done');
               break;
             }
@@ -419,7 +421,7 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
           ee.emit('ready');
         }
 
-        return !this._session.stop;
+        return !this._stopSession;
       })
 
       .catch((e) => {
@@ -596,12 +598,12 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     if (error instanceof errors.TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
-      if (this._session) this._session.stop = this.impTestFile.values.stopOnFailure;
+      this._stopSession = this.impTestFile.values.stopOnFailure;
 
     } else if (error instanceof errors.TestStateError) {
 
       this._error(error);
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
 
     } else if (error instanceof errors.SessionFailedError) {
 
@@ -610,65 +612,63 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     } else if (error instanceof errors.DeviceDisconnectedError) {
 
       this._testLine(c.red('Device disconnected'));
-
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
       this._stopDevice = true;
 
     } else if (error instanceof errors.DeviceRuntimeError) {
 
       this._testLine(c.red('Device Runtime Error: ' + error.message));
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
 
     } else if (error instanceof errors.AgentRuntimeError) {
 
       this._testLine(c.red('Agent Runtime Error: ' + error.message));
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
 
     } else if (error instanceof errors.DeviceError) {
 
       this._testLine(c.red('Device Error: ' + error.message));
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
 
     } else if (error instanceof errors.WrongModelError) {
 
       this._error(error.message);
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
       this._stopDevice = true;
 
     } else if (error instanceof errors.DevicePowerstateError) {
 
       this._error(error.message);
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
       this._stopDevice = true;
 
     } else if (error instanceof Error) {
 
       this._error(error.message);
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
 
     } else {
 
       this._error(error);
-      if (this._session) this._session.stop = true;
+      this._stopSession = true;
 
     }
-
-    this._success = false;
 
     if (this._session) {
       this._session.error = true;
-
-      // abort completely?
-      // _session.stop==true means the error is
-      // big enough to interrupt the session.
-      // in combination w/stopOnFailure it makes sense
-      // to abort the entire testing
-      if (!this._testingAbort && this._session.stop && this.impTestFile.values.stopOnFailure) {
-        this._testingAbort = true;
-        // this._testingAbortReason = 'stopOnFailure config value is set to "true"';
-      }
     }
 
+    // abort completely?
+    // _stopSession==true means the error is
+    // big enough to interrupt the session.
+    // in combination w/stopOnFailure it makes sense
+    // to abort the entire testing
+    if (!this._testingAbort && this._stopSession && this.impTestFile.values.stopOnFailure) {
+      this._testingAbort = true;
+    }
+
+    // command has not succeeded
+    this._success = false;
   }
 
   /**
