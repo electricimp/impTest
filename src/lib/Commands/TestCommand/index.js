@@ -429,7 +429,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       .catch((e) => {
         this._onError(e);
-        ee.emit('error', {error: e});
+        this.emit('done');
       });
 
     return ee;
