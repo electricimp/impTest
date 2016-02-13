@@ -4,7 +4,7 @@
 
 'use strict';
 
-//<editor-fold desc="imports">
+//<editor-fold desc="Imports">
 const fs = require('fs');
 const c = require('colors');
 const path = require('path');
@@ -18,12 +18,15 @@ const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
 //</editor-fold>
 
-class TestCommand extends AbstractCommand {
+/**
+ * Delay before testing start.
+ * Prevents log sessions mixing, allows
+ * service messages to be before tests output.
+ * [s]
+ */
+const STARTUP_DELAY = 2;
 
-  constructor() {
-    super();
-    this.startTimeout = 2;
-  }
+class TestCommand extends AbstractCommand {
 
   /**
    * Run command
@@ -167,7 +170,7 @@ class TestCommand extends AbstractCommand {
     // bootstrap code
     const bootstrapCode =
       `// bootstrap tests
-imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
+imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.session = "${this._session.id}";
@@ -759,14 +762,6 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     this._testCaseFile = value;
   }
 
-  get startTimeout() {
-    return this._startTimeout;
-  }
-
-  set startTimeout(value) {
-    this._startTimeout = value;
-  }
-
   get bundler() {
     return this._bundler;
   }
@@ -775,7 +770,7 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     this._bundler = value;
   }
 
-// </editor-fold>
+  // </editor-fold>
 }
 
 module.exports = TestCommand;
