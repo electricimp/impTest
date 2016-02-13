@@ -1,6 +1,6 @@
 'use strict';
 
-const Watchdog = require('../src/lib/Commands/TestCommand/Watchdog');
+const Watchdog = require('../src/lib/Watchdog');
 
 describe('Watchdog test suite', () => {
 

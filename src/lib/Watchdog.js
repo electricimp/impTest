@@ -4,7 +4,7 @@
 
 'use strict';
 
-const DebugMixin = require('../../DebugMixin');
+const DebugMixin = require('./DebugMixin');
 const EventEmitter = require('events');
 
 class Watchdog extends EventEmitter {
