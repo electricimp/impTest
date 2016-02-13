@@ -572,7 +572,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
               this._testLine(c.green(sessionMessage));
             }
 
-            this._session.stop = true;
+            this._stopSession = true;
             break;
 
         }
