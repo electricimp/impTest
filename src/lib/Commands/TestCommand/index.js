@@ -11,12 +11,12 @@ const path = require('path');
 const glob = require('glob');
 const errors = require('./Errors');
 const EventEmitter = require('events');
+const Watchdog = require('../../Watchdog');
 const randomWords = require('random-words');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
-const Watchdog = require('../../Watchdog');
 //</editor-fold>
 
 /**
