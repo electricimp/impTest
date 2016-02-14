@@ -27,6 +27,17 @@ const promiseWhile = require('../../utils/promiseWhile');
  */
 const STARTUP_DELAY = 2;
 
+/**
+ * Timeout before session startup
+ */
+const STARTUP_TIMEOUT = 60;
+
+/**
+ * Allow extra time on top of .imptest.timeout before
+ * treating test as timed out on a tool siode.
+ */
+const EXTRA_TEST_MESSAGE_TIMEOUT = 5;
+
 class TestCommand extends AbstractCommand {
 
   /**
@@ -47,7 +58,7 @@ class TestCommand extends AbstractCommand {
         let d = 0;
 
         return promiseWhile(
-          () => d++ < this.impTestFile.values.devices.length && !this._testingAbort,
+          () => d++ < this.impTestFile.values.devices.length && !this._abortTesting,
           () => this._runDevice(d - 1, testFiles).catch(() => {
             this._debug(c.red('Device #' + d + ' run failed'));
           })
@@ -61,7 +72,7 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   finish() {
-    if (this._testingAbort) {
+    if (this._abortTesting) {
       // testing was aborted
       this._error('Testing Aborted' + (this._testingAbortReason ? (': ' + this._testingAbortReason) : ''));
     }
@@ -233,6 +244,37 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       });
   }
 
+  _initSessionWatchdogs() {
+    // test messages
+    this._sessionTestMessagesWatchdog = new Watchdog();
+    this._sessionTestMessagesWatchdog.name = 'session_test_messages';
+    this._sessionTestMessagesWatchdog.timeout = EXTRA_TEST_MESSAGE_TIMEOUT +
+                                                parseFloat(this.impTestFile.values.timeout);
+    this._sessionTestMessagesWatchdog.on('timeout', this._onSessionWatchdog.bind(this));
+
+    // session start
+    this._sessionStartWatchdog = new Watchdog();
+    this._sessionStartWatchdog.name = 'session_start';
+    this._sessionStartWatchdog.timeout = STARTUP_TIMEOUT;
+    this._sessionStartWatchdog.on('timeout', this._onSessionWatchdog.bind(this));
+    this._sessionStartWatchdog.start();
+  }
+
+  _onSessionWatchdog(event) {
+    switch (event.name) {
+      case 'session_start':
+        this._onError(new errors.SessionStartTimeoutError());
+        break;
+
+      case 'session_test_messages':
+        this._onError(new errors.SesstionTestMessagesTimeoutError());
+        break;
+
+      default:
+        break;
+    }
+  }
+
   /**
    * Initialize test session
    * @private
@@ -268,8 +310,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   _runTestSession(deviceCode, agentCode, type) {
 
     this._stopSession = false;
-    const w = new Watchdog();
-    w.timeout = 1;
+    this._initSessionWatchdogs();
 
     return new Promise((resolve, reject) => {
 
@@ -306,7 +347,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
             this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
           }
 
-          if (this._testingAbort || this._session.error && !!this.impTestFile.values.stopOnFailure) {
+          if (this._abortTesting || this._session.error && !!this.impTestFile.values.stopOnFailure) {
             // stop testing cycle
             reject();
           } else {
@@ -527,6 +568,9 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         switch (value.type) {
           case 'START':
 
+            // stop session start watchdog
+            this._sessionStartWatchdog.stop();
+
             if (this._session.state !== 'ready') {
               throw new errors.TestStateError('Invalid test session state');
             }
@@ -535,6 +579,9 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
             break;
 
           case 'STATUS':
+
+            // reset test message watchdog
+            this._sessionTestMessagesWatchdog.reset();
 
             if (this._session.state !== 'started') {
               throw new errors.TestStateError('Invalid test session state');
@@ -555,6 +602,9 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
           case 'FAIL':
 
+            // stop test message watchdog
+            this._sessionTestMessagesWatchdog.stop();
+
             if (this._session.state !== 'started') {
               throw new errors.TestStateError('Invalid test session state');
             }
@@ -563,6 +613,9 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
             break;
 
           case 'RESULT':
+
+            // stop test message watchdog
+            this._sessionTestMessagesWatchdog.stop();
 
             if (this._session.state !== 'started') {
               throw new errors.TestStateError('Invalid test session state');
@@ -586,6 +639,8 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
             this._stopSession = true;
             break;
 
+          default:
+            break;
         }
 
         break;
@@ -652,6 +707,16 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._stopSession = true;
       this._stopDevice = true;
 
+    } else if (error instanceof  errors.SessionStartTimeoutError) {
+
+      this._error('Session startup timeout');
+      this._stopSession = true;
+
+    } else if (error instanceof  errors.SesstionTestMessagesTimeoutError) {
+
+      this._error('Testing timeout');
+      this._stopSession = this.impTestFile.values.stopOnFailure;
+
     } else if (error instanceof Error) {
 
       this._error(error.message);
@@ -673,8 +738,8 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     // big enough to interrupt the session.
     // in combination w/stopOnFailure it makes sense
     // to abort the entire testing
-    if (!this._testingAbort && this._stopSession && this.impTestFile.values.stopOnFailure) {
-      this._testingAbort = true;
+    if (this._stopSession && this.impTestFile.values.stopOnFailure) {
+      this._abortTesting = true;
     }
 
     // command has not succeeded

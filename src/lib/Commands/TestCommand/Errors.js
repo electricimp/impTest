@@ -9,3 +9,5 @@ module.exports.SessionFailedError = class SessionFailedError extends Error {};
 module.exports.TestMethodError = class TestMethodError extends Error {};
 module.exports.TestStateError = class TestStateError extends Error {};
 module.exports.WrongModelError = class WrongModelError extends Error {};
+module.exports.SessionStartTimeoutError = class SessionStartTimeoutError extends Error {};
+module.exports.SesstionTestMessagesTimeoutError = class SesstionTestMessagesTimeoutError extends Error {};
