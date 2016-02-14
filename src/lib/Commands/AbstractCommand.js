@@ -43,7 +43,7 @@ class AbstractCommand {
       this.logTiming = true; // enable log timing
       this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
 
-      this.buildAPIClient.apiKey = this.impTestFile.values.apiKey;
+      this.buildAPIClient.apiKey = this.imptestFile.values.apiKey;
       resolve();
     });
   }
@@ -134,12 +134,12 @@ class AbstractCommand {
     return this._buildAPIClient;
   }
 
-  set impTestFile(value) {
-    this._impTestFile = value;
+  set imptestFile(value) {
+    this._imptestFile = value;
   }
 
-  get impTestFile() {
-    return this._impTestFile;
+  get imptestFile() {
+    return this._imptestFile;
   }
 
   get version() {

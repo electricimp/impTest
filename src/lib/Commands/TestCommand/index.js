@@ -10,9 +10,9 @@ const c = require('colors');
 const path = require('path');
 const glob = require('glob');
 const errors = require('./Errors');
+const Session = require('./Session');
 const EventEmitter = require('events');
 const Watchdog = require('../../Watchdog');
-const randomWords = require('random-words');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
 const AbstractCommand = require('../AbstractCommand');
@@ -58,7 +58,7 @@ class TestCommand extends AbstractCommand {
         let d = 0;
 
         return promiseWhile(
-          () => d++ < this.impTestFile.values.devices.length && !this._abortTesting,
+          () => d++ < this.imptestFile.values.devices.length && !this._abortTesting,
           () => this._runDevice(d - 1, testFiles).catch(() => {
             this._debug(c.red('Device #' + d + ' run failed'));
           })
@@ -125,8 +125,8 @@ class TestCommand extends AbstractCommand {
       searchPatterns = this.testCaseFile;
     } else {
       // look in config file directory
-      configCwd = this.impTestFile.dir;
-      searchPatterns = this.impTestFile.values.tests;
+      configCwd = this.imptestFile.dir;
+      searchPatterns = this.imptestFile.values.tests;
     }
 
     if (typeof searchPatterns === 'string') {
@@ -167,12 +167,13 @@ class TestCommand extends AbstractCommand {
     this._blankLine();
 
     // init test session
-    this._session = this._initTestSession();
-
-    this._info(c.blue('Starting test session ') + this._session.id);
+    this._session = new Session();
+    this._session.debug = this.debug;
+    this._session.buildAPIClient = this.buildAPIClient;
+    this._session.on('info', this._info.bind(this));
 
     // determine device
-    const deviceId = this.impTestFile.values.devices[deviceIndex];
+    const deviceId = this.imptestFile.values.devices[deviceIndex];
 
     /* [info] */
     this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
@@ -186,8 +187,8 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.session = "${this._session.id}";
-  t.timeout = ${parseFloat(this.impTestFile.values.timeout)};
-  t.stopOnFailure = ${!!this.impTestFile.values.stopOnFailure};
+  t.timeout = ${parseFloat(this.imptestFile.values.timeout)};
+  t.stopOnFailure = ${!!this.imptestFile.values.stopOnFailure};
   // poehali!
   t.run();
 });`;
@@ -222,11 +223,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       .then((res) => {
         this._info(c.blue('Using device ' +
                    (deviceIndex + 1) + ' of ' +
-                   this.impTestFile.values.devices.length + ': ')
+                   this.imptestFile.values.devices.length + ': ')
                    + res.device.name + c.blue(' / ') + deviceId);
 
         // check model
-        if (res.device.model_id !== this.impTestFile.values.modelId) {
+        if (res.device.model_id !== this.imptestFile.values.modelId) {
           throw new errors.WrongModelError('Device is assigned to a wrong model');
         }
 
@@ -237,7 +238,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       })
 
       // run test session
-      .then(() => this._runTestSession(deviceCode, agentCode, file.type))
+      .then(() => this._runTestSession(deviceId, deviceCode, agentCode, file.type))
 
       .catch((error) => {
         this._onError(error);
@@ -253,7 +254,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     this._sessionTestMessagesWatchdog = new Watchdog();
     this._sessionTestMessagesWatchdog.name = 'session_test_messages';
     this._sessionTestMessagesWatchdog.timeout = EXTRA_TEST_MESSAGE_TIMEOUT +
-                                                parseFloat(this.impTestFile.values.timeout);
+                                                parseFloat(this.imptestFile.values.timeout);
     this._sessionTestMessagesWatchdog.on('timeout', this._onSessionWatchdog.bind(this));
 
     // session start
@@ -273,128 +274,60 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     switch (event.name) {
       case 'session_start':
         this._onError(new errors.SessionStartTimeoutError());
-        this._finishSession();
         break;
 
       case 'session_test_messages':
         this._onError(new errors.SesstionTestMessagesTimeoutError());
-        this._finishSession();
         break;
 
       default:
         break;
     }
-  }
 
-  /**
-   * Initialize test session
-   * @private
-   */
-  _initTestSession() {
-    let sessionId = null;
-
-    while (null === sessionId || (this._session && sessionId === this._session.id)) {
-      sessionId = randomWords(2).join('-');
+    if (this._stopSession) {
+      this._session.stop(this.imptestFile.values.stopOnFailure, this._abortTesting);
     }
-
-    const p = new Promise((resolve, reject) => {
-      p.resolve = resolve;
-      p.reject = reject;
-    });
-
-    return {
-      id: sessionId,
-      state: 'initialized',
-      deviceCodespaceUsage: 0,
-      failures: 0,
-      assertions: 0,
-      tests: 0,
-      promise: p,
-      error: false // overall error
-    };
   }
 
   /**
    * Execute test via BuildAPI from prepared code
    *
+   * @param {string} deviceId
    * @param {string} deviceCode
    * @param {string} agentCode
    * @param {"agent"|"device"} type
    * @return {Promise}
    * @private
    */
-  _runTestSession(deviceCode, agentCode, type) {
+  _runTestSession(deviceId, deviceCode, agentCode, type) {
 
     this._stopSession = false;
     this._initSessionWatchdogs();
 
-      // start reading logs
-      this._readLogs(type, this.impTestFile.values.devices[0])
+    // start reading logs
+    this._readLogs(type, deviceId)
 
-        .on('ready', () => {
-          this._startSession(deviceCode, agentCode);
-        })
-
-        // session is over
-        .on('done', () => {
-          this._finishSession();
-        })
-
-        .on('log', (event) => {
-          this._onLogMessage(event.type, event.value || null);
-        })
-
-        .on('error', (event) => {
-          this._onError(event.error);
-          // 'done' is emitted on 'error' as well
-          // so no need to call to _finishSession()
-        });
-
-  }
-
-  /**
-   * Start session
-   * @param {string} deviceCode
-   * @param {string} agentCode
-   * @private
-   */
-  _startSession(deviceCode, agentCode) {
-    this.buildAPIClient
-      .createRevision(this.impTestFile.values.modelId, deviceCode, agentCode)
-
-      .then((body) => {
-        this._info(c.blue('Created revision: ') + body.revision.version);
-        return this.buildAPIClient
-          .restartModel(this.impTestFile.values.modelId)
-          .then(/* model restarted */() => {
-            this._debug(c.blue('Model restarted'));
-          });
+      .on('ready', () => {
+        this._session.start(deviceCode, agentCode, this.imptestFile.values.modelId);
       })
 
-      .catch((error) => {
-        this._onError(error);
-        this._session.promise.reject(error);
+      // session is over
+      .on('done', () => {
+        this._session.stop(this.imptestFile.values.stopOnFailure, this._abortTesting);
+      })
+
+      .on('log', (event) => {
+        this._onLogMessage(event.type, event.value || null);
+      })
+
+      .on('error', (event) => {
+        this._onError(event.error);
+        // 'done' is emitted on 'error' as well
+        // so no need to call to _finishSession()
       });
-  }
 
-  /**
-   * Finish test session
-   * @private
-   */
-  _finishSession() {
-    if (this._session.error) {
-      this._info(c.red('Session ') + this._session.id + c.red(' failed'));
-    } else {
-      this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
-    }
 
-    if (this._abortTesting || (this._session.error && this.impTestFile.values.stopOnFailure)) {
-      // stop testing cycle
-      this._session.promise.reject();
-    } else {
-      // proceed to next session
-      this._session.promise.resolve();
-    }
+    return this._session.promise;
   }
 
   /**
@@ -693,7 +626,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     if (error instanceof errors.TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
-      this._stopSession = this.impTestFile.values.stopOnFailure;
+      this._stopSession = this.imptestFile.values.stopOnFailure;
 
     } else if (error instanceof errors.TestStateError) {
 
@@ -772,7 +705,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     // big enough to interrupt the session.
     // in combination w/stopOnFailure it makes sense
     // to abort the entire testing
-    if (this._stopSession && this.impTestFile.values.stopOnFailure) {
+    if (this._stopSession && this.imptestFile.values.stopOnFailure) {
       this._abortTesting = true;
     }
 
@@ -808,25 +741,25 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       let sourceFilePath;
 
-      if (this.impTestFile.values.agentFile) {
-        sourceFilePath = path.resolve(this.impTestFile.dir, this.impTestFile.values.agentFile);
+      if (this.imptestFile.values.agentFile) {
+        sourceFilePath = path.resolve(this.imptestFile.dir, this.imptestFile.values.agentFile);
 
         /* [debug] */
         this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
         /* [info] */
         this._info(c.blue('Agent source file: ')
-                   + this.impTestFile.values.agentFile);
+                   + this.imptestFile.values.agentFile);
 
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
       } else {
         this._agentSource = '/* no agent source provided */';
       }
 
-      if (this.impTestFile.values.deviceFile) {
-        sourceFilePath = path.resolve(this.impTestFile.dir, this.impTestFile.values.deviceFile);
+      if (this.imptestFile.values.deviceFile) {
+        sourceFilePath = path.resolve(this.imptestFile.dir, this.imptestFile.values.deviceFile);
 
         this._debug(c.blue('Device source code file path: ') + sourceFilePath);
-        this._info(c.blue('Device source file: ') + this.impTestFile.values.deviceFile);
+        this._info(c.blue('Device source file: ') + this.imptestFile.values.deviceFile);
 
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
       } else {

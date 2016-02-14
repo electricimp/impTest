@@ -28,7 +28,7 @@ impTestFile.debug = parseBool(commander.debug);
 const command = new InitCommand();
 
 command.buildAPIClient = buildAPIClient;
-command.impTestFile = impTestFile;
+command.imptestFile = impTestFile;
 command.force = parseBool(commander.force);
 command.version = packageJson.version;
 

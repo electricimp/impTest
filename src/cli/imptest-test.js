@@ -38,7 +38,7 @@ command.version = packageJson.version;
 command.debug = parseBool(commander.debug);
 command.testFrameworkFile = __dirname + '/../impUnit/bundle.nut';
 command.testCaseFile = commander.args[0] || null;
-command.impTestFile = impTestFile;
+command.imptestFile = impTestFile;
 command.buildAPIClient = buildAPIClient;
 command.bundler = bundler;
 
