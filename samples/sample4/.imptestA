@@ -1,0 +1,11 @@
+{
+  "apiKey": "df6762b0dbb28739f37f509bfb3ec7e2",
+  "modelId": "rOgeGCEM1cS7",
+  "devices": [
+    "23349c7838a609ee"
+  ],
+  "deviceFile": "device.nut",
+  "agentFile": "agent.nut",
+  "stopOnFailure": false,
+  "timeout": 3
+}
