@@ -424,7 +424,6 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
             } catch (e) {
               ee.emit('error', {error: e});
-              this._onError(e);
             }
 
             // are we done?
@@ -443,7 +442,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       })
 
       .catch((e) => {
-        this._onError(e);
+        this.emit('error', {error: e});
         this.emit('done');
       });
 
