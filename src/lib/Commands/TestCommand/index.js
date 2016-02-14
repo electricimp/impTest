@@ -715,7 +715,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     } else if (error instanceof  errors.SesstionTestMessagesTimeoutError) {
 
       this._error('Testing timeout');
-      this._stopSession = this.impTestFile.values.stopOnFailure;
+
+      // tool-side timeouts are longer than test-side, so they
+      // indicate for test session to become unresponsive,
+      // so it makes sense to stop it
+      this._stopSession = true;
 
     } else if (error instanceof Error) {
 
