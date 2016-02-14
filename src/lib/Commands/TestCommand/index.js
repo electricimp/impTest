@@ -275,6 +275,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       // start reading logs
       this._readLogs(type, this.impTestFile.values.devices[0])
+
         .on('ready', () => {
 
           // xxx
@@ -320,9 +321,16 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
           }
         })
 
-        // xxx
-        .on('log', (e) => {
-          console.log(c.yellow('log'), e);
+        .on('log', (event) => {
+          // xxx
+          console.log(c.yellow('log'), event);
+          this._onLogMessage(event.type, event.value || null);
+        })
+
+        .on('error', (event) => {
+          // xxx
+          console.log(c.yellow('error'), event);
+          this._onError(event.error);
         });
 
     });
@@ -333,7 +341,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    *
    * @param {"agent"|"device"} type
    * @param {string} deviceId
-   * @returns {EventEmitter} Events: ready, done, log
+   * @returns {EventEmitter} Events: ready, done, log, error
    *
    * @private
    */
@@ -363,28 +371,28 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
                   if (message.match(/Agent restarted/)) {
                     // agent restarted
-                    this._onLogMessage('AGENT_RESTARTED');
+                    ee.emit('log', {type: 'AGENT_RESTARTED'});
                   } else if (m = message.match(/(Out of space)?.*?([\d\.]+)% program storage used/)) {
                     // code space used
-                    this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[2]));
+                    ee.emit('log', {type: 'DEVICE_CODE_SPACE_USAGE', value: parseFloat(m[2])});
 
                     // out of code space
                     if (m[1]) {
-                      this._onLogMessage('DEVICE_OUT_OF_CODE_SPACE');
+                      ee.emit('log', {type: 'DEVICE_OUT_OF_CODE_SPACE'});
                     }
                   } else if (message.match(/Device disconnected/)) {
-                    this._onLogMessage('DEVICE_DISCONNECTED');
+                    ee.emit('log', {type: 'DEVICE_DISCONNECTED'});
                   } else if (message.match(/Device connected/)) {
-                    this._onLogMessage('DEVICE_CONNECTED');
+                    ee.emit('log', {type: 'DEVICE_CONNECTED'});
                   } else {
-                    this._onLogMessage('UNKNOWN', log);
+                    ee.emit('log', {type: 'UNKNOWN', value: log});
                   }
 
                   break;
 
                 // error
                 case 'lastexitcode':
-                  this._onLogMessage('LASTEXITCODE', message);
+                  ee.emit('log', {type: 'LASTEXITCODE', value: message});
                   break;
 
                 case 'server.log':
@@ -393,37 +401,36 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
                   if (log.type.replace(/\.log$/, '') === apiType) {
                     if (message.match(/__IMPUNIT__/)) {
                       // impUnit message, decode it
-                      this._onLogMessage('IMPUNIT', JSON.parse(message));
+                      ee.emit('log', {type: 'IMPUNIT', value: JSON.parse(message)});
                     }
                   }
 
                   break;
 
                 case 'agent.error':
-                  this._onLogMessage('AGENT_ERROR', message);
+                  ee.emit('log', {type: 'AGENT_ERROR', value: message});
                   break;
 
                 case 'server.error':
-                  this._onLogMessage('DEVICE_ERROR', message);
+                  ee.emit('log', {type: 'DEVICE_ERROR', value: message});
                   break;
 
                 case 'powerstate':
-                  this._onLogMessage('POWERSTATE', message);
+                  ee.emit('log', {type: 'POWERSTATE', value: message});
                   break;
 
                 case 'firmware':
-                  this._onLogMessage('FIRMWARE', message);
+                  ee.emit('log', {type: 'FIRMWARE', value: message});
                   break;
 
                 default:
-                  this._onLogMessage('UNKNOWN', log);
+                  ee.emit('log', {type: 'UNKNOWN', value: log});
                   break;
               }
 
             } catch (e) {
-
+              ee.emit('error', {error: e});
               this._onError(e);
-
             }
 
             // are we done?
