@@ -30,7 +30,7 @@ const STARTUP_DELAY = 2;
 /**
  * Timeout before session startup
  */
-const STARTUP_TIMEOUT = 5;
+const STARTUP_TIMEOUT = 60;
 
 /**
  * Allow extra time on top of .imptest.timeout before
