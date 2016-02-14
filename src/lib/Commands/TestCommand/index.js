@@ -30,7 +30,7 @@ const STARTUP_DELAY = 2;
 /**
  * Timeout before session startup
  */
-const STARTUP_TIMEOUT = 60;
+const STARTUP_TIMEOUT = 5;
 
 /**
  * Allow extra time on top of .imptest.timeout before
@@ -167,7 +167,7 @@ class TestCommand extends AbstractCommand {
     this._blankLine();
 
     // init test session
-    this._initTestSession();
+    this._session = this._initTestSession();
 
     this._info(c.blue('Starting test session ') + this._session.id);
 
@@ -244,6 +244,10 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       });
   }
 
+  /**
+   * Initialize session watchdog timers
+   * @private
+   */
   _initSessionWatchdogs() {
     // test messages
     this._sessionTestMessagesWatchdog = new Watchdog();
@@ -260,14 +264,21 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     this._sessionStartWatchdog.start();
   }
 
+  /**
+   * Handle session watchdog timeouts
+   * @param {{name: {string}}} event
+   * @private
+   */
   _onSessionWatchdog(event) {
     switch (event.name) {
       case 'session_start':
         this._onError(new errors.SessionStartTimeoutError());
+        this._finishSession();
         break;
 
       case 'session_test_messages':
         this._onError(new errors.SesstionTestMessagesTimeoutError());
+        this._finishSession();
         break;
 
       default:
@@ -286,14 +297,19 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       sessionId = randomWords(2).join('-');
     }
 
-    this._session = {
+    const p = new Promise((resolve, reject) => {
+      p.resolve = resolve;
+      p.reject = reject;
+    });
+
+    return {
       id: sessionId,
       state: 'initialized',
       deviceCodespaceUsage: 0,
       failures: 0,
       assertions: 0,
       tests: 0,
-      stop: false,
+      promise: p,
       error: false // overall error
     };
   }
@@ -312,48 +328,16 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     this._stopSession = false;
     this._initSessionWatchdogs();
 
-    return new Promise((resolve, reject) => {
-
       // start reading logs
       this._readLogs(type, this.impTestFile.values.devices[0])
 
         .on('ready', () => {
-
-          this.buildAPIClient
-            .createRevision(this.impTestFile.values.modelId, deviceCode, agentCode)
-
-            .then((body) => {
-              this._info(c.blue('Created revision: ') + body.revision.version);
-              return this.buildAPIClient
-                .restartModel(this.impTestFile.values.modelId)
-                .then(/* model restarted */() => {
-                  this._debug(c.blue('Model restarted'));
-                });
-            })
-
-            .catch((error) => {
-              this._onError(error);
-              reject(error);
-            });
-
+          this._startSession(deviceCode, agentCode);
         })
 
         // session is over
         .on('done', () => {
-
-          if (this._session.error) {
-            this._info(c.red('Session ') + this._session.id + c.red(' failed'));
-          } else {
-            this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
-          }
-
-          if (this._abortTesting || this._session.error && !!this.impTestFile.values.stopOnFailure) {
-            // stop testing cycle
-            reject();
-          } else {
-            // proceed to next session
-            resolve();
-          }
+          this._finishSession();
         })
 
         .on('log', (event) => {
@@ -362,9 +346,55 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
         .on('error', (event) => {
           this._onError(event.error);
+          // done is emitted on 'error' as well
+          // so no need to call to _finishSession()
         });
 
-    });
+  }
+
+  /**
+   * Start session
+   * @param {string} deviceCode
+   * @param {string} agentCode
+   * @private
+   */
+  _startSession(deviceCode, agentCode) {
+    this.buildAPIClient
+      .createRevision(this.impTestFile.values.modelId, deviceCode, agentCode)
+
+      .then((body) => {
+        this._info(c.blue('Created revision: ') + body.revision.version);
+        return this.buildAPIClient
+          .restartModel(this.impTestFile.values.modelId)
+          .then(/* model restarted */() => {
+            this._debug(c.blue('Model restarted'));
+          });
+      })
+
+      .catch((error) => {
+        this._onError(error);
+        this._session.promise.reject(error);
+      });
+  }
+
+  /**
+   * Finish test session
+   * @private
+   */
+  _finishSession() {
+    if (this._session.error) {
+      this._info(c.red('Session ') + this._session.id + c.red(' failed'));
+    } else {
+      this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
+    }
+
+    if (this._abortTesting || (this._session.error && this.impTestFile.values.stopOnFailure)) {
+      // stop testing cycle
+      this._session.promise.reject();
+    } else {
+      // proceed to next session
+      this._session.promise.resolve();
+    }
   }
 
   /**
@@ -389,7 +419,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
           for (const log of data.logs) {
 
             // xxx
-            //console.log(c.yellow(JSON.stringify(log)));
+            // console.log(c.yellow(JSON.stringify(log)));
 
             let m;
             const message = log.message;
@@ -707,12 +737,12 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._stopSession = true;
       this._stopDevice = true;
 
-    } else if (error instanceof  errors.SessionStartTimeoutError) {
+    } else if (error instanceof errors.SessionStartTimeoutError) {
 
       this._error('Session startup timeout');
       this._stopSession = true;
 
-    } else if (error instanceof  errors.SesstionTestMessagesTimeoutError) {
+    } else if (error instanceof errors.SesstionTestMessagesTimeoutError) {
 
       this._error('Testing timeout');
 
