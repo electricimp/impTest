@@ -278,9 +278,6 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
         .on('ready', () => {
 
-          // xxx
-          console.log(c.yellow('ready'));
-
           this.buildAPIClient
             .createRevision(this.impTestFile.values.modelId, deviceCode, agentCode)
 
@@ -303,9 +300,6 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         // session is over
         .on('done', () => {
 
-          // xxx
-          console.log(c.yellow('done'));
-
           if (this._session.error) {
             this._info(c.red('Session ') + this._session.id + c.red(' failed'));
           } else {
@@ -322,14 +316,10 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         })
 
         .on('log', (event) => {
-          // xxx
-          console.log(c.yellow('log'), event);
           this._onLogMessage(event.type, event.value || null);
         })
 
         .on('error', (event) => {
-          // xxx
-          console.log(c.yellow('error'), event);
           this._onError(event.error);
         });
 
