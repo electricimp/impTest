@@ -277,6 +277,9 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._readLogs(type, this.impTestFile.values.devices[0])
         .on('ready', () => {
 
+          // xxx
+          console.log(c.yellow('ready'));
+
           this.buildAPIClient
             .createRevision(this.impTestFile.values.modelId, deviceCode, agentCode)
 
@@ -299,6 +302,9 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         // session is over
         .on('done', () => {
 
+          // xxx
+          console.log(c.yellow('done'));
+
           if (this._session.error) {
             this._info(c.red('Session ') + this._session.id + c.red(' failed'));
           } else {
@@ -312,6 +318,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
             // proceed to next session
             resolve();
           }
+        })
+
+        // xxx
+        .on('log', (e) => {
+          console.log(c.yellow('log'), e);
         });
 
     });
@@ -322,7 +333,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    *
    * @param {"agent"|"device"} type
    * @param {string} deviceId
-   * @returns {EventEmitter} Events: ready, done
+   * @returns {EventEmitter} Events: ready, done, log
    *
    * @private
    */
