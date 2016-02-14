@@ -1,9 +1,10 @@
 'use strict';
 
-var path = require('path');
-var fs = require('fs');
-var stripJsonComments = require('strip-json-comments');
-var colors = require('colors');
+const c = require('colors');
+const fs = require('fs');
+const path = require('path');
+const DebugMixin = require('./DebugMixin');
+const stripJsonComments = require('strip-json-comments');
 
 /**
  * Config file abstraction
@@ -14,6 +15,7 @@ class ImpTestFile {
    * @param {string} configPath
    */
   constructor(configPath) {
+    DebugMixin.call(this);
     this._path = path.resolve(configPath);
   }
 
@@ -44,32 +46,19 @@ class ImpTestFile {
    */
   _read() {
     let values = {};
-    this._debug(colors.blue('Using config file:'), this.path);
+    this._debug(c.blue('Using config file:'), this.path);
 
     if (this.exists()) {
       values = fs.readFileSync(this.path).toString();
       values = stripJsonComments(values);
       values = JSON.parse(values);
       values = Object.assign(this.defaultValues, values);
-      this._debug(colors.blue('Config values:'), values);
+      this._debug(c.blue('Config values:'), values);
     } else {
-      this._debug(colors.red('Config file not found'));
+      this._debug(c.red('Config file not found'));
     }
 
     return values;
-  }
-
-  /**
-   * Debug print
-   * @param {*} ...objects
-   * @protected
-   */
-  _debug() {
-    if (this.debug) {
-      const args = Array.prototype.slice.call(arguments);
-      args.unshift(colors.green('[debug:' + this.constructor.name + ']'));
-      console.log.apply(this, args);
-    }
   }
 
   /**
@@ -95,14 +84,6 @@ class ImpTestFile {
    */
   get dir() {
     return path.dirname(this._path);
-  }
-
-  get debug() {
-    return this.__debug;
-  }
-
-  set debug(value) {
-    this.__debug = value;
   }
 }
 

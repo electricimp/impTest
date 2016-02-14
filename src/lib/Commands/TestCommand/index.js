@@ -4,13 +4,14 @@
 
 'use strict';
 
-//<editor-fold desc="imports">
+//<editor-fold desc="Imports">
 const fs = require('fs');
 const c = require('colors');
 const path = require('path');
 const glob = require('glob');
 const errors = require('./Errors');
 const EventEmitter = require('events');
+const Watchdog = require('../../Watchdog');
 const randomWords = require('random-words');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
@@ -18,12 +19,26 @@ const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
 //</editor-fold>
 
-class TestCommand extends AbstractCommand {
+/**
+ * Delay before testing start.
+ * Prevents log sessions mixing, allows
+ * service messages to be before tests output.
+ * [s]
+ */
+const STARTUP_DELAY = 2;
 
-  constructor() {
-    super();
-    this.startTimeout = 2;
-  }
+/**
+ * Timeout before session startup
+ */
+const STARTUP_TIMEOUT = 60;
+
+/**
+ * Allow extra time on top of .imptest.timeout before
+ * treating test as timed out on a tool siode.
+ */
+const EXTRA_TEST_MESSAGE_TIMEOUT = 5;
+
+class TestCommand extends AbstractCommand {
 
   /**
    * Run command
@@ -43,7 +58,7 @@ class TestCommand extends AbstractCommand {
         let d = 0;
 
         return promiseWhile(
-          () => d++ < this.impTestFile.values.devices.length && !this._testingAbort,
+          () => d++ < this.impTestFile.values.devices.length && !this._abortTesting,
           () => this._runDevice(d - 1, testFiles).catch(() => {
             this._debug(c.red('Device #' + d + ' run failed'));
           })
@@ -57,7 +72,7 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   finish() {
-    if (this._testingAbort) {
+    if (this._abortTesting) {
       // testing was aborted
       this._error('Testing Aborted' + (this._testingAbortReason ? (': ' + this._testingAbortReason) : ''));
     }
@@ -152,7 +167,7 @@ class TestCommand extends AbstractCommand {
     this._blankLine();
 
     // init test session
-    this._initTestSession();
+    this._session = this._initTestSession();
 
     this._info(c.blue('Starting test session ') + this._session.id);
 
@@ -167,7 +182,7 @@ class TestCommand extends AbstractCommand {
     // bootstrap code
     const bootstrapCode =
       `// bootstrap tests
-imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
+imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.session = "${this._session.id}";
@@ -230,6 +245,48 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
   }
 
   /**
+   * Initialize session watchdog timers
+   * @private
+   */
+  _initSessionWatchdogs() {
+    // test messages
+    this._sessionTestMessagesWatchdog = new Watchdog();
+    this._sessionTestMessagesWatchdog.name = 'session_test_messages';
+    this._sessionTestMessagesWatchdog.timeout = EXTRA_TEST_MESSAGE_TIMEOUT +
+                                                parseFloat(this.impTestFile.values.timeout);
+    this._sessionTestMessagesWatchdog.on('timeout', this._onSessionWatchdog.bind(this));
+
+    // session start
+    this._sessionStartWatchdog = new Watchdog();
+    this._sessionStartWatchdog.name = 'session_start';
+    this._sessionStartWatchdog.timeout = STARTUP_TIMEOUT;
+    this._sessionStartWatchdog.on('timeout', this._onSessionWatchdog.bind(this));
+    this._sessionStartWatchdog.start();
+  }
+
+  /**
+   * Handle session watchdog timeouts
+   * @param {{name: {string}}} event
+   * @private
+   */
+  _onSessionWatchdog(event) {
+    switch (event.name) {
+      case 'session_start':
+        this._onError(new errors.SessionStartTimeoutError());
+        this._finishSession();
+        break;
+
+      case 'session_test_messages':
+        this._onError(new errors.SesstionTestMessagesTimeoutError());
+        this._finishSession();
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  /**
    * Initialize test session
    * @private
    */
@@ -240,14 +297,19 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
       sessionId = randomWords(2).join('-');
     }
 
-    this._session = {
+    const p = new Promise((resolve, reject) => {
+      p.resolve = resolve;
+      p.reject = reject;
+    });
+
+    return {
       id: sessionId,
       state: 'initialized',
       deviceCodespaceUsage: 0,
       failures: 0,
       assertions: 0,
       tests: 0,
-      stop: false,
+      promise: p,
       error: false // overall error
     };
   }
@@ -264,51 +326,75 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
   _runTestSession(deviceCode, agentCode, type) {
 
     this._stopSession = false;
-
-    return new Promise((resolve, reject) => {
+    this._initSessionWatchdogs();
 
       // start reading logs
       this._readLogs(type, this.impTestFile.values.devices[0])
+
         .on('ready', () => {
-
-          this.buildAPIClient
-            .createRevision(this.impTestFile.values.modelId, deviceCode, agentCode)
-
-            .then((body) => {
-              this._info(c.blue('Created revision: ') + body.revision.version);
-              return this.buildAPIClient
-                .restartModel(this.impTestFile.values.modelId)
-                .then(/* model restarted */() => {
-                  this._debug(c.blue('Model restarted'));
-                });
-            })
-
-            .catch((error) => {
-              this._onError(error);
-              reject(error);
-            });
-
+          this._startSession(deviceCode, agentCode);
         })
 
         // session is over
         .on('done', () => {
+          this._finishSession();
+        })
 
-          if (this._session.error) {
-            this._info(c.red('Session ') + this._session.id + c.red(' failed'));
-          } else {
-            this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
-          }
+        .on('log', (event) => {
+          this._onLogMessage(event.type, event.value || null);
+        })
 
-          if (this._testingAbort || this._session.error && !!this.impTestFile.values.stopOnFailure) {
-            // stop testing cycle
-            reject();
-          } else {
-            // proceed to next session
-            resolve();
-          }
+        .on('error', (event) => {
+          this._onError(event.error);
+          // 'done' is emitted on 'error' as well
+          // so no need to call to _finishSession()
         });
 
-    });
+  }
+
+  /**
+   * Start session
+   * @param {string} deviceCode
+   * @param {string} agentCode
+   * @private
+   */
+  _startSession(deviceCode, agentCode) {
+    this.buildAPIClient
+      .createRevision(this.impTestFile.values.modelId, deviceCode, agentCode)
+
+      .then((body) => {
+        this._info(c.blue('Created revision: ') + body.revision.version);
+        return this.buildAPIClient
+          .restartModel(this.impTestFile.values.modelId)
+          .then(/* model restarted */() => {
+            this._debug(c.blue('Model restarted'));
+          });
+      })
+
+      .catch((error) => {
+        this._onError(error);
+        this._session.promise.reject(error);
+      });
+  }
+
+  /**
+   * Finish test session
+   * @private
+   */
+  _finishSession() {
+    if (this._session.error) {
+      this._info(c.red('Session ') + this._session.id + c.red(' failed'));
+    } else {
+      this._info(c.green('Session ') + this._session.id + c.green(' succeeded'));
+    }
+
+    if (this._abortTesting || (this._session.error && this.impTestFile.values.stopOnFailure)) {
+      // stop testing cycle
+      this._session.promise.reject();
+    } else {
+      // proceed to next session
+      this._session.promise.resolve();
+    }
   }
 
   /**
@@ -316,7 +402,7 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
    *
    * @param {"agent"|"device"} type
    * @param {string} deviceId
-   * @returns {EventEmitter} Events: ready, done
+   * @returns {EventEmitter} Events: ready, done, log, error
    *
    * @private
    */
@@ -333,7 +419,7 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
           for (const log of data.logs) {
 
             // xxx
-            //console.log(c.yellow(JSON.stringify(log)));
+            // console.log(c.yellow(JSON.stringify(log)));
 
             let m;
             const message = log.message;
@@ -346,28 +432,28 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
 
                   if (message.match(/Agent restarted/)) {
                     // agent restarted
-                    this._onLogMessage('AGENT_RESTARTED');
+                    ee.emit('log', {type: 'AGENT_RESTARTED'});
                   } else if (m = message.match(/(Out of space)?.*?([\d\.]+)% program storage used/)) {
                     // code space used
-                    this._onLogMessage('DEVICE_CODE_SPACE_USAGE', parseFloat(m[2]));
+                    ee.emit('log', {type: 'DEVICE_CODE_SPACE_USAGE', value: parseFloat(m[2])});
 
                     // out of code space
                     if (m[1]) {
-                      this._onLogMessage('DEVICE_OUT_OF_CODE_SPACE');
+                      ee.emit('log', {type: 'DEVICE_OUT_OF_CODE_SPACE'});
                     }
                   } else if (message.match(/Device disconnected/)) {
-                    this._onLogMessage('DEVICE_DISCONNECTED');
+                    ee.emit('log', {type: 'DEVICE_DISCONNECTED'});
                   } else if (message.match(/Device connected/)) {
-                    this._onLogMessage('DEVICE_CONNECTED');
+                    ee.emit('log', {type: 'DEVICE_CONNECTED'});
                   } else {
-                    this._onLogMessage('UNKNOWN', log);
+                    ee.emit('log', {type: 'UNKNOWN', value: log});
                   }
 
                   break;
 
                 // error
                 case 'lastexitcode':
-                  this._onLogMessage('LASTEXITCODE', message);
+                  ee.emit('log', {type: 'LASTEXITCODE', value: message});
                   break;
 
                 case 'server.log':
@@ -376,37 +462,36 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
                   if (log.type.replace(/\.log$/, '') === apiType) {
                     if (message.match(/__IMPUNIT__/)) {
                       // impUnit message, decode it
-                      this._onLogMessage('IMPUNIT', JSON.parse(message));
+                      ee.emit('log', {type: 'IMPUNIT', value: JSON.parse(message)});
                     }
                   }
 
                   break;
 
                 case 'agent.error':
-                  this._onLogMessage('AGENT_ERROR', message);
+                  ee.emit('log', {type: 'AGENT_ERROR', value: message});
                   break;
 
                 case 'server.error':
-                  this._onLogMessage('DEVICE_ERROR', message);
+                  ee.emit('log', {type: 'DEVICE_ERROR', value: message});
                   break;
 
                 case 'powerstate':
-                  this._onLogMessage('POWERSTATE', message);
+                  ee.emit('log', {type: 'POWERSTATE', value: message});
                   break;
 
                 case 'firmware':
-                  this._onLogMessage('FIRMWARE', message);
+                  ee.emit('log', {type: 'FIRMWARE', value: message});
                   break;
 
                 default:
-                  this._onLogMessage('UNKNOWN', log);
+                  ee.emit('log', {type: 'UNKNOWN', value: log});
                   break;
               }
 
             } catch (e) {
-
+              ee.emit('error', {error: e});
               this._onError(e);
-
             }
 
             // are we done?
@@ -426,7 +511,7 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
 
       .catch((e) => {
         this._onError(e);
-        ee.emit('error', {error: e});
+        this.emit('done');
       });
 
     return ee;
@@ -513,6 +598,9 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
         switch (value.type) {
           case 'START':
 
+            // stop session start watchdog
+            this._sessionStartWatchdog.stop();
+
             if (this._session.state !== 'ready') {
               throw new errors.TestStateError('Invalid test session state');
             }
@@ -521,6 +609,9 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
             break;
 
           case 'STATUS':
+
+            // reset test message watchdog
+            this._sessionTestMessagesWatchdog.reset();
 
             if (this._session.state !== 'started') {
               throw new errors.TestStateError('Invalid test session state');
@@ -541,6 +632,9 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
 
           case 'FAIL':
 
+            // stop test message watchdog
+            this._sessionTestMessagesWatchdog.stop();
+
             if (this._session.state !== 'started') {
               throw new errors.TestStateError('Invalid test session state');
             }
@@ -549,6 +643,9 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
             break;
 
           case 'RESULT':
+
+            // stop test message watchdog
+            this._sessionTestMessagesWatchdog.stop();
 
             if (this._session.state !== 'started') {
               throw new errors.TestStateError('Invalid test session state');
@@ -569,9 +666,11 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
               this._testLine(c.green(sessionMessage));
             }
 
-            this._session.stop = true;
+            this._stopSession = true;
             break;
 
+          default:
+            break;
         }
 
         break;
@@ -638,6 +737,20 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
       this._stopSession = true;
       this._stopDevice = true;
 
+    } else if (error instanceof errors.SessionStartTimeoutError) {
+
+      this._error('Session startup timeout');
+      this._stopSession = true;
+
+    } else if (error instanceof errors.SesstionTestMessagesTimeoutError) {
+
+      this._error('Testing timeout');
+
+      // tool-side timeouts are longer than test-side, so they
+      // indicate for test session to become unresponsive,
+      // so it makes sense to stop it
+      this._stopSession = true;
+
     } else if (error instanceof Error) {
 
       this._error(error.message);
@@ -659,8 +772,8 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     // big enough to interrupt the session.
     // in combination w/stopOnFailure it makes sense
     // to abort the entire testing
-    if (!this._testingAbort && this._stopSession && this.impTestFile.values.stopOnFailure) {
-      this._testingAbort = true;
+    if (this._stopSession && this.impTestFile.values.stopOnFailure) {
+      this._abortTesting = true;
     }
 
     // command has not succeeded
@@ -735,7 +848,7 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
    */
   get _frameworkCode() {
     if (!this.__frameworkCode) {
-      this.__frameworkCode = this.bundler.process(this.testFrameworkFile);
+      this.__frameworkCode = this.bundler.process(this.testFrameworkFile).trim();
     }
 
     return this.__frameworkCode;
@@ -759,14 +872,6 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     this._testCaseFile = value;
   }
 
-  get startTimeout() {
-    return this._startTimeout;
-  }
-
-  set startTimeout(value) {
-    this._startTimeout = value;
-  }
-
   get bundler() {
     return this._bundler;
   }
@@ -775,7 +880,7 @@ imp.wakeup(${parseFloat(this.startTimeout) /* prevent log sessions mixing, allow
     this._bundler = value;
   }
 
-// </editor-fold>
+  // </editor-fold>
 }
 
 module.exports = TestCommand;
