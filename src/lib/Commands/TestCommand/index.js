@@ -16,6 +16,7 @@ const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
+const Watchdog = require('../../Watchdog');
 //</editor-fold>
 
 /**
@@ -267,6 +268,8 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   _runTestSession(deviceCode, agentCode, type) {
 
     this._stopSession = false;
+    const w = new Watchdog();
+    w.timeout = 1;
 
     return new Promise((resolve, reject) => {
 
