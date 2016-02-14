@@ -346,7 +346,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
         .on('error', (event) => {
           this._onError(event.error);
-          // done is emitted on 'error' as well
+          // 'done' is emitted on 'error' as well
           // so no need to call to _finishSession()
         });
 
