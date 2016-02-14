@@ -13,8 +13,8 @@ class Watchdog extends EventEmitter {
     super();
     DebugMixin.call(this);
     this.name = null;
+    this.timeout = 0;
     this._timerId = null;
-    this.timeout = 1;
   }
 
   start() {
@@ -37,7 +37,7 @@ class Watchdog extends EventEmitter {
   }
 
   _onTimeout() {
-    this.emit('timeout');
+    this._debug(`Watchdog "${this.name}" timed out`);
     this.emit('timeout', {name: this.name});
   }
 
