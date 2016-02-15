@@ -53,7 +53,7 @@ class Session extends EventEmitter {
    */
   run(testType, deviceId, modelId, deviceCode, agentCode) {
 
-    this.logsParser.parse(testType, deviceId)
+    this.logParser.parse(testType, deviceId)
 
       .on('ready', () => {
         this._start(deviceCode, agentCode, modelId);
@@ -386,12 +386,12 @@ class Session extends EventEmitter {
     this._buildAPIClient = value;
   }
 
-  get logsParser() {
-    return this._logsParser;
+  get logParser() {
+    return this._logParser;
   }
 
-  set logsParser(value) {
-    this._logsParser = value;
+  set logParser(value) {
+    this._logParser = value;
   }
 
   get stop() {
@@ -399,8 +399,8 @@ class Session extends EventEmitter {
   }
 
   set stop(value) {
-    if (this.logsParser) {
-      this.logsParser.stop = value;
+    if (this.logParser) {
+      this.logParser.stop = value;
     }
 
     this._stop = value;

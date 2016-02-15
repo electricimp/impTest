@@ -10,8 +10,8 @@ const c = require('colors');
 const path = require('path');
 const glob = require('glob');
 const Session = require('./Session');
+const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
-const LogsParser = require('./LogsParser');
 const randomstring = require('randomstring');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
@@ -318,9 +318,9 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._session.debug = this.debug;
       this._session.buildAPIClient = this.buildAPIClient;
 
-      this._session.logsParser = new LogsParser();
-      this._session.logsParser.buildAPIClient = this.buildAPIClient;
-      this._session.logsParser.debug = this.debug;
+      this._session.logParser = new LogParser();
+      this._session.logParser.buildAPIClient = this.buildAPIClient;
+      this._session.logParser.debug = this.debug;
 
       this._session.on('message', (e) => {
         if ('info' === e.type) {

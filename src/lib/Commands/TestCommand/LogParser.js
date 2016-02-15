@@ -25,7 +25,7 @@ class LogsParser extends EventEmitter {
    * Read device logs, convert them to predefined types
    * @param {"agent"|"device"} testType
    * @param {string} deviceId
-   * @return {LogsParser}
+   * @return {LogParser}
    */
   parse(testType, deviceId) {
 
