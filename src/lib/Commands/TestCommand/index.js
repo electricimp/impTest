@@ -251,42 +251,31 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    */
   _initSessionWatchdogs() {
     // test messages
+
     this._sessionTestMessagesWatchdog = new Watchdog();
-    this._sessionTestMessagesWatchdog.name = 'session_test_messages';
-    this._sessionTestMessagesWatchdog.timeout = EXTRA_TEST_MESSAGE_TIMEOUT +
-                                                parseFloat(this.imptestFile.values.timeout);
-    this._sessionTestMessagesWatchdog.on('timeout', this._onSessionWatchdog.bind(this));
+    this._sessionTestMessagesWatchdog.debug = this.debug;
+    this._sessionTestMessagesWatchdog.name = 'test-messages';
+    this._sessionTestMessagesWatchdog.timeout =
+      EXTRA_TEST_MESSAGE_TIMEOUT + parseFloat(this.imptestFile.values.timeout);
+
+    this._sessionTestMessagesWatchdog.on('timeout', () => {
+      this._onError(new Errors.SesstionTestMessagesTimeoutError());
+      this._session.stop = this._stopSession;
+    });
 
     // session start
+
     this._sessionStartWatchdog = new Watchdog();
-    this._sessionStartWatchdog.name = 'session_start';
+    this._sessionStartWatchdog.debug = this.debug;
+    this._sessionStartWatchdog.name = 'session-start';
     this._sessionStartWatchdog.timeout = STARTUP_TIMEOUT;
-    this._sessionStartWatchdog.on('timeout', this._onSessionWatchdog.bind(this));
+
+    this._sessionStartWatchdog.on('timeout', () => {
+      this._onError(new Errors.SessionStartTimeoutError());
+      this._session.stop = this._stopSession;
+    });
+
     this._sessionStartWatchdog.start();
-  }
-
-  /**
-   * Handle session watchdog timeouts
-   * @param {{name: {string}}} event
-   * @private
-   */
-  _onSessionWatchdog(event) {
-    switch (event.name) {
-      case 'session_start':
-        this._onError(new Errors.SessionStartTimeoutError());
-        break;
-
-      case 'session_test_messages':
-        this._onError(new Errors.SesstionTestMessagesTimeoutError());
-        break;
-
-      default:
-        break;
-    }
-
-    if (this._stopSession) {
-      this._session.stop(this.imptestFile.values.stopOnFailure, this._abortTesting);
-    }
   }
 
   /**
