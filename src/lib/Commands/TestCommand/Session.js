@@ -66,11 +66,6 @@ class Session extends EventEmitter {
    */
   _start(deviceCode, agentCode, modelId) {
 
-    this.emit('message', {
-      type: 'info',
-      message: c.blue('Starting test session ') + this.id
-    });
-
     this._buildAPIClient
       .createRevision(modelId, deviceCode, agentCode)
 

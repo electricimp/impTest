@@ -185,6 +185,7 @@ class TestCommand extends AbstractCommand {
     // init test session
 
     this._session = new Session();
+    this._info( c.blue('Starting test session ') + this._session.id);
 
     // determine device
     const deviceId = this._impTestFile.values.devices[deviceIndex];
