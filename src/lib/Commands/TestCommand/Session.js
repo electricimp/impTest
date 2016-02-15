@@ -3,6 +3,8 @@
  *
  * Events:
  *  - info(message)
+ *  - error(error)
+ *  - done
  */
 
 'use strict';
@@ -11,6 +13,8 @@ const c = require('colors');
 const EventEmitter = require('events');
 const randomWords = require('random-words');
 const DebugMixin = require('../../DebugMixin');
+const sprintf = require('sprintf-js').sprintf;
+const errors = require('./Errors');
 
 class Session extends EventEmitter {
 
@@ -20,18 +24,31 @@ class Session extends EventEmitter {
 
     this.id = randomWords(2).join('-');
     this.state = 'initialized';
+  }
 
-    // init promise
+  run(testType, deviceId, modelId, deviceCode, agentCode) {
 
-    let resolve, reject;
+    this.logsParser.parse(testType, deviceId)
 
-    this.promise = new Promise((ok, err) => {
-      resolve = ok;
-      reject = err;
-    });
+      .on('ready', () => {
+        this.start(deviceCode, agentCode, modelId);
+      })
 
-    this.promise.resolve = resolve;
-    this.promise.reject = reject;
+      .on('done', () => {
+        this.finish();
+      })
+
+      .on('log', (log) => {
+        this._handleLog(log.type, log.value);
+      })
+
+      .on('error', (event) => {
+        this.emit('error', event.error);
+        this.logsParser.stop = this.stop;
+        // 'done' is emitted on 'error' as well
+        // so no need to call to stop()
+      });
+
   }
 
   /**
@@ -57,27 +74,180 @@ class Session extends EventEmitter {
       })
 
       .catch((error) => {
-        this._onError(error);
-        this.promise.reject(error);
+        this.emit('error', error);
+        this.finish();
       });
   }
 
   /**
    * Finish test session
    */
-  stop(rejectOnFailure, forceReject) {
+  finish(rejectOnFailure, forceReject) {
     if (this.error) {
       this.emit('info', c.red('Session ') + this.id + c.red(' failed'));
     } else {
       this.emit('info', c.green('Session ') + this.id + c.green(' succeeded'));
     }
 
-    if (this.error && rejectOnFailure) {
-      // stop testing cycle
-      this.promise.reject();
-    } else {
-      // proceed to next session
-      this.promise.resolve();
+    this.emit('done');
+  }
+
+
+  /**
+   * Log output handler
+   *
+   * @param {string} type
+   * @param {*} [value=null]
+   * @private
+   */
+  _handleLog(type, value) {
+    let m;
+
+    switch (type) {
+
+      case 'AGENT_RESTARTED':
+        if (this.state === 'initialized') {
+          // also serves as an indicator that current code actually started to run
+          // and previous revision was replaced
+          this.state = 'ready';
+        }
+        break;
+
+      case 'DEVICE_CODE_SPACE_USAGE':
+
+        if (!this.deviceCodespaceUsage !== value) {
+          this.emit('info', c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
+          this.deviceCodespaceUsage = value; // avoid duplicate messages
+        }
+
+        break;
+
+      case 'DEVICE_OUT_OF_CODE_SPACE':
+        this.emit('error', new errors.DeviceError('Out of code space'));
+        break;
+
+      case 'LASTEXITCODE':
+
+        if (this.state !== 'initialized') {
+          if (value.match(/out of memory/)) {
+            this.emit('error', new errors.DeviceError('Out of memory'));
+          } else {
+            this.emit('error', new errors.DeviceError(value));
+          }
+        }
+
+        break;
+
+      case 'DEVICE_ERROR':
+        this.emit('error', new errors.DeviceRuntimeError(value));
+        break;
+
+      case 'AGENT_ERROR':
+        this.emit('error', new errors.AgentRuntimeError(value));
+        break;
+
+      case 'DEVICE_CONNECTED':
+        break;
+
+      case 'DEVICE_DISCONNECTED':
+        this.emit('error', new errors.DeviceDisconnectedError());
+        break;
+
+      case 'POWERSTATE':
+        // todo: researh if any actiones needed
+        this._info(c.blue('Powerstate: ') + value);
+        break;
+
+      case 'FIRMWARE':
+        // todo: researh if any actiones needed
+        this._info(c.blue('Firmware: ') + value);
+        break;
+
+      case 'IMPUNIT':
+
+        if (value.session !== this.id) {
+          // skip messages not from the current session
+          // ??? should an error be thrown?
+          break;
+        }
+
+        switch (value.type) {
+          case 'START':
+
+            this.emit('started');
+
+            if (this.state !== 'ready') {
+              throw new errors.TestStateError('Invalid test session state');
+            }
+
+            this.state = 'started';
+            break;
+
+          case 'STATUS':
+
+            this.emit('test_message');
+
+            if (this.state !== 'started') {
+              throw new errors.TestStateError('Invalid test session state');
+            }
+
+            if (m = value.message.match(/(.+)::setUp\(\)$/)) {
+              // setup
+              this.emit('test_info', c.blue('Setting up ') + m[1]);
+            } else if (m = value.message.match(/(.+)::tearDown\(\)$/)) {
+              // teardown
+              this.emit('test_info', c.blue('Tearing down ') + m[1]);
+            } else {
+              // status message
+              this.emit('test_info', value.message);
+            }
+
+            break;
+
+          case 'FAIL':
+
+            if (this.state !== 'started') {
+              throw new errors.TestStateError('Invalid test session state');
+            }
+
+            this.emit('error', new errors.TestMethodError(value.message));
+            break;
+
+          case 'RESULT':
+
+            this.emit('stopped');
+
+            if (this.state !== 'started') {
+              throw new errors.TestStateError('Invalid test session state');
+            }
+
+            this.tests = value.message.tests;
+            this.failures = value.message.failures;
+            this.assertions = value.message.assertions;
+            this.state = 'finished';
+
+            const sessionMessage =
+              `Tests: ${this.tests}, Assertions: ${this.assertions}, Failures: ${this.failures}`;
+
+            if (this.failures) {
+              this.emit('test_info', c.red(sessionMessage));
+              this.emit('error', new errors.SessionFailedError('Session failed'));
+            } else {
+              this.emit('test_info', c.green(sessionMessage));
+            }
+
+            this.stop = true;
+            break;
+
+          default:
+            break;
+        }
+
+        break;
+
+      default:
+        this.emit('info', c.blue('Message of type ') + value.type + c.blue(': ') + value.message);
+        break;
     }
   }
 
@@ -129,14 +299,6 @@ class Session extends EventEmitter {
     this._tests = value;
   }
 
-  get promise() {
-    return this._promise;
-  }
-
-  set promise(value) {
-    this._promise = value;
-  }
-
   get error() {
     return this._error;
   }
@@ -151,6 +313,26 @@ class Session extends EventEmitter {
 
   set buildAPIClient(value) {
     this._buildAPIClient = value;
+  }
+
+  get logsParser() {
+    return this._logsParser;
+  }
+
+  set logsParser(value) {
+    this._logsParser = value;
+  }
+
+  get stop() {
+    return this._stop;
+  }
+
+  set stop(value) {
+    if (this.logsParser) {
+      this.logsParser.stop = value;
+    }
+
+    this._stop = value;
   }
 }
 

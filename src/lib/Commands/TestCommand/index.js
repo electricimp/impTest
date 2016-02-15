@@ -13,7 +13,6 @@ const errors = require('./Errors');
 const Session = require('./Session');
 const Watchdog = require('../../Watchdog');
 const LogsParser = require('./LogsParser');
-const sprintf = require('sprintf-js').sprintf;
 const randomstring = require('randomstring');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
@@ -167,10 +166,8 @@ class TestCommand extends AbstractCommand {
     this._blankLine();
 
     // init test session
+
     this._session = new Session();
-    this._session.debug = this.debug;
-    this._session.buildAPIClient = this.buildAPIClient;
-    this._session.on('info', this._info.bind(this));
 
     // determine device
     const deviceId = this.imptestFile.values.devices[deviceIndex];
@@ -301,202 +298,55 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    */
   _runSession(deviceId, deviceCode, agentCode, testType) {
 
-    this._stopSession = false;
-    this._initSessionWatchdogs();
+    return new Promise((resolve, reject) => {
 
-    const logsParser = new LogsParser();
-    logsParser.buildAPIClient = this.buildAPIClient;
+      this._stopSession = false;
+      this._initSessionWatchdogs();
 
-    // start reading logs
-    logsParser.parse(testType, deviceId)
+      this._session.debug = this.debug;
+      this._session.buildAPIClient = this.buildAPIClient;
 
-      .on('ready', () => {
-        this._session.start(deviceCode, agentCode, this.imptestFile.values.modelId);
-      })
+      this._session.logsParser = new LogsParser();
+      this._session.logsParser.buildAPIClient = this.buildAPIClient;
+      this._session.logsParser.debug = this.debug;
 
-      // session is over
-      .on('done', () => {
-        this._session.stop(this.imptestFile.values.stopOnFailure, this._abortTesting);
-      })
+      this._session.on('info', this._info.bind(this));
+      this._session.on('test_info', this._testLine.bind(this));
 
-      .on('log', (event) => {
-        this._onLogMessage(event.type, event.value || null);
-        logsParser.stop = this._stopSession;
-      })
-
-      .on('error', (event) => {
-        this._onError(event.error);
-        logsParser.stop = this._stopSession;
-        // 'done' is emitted on 'error' as well
-        // so no need to call to _finishSession()
+      this._session.on('error', (error) => {
+        this._onError(error);
+        this._session.stop = this._stopSession;
       });
 
+      this._session.on('started', () => {
+        this._sessionStartWatchdog.stop();
+      });
 
-    return this._session.promise;
-  }
+      this._session.on('test_message', () => {
+        this._sessionTestMessagesWatchdog.reset();
+      });
 
-  /**
-   * Log output handler
-   *
-   * @param {string} type
-   * @param {*} [value=null]
-   * @private
-   */
-  _onLogMessage(type, value) {
-    let m;
+      this._session.on('stopped', () => {
+        this._sessionTestMessagesWatchdog.stop();
+      });
 
-    switch (type) {
-
-      case 'AGENT_RESTARTED':
-        if (this._session.state === 'initialized') {
-          // also serves as an indicator that current code actually started to run
-          // and previous revision was replaced
-          this._session.state = 'ready';
+      this._session.on('done', () => {
+        if (this._session.error && this.imptestFile.values.stopOnFailure || this._abortTesting) {
+          reject();
+        } else {
+          resolve();
         }
-        break;
+      });
 
-      case 'DEVICE_CODE_SPACE_USAGE':
+      this._session.run(
+        testType,
+        deviceId,
+        this.imptestFile.values.modelId,
+        deviceCode,
+        agentCode
+      );
 
-        if (!this._session.deviceCodespaceUsage !== value) {
-          this._info(c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
-          this._session.deviceCodespaceUsage = value; // avoid duplicate messages
-        }
-
-        break;
-
-      case 'DEVICE_OUT_OF_CODE_SPACE':
-        this._onError(new errors.DeviceError('Out of code space'));
-        break;
-
-      case 'LASTEXITCODE':
-
-        if (this._session.state !== 'initialized') {
-          if (value.match(/out of memory/)) {
-            this._onError(new errors.DeviceError('Out of memory'));
-          } else {
-            this._onError(new errors.DeviceError(value));
-          }
-        }
-
-        break;
-
-      case 'DEVICE_ERROR':
-        this._onError(new errors.DeviceRuntimeError(value));
-        break;
-
-      case 'AGENT_ERROR':
-        this._onError(new errors.AgentRuntimeError(value));
-        break;
-
-      case 'DEVICE_CONNECTED':
-        break;
-
-      case 'DEVICE_DISCONNECTED':
-        this._onError(new errors.DeviceDisconnectedError());
-        break;
-
-      case 'POWERSTATE':
-        // todo: researh if any actiones needed
-        this._info(c.blue('Powerstate: ') + value);
-        break;
-
-      case 'FIRMWARE':
-        // todo: researh if any actiones needed
-        this._info(c.blue('Firmware: ') + value);
-        break;
-
-      case 'IMPUNIT':
-
-        if (value.session !== this._session.id) {
-          // skip messages not from the current session
-          // ??? should an error be thrown?
-          break;
-        }
-
-        switch (value.type) {
-          case 'START':
-
-            // stop session start watchdog
-            this._sessionStartWatchdog.stop();
-
-            if (this._session.state !== 'ready') {
-              throw new errors.TestStateError('Invalid test session state');
-            }
-
-            this._session.state = 'started';
-            break;
-
-          case 'STATUS':
-
-            // reset test message watchdog
-            this._sessionTestMessagesWatchdog.reset();
-
-            if (this._session.state !== 'started') {
-              throw new errors.TestStateError('Invalid test session state');
-            }
-
-            if (m = value.message.match(/(.+)::setUp\(\)$/)) {
-              // setup
-              this._testLine(c.blue('Setting up ') + m[1]);
-            } else if (m = value.message.match(/(.+)::tearDown\(\)$/)) {
-              // teardown
-              this._testLine(c.blue('Tearing down ') + m[1]);
-            } else {
-              // status message
-              this._testLine(value.message);
-            }
-
-            break;
-
-          case 'FAIL':
-
-            // stop test message watchdog
-            this._sessionTestMessagesWatchdog.stop();
-
-            if (this._session.state !== 'started') {
-              throw new errors.TestStateError('Invalid test session state');
-            }
-
-            this._onError(new errors.TestMethodError(value.message));
-            break;
-
-          case 'RESULT':
-
-            // stop test message watchdog
-            this._sessionTestMessagesWatchdog.stop();
-
-            if (this._session.state !== 'started') {
-              throw new errors.TestStateError('Invalid test session state');
-            }
-
-            this._session.tests = value.message.tests;
-            this._session.failures = value.message.failures;
-            this._session.assertions = value.message.assertions;
-            this._session.state = 'finished';
-
-            const sessionMessage =
-              `Tests: ${this._session.tests}, Assertions: ${this._session.assertions}, Failures: ${this._session.failures}`;
-
-            if (this._session.failures) {
-              this._testLine(c.red(sessionMessage));
-              this._onError(new errors.SessionFailedError('Session failed'));
-            } else {
-              this._testLine(c.green(sessionMessage));
-            }
-
-            this._stopSession = true;
-            break;
-
-          default:
-            break;
-        }
-
-        break;
-
-      default:
-        this._info(c.blue('Message of type ') + value.type + c.blue(': ') + value.message);
-        break;
-    }
+    });
   }
 
   /**

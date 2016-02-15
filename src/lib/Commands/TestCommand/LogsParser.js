@@ -10,9 +10,16 @@
 
 'use strict';
 
+const c = require('colors');
 const EventEmitter = require('events');
+const DebugMixin = require('../../DebugMixin');
 
 class LogsParser extends EventEmitter {
+
+  constructor() {
+    super();
+    DebugMixin.call(this);
+  }
 
   /**
    * Read device logs, convert them to predefined types
@@ -30,6 +37,11 @@ class LogsParser extends EventEmitter {
         if (data) {
 
           for (const log of data.logs) {
+
+            this._debug(c.blue('Log line received: ') + JSON.stringify(log));
+
+            // xxx
+            console.log(c.yellow(JSON.stringify(log)));
 
             let m;
             const message = log.message;
