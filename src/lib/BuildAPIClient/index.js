@@ -16,6 +16,8 @@ class BuildAPIClient {
   constructor() {
     DebugMixin.call(this);
 
+    this.apiKey = null;
+    this.apiEndpoint = 'https://build.electricimp.com/v4';
   }
 
   /**
