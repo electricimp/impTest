@@ -323,15 +323,15 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         this._session.stop = this._stopSession;
       });
 
-      this._session.on('started', () => {
+      this._session.on('start', () => {
         this._sessionStartWatchdog.stop();
       });
 
-      this._session.on('test_message', () => {
+      this._session.on('testMessage', () => {
         this._sessionTestMessagesWatchdog.reset();
       });
 
-      this._session.on('stopped', () => {
+      this._session.on('stop', () => {
         this._sessionTestMessagesWatchdog.stop();
       });
 

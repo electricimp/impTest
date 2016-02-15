@@ -4,7 +4,9 @@
  * Events:
  *  - message({type, message})
  *  - error(error)
- *  - started
+ *  - start
+ *  - testMessage
+ *  - stop
  *  - done
  */
 
@@ -200,13 +202,13 @@ class Session extends EventEmitter {
           break;
         }
 
-        this.emit('test_message');
+        this.emit('testMessage');
 
         switch (value.type) {
 
           case 'START':
 
-            this.emit('started');
+            this.emit('start');
 
             if (this.state !== 'ready') {
               throw new errors.TestStateError('Invalid test session state');
@@ -260,8 +262,7 @@ class Session extends EventEmitter {
 
           case 'RESULT':
 
-            // testing stopped
-            this.emit('stopped');
+            this.emit('stop');
 
             if (this.state !== 'started') {
               throw new errors.TestStateError('Invalid test session state');
