@@ -3,6 +3,11 @@
 class Case extends ImpUnitCase {
   function testSomethingSync() {
     this.assertTrue(true);
+
+        local s = "123";
+        while(1) {
+          s+=s;
+        }
   }
 
   function testSomethingAsync() {
