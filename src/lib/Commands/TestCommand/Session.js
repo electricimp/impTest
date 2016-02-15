@@ -37,21 +37,16 @@ class Session extends EventEmitter {
         this.start(deviceCode, agentCode, modelId);
       })
 
-      .on('done', () => {
-        this.finish();
-      })
-
-      .on('log', (log) => {
-        this._handleLog(log.type, log.value);
-      })
+      .on('log', this._handleLog.bind(this))
 
       .on('error', (event) => {
         this.emit('error', event.error);
         this.logsParser.stop = this.stop;
         // 'done' is emitted on 'error' as well
         // so no need to call to stop()
-      });
+      })
 
+      .on('done', this.finish.bind(this));
   }
 
   /**
@@ -110,16 +105,15 @@ class Session extends EventEmitter {
 
 
   /**
-   * Log output handler
+   * Handle log *event* (produced by LogParser)
    *
-   * @param {string} type
-   * @param {*} [value=null]
+   * @param {{type, value}} log
    * @private
    */
-  _handleLog(type, value) {
+  _handleLog(log) {
     let m;
 
-    switch (type) {
+    switch (log.type) {
 
       case 'AGENT_RESTARTED':
         if (this.state === 'initialized') {
@@ -131,14 +125,14 @@ class Session extends EventEmitter {
 
       case 'DEVICE_CODE_SPACE_USAGE':
 
-        if (!this.deviceCodespaceUsage !== value) {
+        if (!this.deviceCodespaceUsage !== log.value) {
 
           this.emit('message', {
             type: 'info',
-            message: c.blue('Device code space usage: ') + sprintf('%.1f%%', value)
+            message: c.blue('Device code space usage: ') + sprintf('%.1f%%', log.value)
           });
 
-          this.deviceCodespaceUsage = value; // avoid duplicate messages
+          this.deviceCodespaceUsage = log.value; // avoid duplicate messages
         }
 
         break;
@@ -150,21 +144,21 @@ class Session extends EventEmitter {
       case 'LASTEXITCODE':
 
         if (this.state !== 'initialized') {
-          if (value.match(/out of memory/)) {
+          if (log.value.match(/out of memory/)) {
             this.emit('error', new errors.DeviceError('Out of memory'));
           } else {
-            this.emit('error', new errors.DeviceError(value));
+            this.emit('error', new errors.DeviceError(log.value));
           }
         }
 
         break;
 
       case 'DEVICE_ERROR':
-        this.emit('error', new errors.DeviceRuntimeError(value));
+        this.emit('error', new errors.DeviceRuntimeError(log.value));
         break;
 
       case 'AGENT_ERROR':
-        this.emit('error', new errors.AgentRuntimeError(value));
+        this.emit('error', new errors.AgentRuntimeError(log.value));
         break;
 
       case 'DEVICE_CONNECTED':
@@ -179,7 +173,7 @@ class Session extends EventEmitter {
 
         this.emit('message', {
           type: 'info',
-          message: c.blue('Powerstate: ') + value
+          message: c.blue('Powerstate: ') + log.value
         });
 
         break;
@@ -189,14 +183,14 @@ class Session extends EventEmitter {
 
         this.emit('message', {
           type: 'info',
-          message: c.blue('Firmware: ') + value
+          message: c.blue('Firmware: ') + log.value
         });
 
         break;
 
       case 'IMPUNIT':
 
-        if (value.session !== this.id) {
+        if (log.value.session !== this.id) {
           // skip messages not from the current session
           // ??? should an error be thrown?
           break;
@@ -204,7 +198,7 @@ class Session extends EventEmitter {
 
         this.emit('testMessage');
 
-        switch (value.type) {
+        switch (log.value.type) {
 
           case 'START':
 
@@ -223,7 +217,7 @@ class Session extends EventEmitter {
               throw new errors.TestStateError('Invalid test session state');
             }
 
-            if (m = value.message.match(/(.+)::setUp\(\)$/)) {
+            if (m = log.value.message.match(/(.+)::setUp\(\)$/)) {
 
               // setup
               this.emit('message', {
@@ -231,7 +225,7 @@ class Session extends EventEmitter {
                 message: c.blue('Setting up ') + m[1]
               });
 
-            } else if (m = value.message.match(/(.+)::tearDown\(\)$/)) {
+            } else if (m = log.value.message.match(/(.+)::tearDown\(\)$/)) {
 
               // teardown
               this.emit('message', {
@@ -244,7 +238,7 @@ class Session extends EventEmitter {
               // status message
               this.emit('message', {
                 type: 'test',
-                message: value.message
+                message: log.value.message
               });
 
             }
@@ -257,7 +251,7 @@ class Session extends EventEmitter {
               throw new errors.TestStateError('Invalid test session state');
             }
 
-            this.emit('error', new errors.TestMethodError(value.message));
+            this.emit('error', new errors.TestMethodError(log.value.message));
             break;
 
           case 'RESULT':
@@ -268,13 +262,14 @@ class Session extends EventEmitter {
               throw new errors.TestStateError('Invalid test session state');
             }
 
-            this.tests = value.message.tests;
-            this.failures = value.message.failures;
-            this.assertions = value.message.assertions;
+            this.tests = log.value.message.tests;
+            this.failures = log.value.message.failures;
+            this.assertions = log.value.message.assertions;
             this.state = 'finished';
 
             const sessionMessage =
-              `Tests: ${this.tests}, Assertions: ${this.assertions}, Failures: ${this.failures}`;
+              `Tests: ${this.tests}, Assertions: ${this.assertions}, ` +
+              `Failures: ${this.failures}`;
 
             if (this.failures) {
 
@@ -307,7 +302,7 @@ class Session extends EventEmitter {
 
         this.emit('message', {
           type: 'info',
-          message: c.blue('Message of type ') + value.type + c.blue(': ') + value.message
+          message: c.blue('Message of type ') + log.value.type + c.blue(': ') + log.value.message
         });
 
         break;
