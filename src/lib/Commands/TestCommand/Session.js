@@ -14,10 +14,10 @@
 
 const c = require('colors');
 const EventEmitter = require('events');
-const randomWords = require('random-words');
-const DebugMixin = require('../../DebugMixin');
-const sprintf = require('sprintf-js').sprintf;
 const Errors = require('./SessionErrors');
+const randomWords = require('random-words');
+const sprintf = require('sprintf-js').sprintf;
+const DebugMixin = require('../../DebugMixin');
 
 class Session extends EventEmitter {
 

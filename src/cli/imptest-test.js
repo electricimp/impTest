@@ -17,7 +17,6 @@ commander
 
 // bootstrap command
 
-
 const command = new TestCommand();
 
 command.version = packageJson.version;

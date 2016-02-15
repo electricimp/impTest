@@ -1,10 +1,10 @@
 'use strict';
 
 const c = require('colors');
-const request = require('request');
-const promiseWhile = require('../utils/promiseWhile');
-const DebugMixin = require('../DebugMixin');
 const Errors = require('./Errors');
+const request = require('request');
+const DebugMixin = require('../DebugMixin');
+const promiseWhile = require('../utils/promiseWhile');
 
 /**
  * Electric Imp Build API client.

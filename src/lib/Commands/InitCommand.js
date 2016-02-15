@@ -4,7 +4,7 @@
 
 'use strict';
 
-var AbstractCommand = require('./AbstractCommand');
+const AbstractCommand = require('./AbstractCommand');
 
 class InitCommand extends AbstractCommand {
   run() {
