@@ -125,14 +125,14 @@ class Session extends EventEmitter {
 
       case 'DEVICE_CODE_SPACE_USAGE':
 
-        if (!this.deviceCodespaceUsage !== log.value) {
+        if (!this._deviceCodespaceUsage !== log.value) {
 
           this.emit('message', {
             type: 'info',
             message: c.blue('Device code space usage: ') + sprintf('%.1f%%', log.value)
           });
 
-          this.deviceCodespaceUsage = log.value; // avoid duplicate messages
+          this._deviceCodespaceUsage = log.value; // avoid duplicate messages
         }
 
         break;
@@ -323,14 +323,6 @@ class Session extends EventEmitter {
 
   set state(value) {
     this._state = value;
-  }
-
-  get deviceCodespaceUsage() {
-    return this._deviceCodespaceUsage;
-  }
-
-  set deviceCodespaceUsage(value) {
-    this._deviceCodespaceUsage = value;
   }
 
   get failures() {
