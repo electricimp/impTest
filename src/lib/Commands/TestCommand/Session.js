@@ -41,7 +41,6 @@ class Session extends EventEmitter {
 
       .on('error', (event) => {
         this.emit('error', event.error);
-        this.logsParser.stop = this.stop;
         // 'done' is emitted on 'error' as well
         // so no need to call to stop()
       })
