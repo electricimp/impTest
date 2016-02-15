@@ -11,10 +11,10 @@ const path = require('path');
 const glob = require('glob');
 const errors = require('./Errors');
 const Session = require('./Session');
-const EventEmitter = require('events');
 const Watchdog = require('../../Watchdog');
-const randomstring = require('randomstring');
+const LogsParser = require('./LogsParser');
 const sprintf = require('sprintf-js').sprintf;
+const randomstring = require('randomstring');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
 //</editor-fold>
@@ -238,7 +238,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       })
 
       // run test session
-      .then(() => this._runTestSession(deviceId, deviceCode, agentCode, file.type))
+      .then(() => this._runSession(deviceId, deviceCode, agentCode, file.type))
 
       .catch((error) => {
         this._onError(error);
@@ -295,17 +295,20 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    * @param {string} deviceId
    * @param {string} deviceCode
    * @param {string} agentCode
-   * @param {"agent"|"device"} type
+   * @param {"agent"|"device"} testType
    * @return {Promise}
    * @private
    */
-  _runTestSession(deviceId, deviceCode, agentCode, type) {
+  _runSession(deviceId, deviceCode, agentCode, testType) {
 
     this._stopSession = false;
     this._initSessionWatchdogs();
 
+    const logsParser = new LogsParser();
+    logsParser.buildAPIClient = this.buildAPIClient;
+
     // start reading logs
-    this._readLogs(type, deviceId)
+    logsParser.parse(testType, deviceId)
 
       .on('ready', () => {
         this._session.start(deviceCode, agentCode, this.imptestFile.values.modelId);
@@ -318,135 +321,18 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       .on('log', (event) => {
         this._onLogMessage(event.type, event.value || null);
+        logsParser.stop = this._stopSession;
       })
 
       .on('error', (event) => {
         this._onError(event.error);
+        logsParser.stop = this._stopSession;
         // 'done' is emitted on 'error' as well
         // so no need to call to _finishSession()
       });
 
 
     return this._session.promise;
-  }
-
-  /**
-   * Read device logs, convert them to predefined types
-   *
-   * @param {"agent"|"device"} type
-   * @param {string} deviceId
-   * @returns {EventEmitter} Events: ready, done, log, error
-   *
-   * @private
-   */
-  _readLogs(type, deviceId) {
-    const ee = new EventEmitter();
-
-    // for historical reasons, device produce server.* messages
-    const apiType = {agent: 'agent', device: 'server'}[type];
-
-    this.buildAPIClient.streamDeviceLogs(deviceId, (data) => {
-
-        if (data) {
-
-          for (const log of data.logs) {
-
-            // xxx
-            // console.log(c.yellow(JSON.stringify(log)));
-
-            let m;
-            const message = log.message;
-
-            try {
-
-              switch (log.type) {
-
-                case 'status':
-
-                  if (message.match(/Agent restarted/)) {
-                    // agent restarted
-                    ee.emit('log', {type: 'AGENT_RESTARTED'});
-                  } else if (m = message.match(/(Out of space)?.*?([\d\.]+)% program storage used/)) {
-                    // code space used
-                    ee.emit('log', {type: 'DEVICE_CODE_SPACE_USAGE', value: parseFloat(m[2])});
-
-                    // out of code space
-                    if (m[1]) {
-                      ee.emit('log', {type: 'DEVICE_OUT_OF_CODE_SPACE'});
-                    }
-                  } else if (message.match(/Device disconnected/)) {
-                    ee.emit('log', {type: 'DEVICE_DISCONNECTED'});
-                  } else if (message.match(/Device connected/)) {
-                    ee.emit('log', {type: 'DEVICE_CONNECTED'});
-                  } else {
-                    ee.emit('log', {type: 'UNKNOWN', value: log});
-                  }
-
-                  break;
-
-                // error
-                case 'lastexitcode':
-                  ee.emit('log', {type: 'LASTEXITCODE', value: message});
-                  break;
-
-                case 'server.log':
-                case 'agent.log':
-
-                  if (log.type.replace(/\.log$/, '') === apiType) {
-                    if (message.match(/__IMPUNIT__/)) {
-                      // impUnit message, decode it
-                      ee.emit('log', {type: 'IMPUNIT', value: JSON.parse(message)});
-                    }
-                  }
-
-                  break;
-
-                case 'agent.error':
-                  ee.emit('log', {type: 'AGENT_ERROR', value: message});
-                  break;
-
-                case 'server.error':
-                  ee.emit('log', {type: 'DEVICE_ERROR', value: message});
-                  break;
-
-                case 'powerstate':
-                  ee.emit('log', {type: 'POWERSTATE', value: message});
-                  break;
-
-                case 'firmware':
-                  ee.emit('log', {type: 'FIRMWARE', value: message});
-                  break;
-
-                default:
-                  ee.emit('log', {type: 'UNKNOWN', value: log});
-                  break;
-              }
-
-            } catch (e) {
-              ee.emit('error', {error: e});
-            }
-
-            // are we done?
-            if (this._stopSession) {
-              ee.emit('done');
-              break;
-            }
-          }
-
-        } else {
-          // we're connected
-          ee.emit('ready');
-        }
-
-        return !this._stopSession;
-      })
-
-      .catch((e) => {
-        this.emit('error', {error: e});
-        this.emit('done');
-      });
-
-    return ee;
   }
 
   /**
