@@ -213,7 +213,7 @@ class Session extends EventEmitter {
 
         switch (log.value.type) {
 
-          case 'START':
+          case 'SESSION_START':
 
             this.emit('start');
 
@@ -224,7 +224,7 @@ class Session extends EventEmitter {
             this.state = 'started';
             break;
 
-          case 'STATUS':
+          case 'TEST_START':
 
             if (this.state !== 'started') {
               throw new Errors.TestStateError('Invalid test session state');
@@ -258,7 +258,7 @@ class Session extends EventEmitter {
 
             break;
 
-          case 'FAIL':
+          case 'TEST_FAIL':
 
             if (this.state !== 'started') {
               throw new Errors.TestStateError('Invalid test session state');
@@ -267,7 +267,7 @@ class Session extends EventEmitter {
             this.emit('error', new Errors.TestMethodError(log.value.message));
             break;
 
-          case 'RESULT':
+          case 'SESSION_RESULT':
 
             this.emit('result');
 
@@ -303,6 +303,9 @@ class Session extends EventEmitter {
             }
 
             this.stop = true;
+            break;
+
+          case 'TEST_OK':
             break;
 
           default:
