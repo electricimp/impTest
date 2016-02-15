@@ -3,6 +3,7 @@
 const c = require('colors');
 const request = require('request');
 const promiseWhile = require('../utils/promiseWhile');
+const DebugMixin = require('../DebugMixin');
 
 /**
  * Electric Imp Build API client.
@@ -13,9 +14,8 @@ const promiseWhile = require('../utils/promiseWhile');
 class BuildAPIClient {
 
   constructor() {
-    this.__debug = false;
-    this._apiKey = null;
-    this._apiEndpoint = 'https://build.electricimp.com/v4';
+    DebugMixin.call(this);
+
   }
 
   /**
@@ -252,33 +252,12 @@ class BuildAPIClient {
     });
   }
 
-  /**
-   * Debug print
-   * @param {*} ...objects
-   * @protected
-   */
-  _debug() {
-    if (this.debug) {
-      const args = Array.prototype.slice.call(arguments);
-      args.unshift(c.green('[debug:' + this.constructor.name + ']'));
-      console.log.apply(this, args);
-    }
-  }
-
   set apiKey(value) {
     this._apiKey = value;
   }
 
   get apiKey() {
     return this._apiKey;
-  }
-
-  get debug() {
-    return this.__debug;
-  }
-
-  set debug(value) {
-    this.__debug = value;
   }
 
   get apiEndpoint() {
