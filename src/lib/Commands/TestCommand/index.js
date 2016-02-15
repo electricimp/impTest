@@ -9,7 +9,6 @@ const fs = require('fs');
 const c = require('colors');
 const path = require('path');
 const glob = require('glob');
-const errors = require('./Errors');
 const Session = require('./Session');
 const Watchdog = require('../../Watchdog');
 const LogsParser = require('./LogsParser');
@@ -37,6 +36,19 @@ const STARTUP_TIMEOUT = 60;
  */
 const EXTRA_TEST_MESSAGE_TIMEOUT = 5;
 
+/**
+ * Errors
+ */
+const Errors = {
+  WrongModelError: class WrongModelError extends Error {},
+  DevicePowerstateError: class DevicePowerstateError extends Error {},
+  SessionStartTimeoutError: class SessionStartTimeoutError extends Error {},
+  SesstionTestMessagesTimeoutError: class SesstionTestMessagesTimeoutError extends Error {}
+};
+
+/**
+ * Test command
+ */
 class TestCommand extends AbstractCommand {
 
   /**
@@ -167,7 +179,7 @@ class TestCommand extends AbstractCommand {
 
     // init test session
 
-    this._session = new Session();
+    this._session = new Session.Session();
 
     // determine device
     const deviceId = this.imptestFile.values.devices[deviceIndex];
@@ -225,12 +237,12 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
         // check model
         if (res.device.model_id !== this.imptestFile.values.modelId) {
-          throw new errors.WrongModelError('Device is assigned to a wrong model');
+          throw new Errors.WrongModelError('Device is assigned to a wrong model');
         }
 
         // check online state
         if (res.device.powerstate !== 'online') {
-          throw new errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
+          throw new Errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
         }
       })
 
@@ -270,11 +282,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   _onSessionWatchdog(event) {
     switch (event.name) {
       case 'session_start':
-        this._onError(new errors.SessionStartTimeoutError());
+        this._onError(new Errors.SessionStartTimeoutError());
         break;
 
       case 'session_test_messages':
-        this._onError(new errors.SesstionTestMessagesTimeoutError());
+        this._onError(new Errors.SesstionTestMessagesTimeoutError());
         break;
 
       default:
@@ -363,59 +375,59 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   _onError(error) {
     this._debug('Error type: ' + error.constructor.name);
 
-    if (error instanceof errors.TestMethodError) {
+    if (error instanceof Session.errors.TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
       this._stopSession = this.imptestFile.values.stopOnFailure;
 
-    } else if (error instanceof errors.TestStateError) {
+    } else if (error instanceof Session.errors.TestStateError) {
 
       this._error(error);
       this._stopSession = true;
 
-    } else if (error instanceof errors.SessionFailedError) {
+    } else if (error instanceof Session.errors.SessionFailedError) {
 
       // do nothing, produced at the end of session anyway
 
-    } else if (error instanceof errors.DeviceDisconnectedError) {
+    } else if (error instanceof Session.errors.DeviceDisconnectedError) {
 
       this._testLine(c.red('Device disconnected'));
       this._stopSession = true;
       this._stopDevice = true;
 
-    } else if (error instanceof errors.DeviceRuntimeError) {
+    } else if (error instanceof Session.errors.DeviceRuntimeError) {
 
       this._testLine(c.red('Device Runtime Error: ' + error.message));
       this._stopSession = true;
 
-    } else if (error instanceof errors.AgentRuntimeError) {
+    } else if (error instanceof Session.errors.AgentRuntimeError) {
 
       this._testLine(c.red('Agent Runtime Error: ' + error.message));
       this._stopSession = true;
 
-    } else if (error instanceof errors.DeviceError) {
+    } else if (error instanceof Session.errors.DeviceError) {
 
       this._testLine(c.red('Device Error: ' + error.message));
       this._stopSession = true;
 
-    } else if (error instanceof errors.WrongModelError) {
+    } else if (error instanceof Errors.WrongModelError) {
 
       this._error(error.message);
       this._stopSession = true;
       this._stopDevice = true;
 
-    } else if (error instanceof errors.DevicePowerstateError) {
+    } else if (error instanceof Errors.DevicePowerstateError) {
 
       this._error(error.message);
       this._stopSession = true;
       this._stopDevice = true;
 
-    } else if (error instanceof errors.SessionStartTimeoutError) {
+    } else if (error instanceof Errors.SessionStartTimeoutError) {
 
       this._error('Session startup timeout');
       this._stopSession = true;
 
-    } else if (error instanceof errors.SesstionTestMessagesTimeoutError) {
+    } else if (error instanceof Errors.SesstionTestMessagesTimeoutError) {
 
       this._error('Testing timeout');
 

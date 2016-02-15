@@ -17,7 +17,20 @@ const EventEmitter = require('events');
 const randomWords = require('random-words');
 const DebugMixin = require('../../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
-const errors = require('./Errors');
+
+// todo: move more log parsing outside
+// todo: remove debug printouts
+// todo: export session errors
+
+// errors
+const Errors = {};
+Errors.AgentRuntimeError = class AgentRuntimeError extends Error {};
+Errors.DeviceDisconnectedError = class DeviceDisconnectedError extends Error {};
+Errors.DeviceError = class DeviceError extends Error {};
+Errors.DeviceRuntimeError = class DeviceRuntimeError extends Error {};
+Errors.SessionFailedError = class SessionFailedError extends Error {};
+Errors.TestMethodError = class TestMethodError extends Error {};
+Errors.TestStateError = class TestStateError extends Error {};
 
 class Session extends EventEmitter {
 
@@ -146,34 +159,34 @@ class Session extends EventEmitter {
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        this.emit('error', new errors.DeviceError('Out of code space'));
+        this.emit('error', new Errors.DeviceError('Out of code space'));
         break;
 
       case 'LASTEXITCODE':
 
         if (this.state !== 'initialized') {
           if (log.value.match(/out of memory/)) {
-            this.emit('error', new errors.DeviceError('Out of memory'));
+            this.emit('error', new Errors.DeviceError('Out of memory'));
           } else {
-            this.emit('error', new errors.DeviceError(log.value));
+            this.emit('error', new Errors.DeviceError(log.value));
           }
         }
 
         break;
 
       case 'DEVICE_ERROR':
-        this.emit('error', new errors.DeviceRuntimeError(log.value));
+        this.emit('error', new Errors.DeviceRuntimeError(log.value));
         break;
 
       case 'AGENT_ERROR':
-        this.emit('error', new errors.AgentRuntimeError(log.value));
+        this.emit('error', new Errors.AgentRuntimeError(log.value));
         break;
 
       case 'DEVICE_CONNECTED':
         break;
 
       case 'DEVICE_DISCONNECTED':
-        this.emit('error', new errors.DeviceDisconnectedError());
+        this.emit('error', new Errors.DeviceDisconnectedError());
         break;
 
       case 'POWERSTATE':
@@ -213,7 +226,7 @@ class Session extends EventEmitter {
             this.emit('start');
 
             if (this.state !== 'ready') {
-              throw new errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError('Invalid test session state');
             }
 
             this.state = 'started';
@@ -222,7 +235,7 @@ class Session extends EventEmitter {
           case 'STATUS':
 
             if (this.state !== 'started') {
-              throw new errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError('Invalid test session state');
             }
 
             if (m = log.value.message.match(/(.+)::setUp\(\)$/)) {
@@ -256,10 +269,10 @@ class Session extends EventEmitter {
           case 'FAIL':
 
             if (this.state !== 'started') {
-              throw new errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError('Invalid test session state');
             }
 
-            this.emit('error', new errors.TestMethodError(log.value.message));
+            this.emit('error', new Errors.TestMethodError(log.value.message));
             break;
 
           case 'RESULT':
@@ -267,7 +280,7 @@ class Session extends EventEmitter {
             this.emit('result');
 
             if (this.state !== 'started') {
-              throw new errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError('Invalid test session state');
             }
 
             this.tests = log.value.message.tests;
@@ -286,7 +299,7 @@ class Session extends EventEmitter {
                 message: c.red(sessionMessage)
               });
 
-              this.emit('error', new errors.SessionFailedError('Session failed'));
+              this.emit('error', new Errors.SessionFailedError('Session failed'));
 
             } else {
 
@@ -392,12 +405,7 @@ class Session extends EventEmitter {
 
     this._stop = value;
   }
-
-  // xxx
-  emit(a, b) {
-    console.log(a, b);
-    super.emit(a, b);
-  }
 }
 
-module.exports = Session;
+module.exports.Session = Session;
+module.exports.Errors = Errors;
