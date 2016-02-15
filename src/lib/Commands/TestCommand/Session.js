@@ -17,20 +17,11 @@ const EventEmitter = require('events');
 const randomWords = require('random-words');
 const DebugMixin = require('../../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
+const Errors = require('./SessionErrors');
 
 // todo: move more log parsing outside
 // todo: remove debug printouts
 // todo: export session errors
-
-// errors
-const Errors = {};
-Errors.AgentRuntimeError = class AgentRuntimeError extends Error {};
-Errors.DeviceDisconnectedError = class DeviceDisconnectedError extends Error {};
-Errors.DeviceError = class DeviceError extends Error {};
-Errors.DeviceRuntimeError = class DeviceRuntimeError extends Error {};
-Errors.SessionFailedError = class SessionFailedError extends Error {};
-Errors.TestMethodError = class TestMethodError extends Error {};
-Errors.TestStateError = class TestStateError extends Error {};
 
 class Session extends EventEmitter {
 

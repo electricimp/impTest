@@ -9,6 +9,7 @@ const fs = require('fs');
 const c = require('colors');
 const path = require('path');
 const glob = require('glob');
+const Errors = require('./Errors');
 const Session = require('./Session');
 const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
@@ -35,16 +36,6 @@ const STARTUP_TIMEOUT = 60;
  * treating test as timed out on a tool siode.
  */
 const EXTRA_TEST_MESSAGE_TIMEOUT = 5;
-
-/**
- * Errors
- */
-const Errors = {
-  WrongModelError: class WrongModelError extends Error {},
-  DevicePowerstateError: class DevicePowerstateError extends Error {},
-  SessionStartTimeoutError: class SessionStartTimeoutError extends Error {},
-  SesstionTestMessagesTimeoutError: class SesstionTestMessagesTimeoutError extends Error {}
-};
 
 /**
  * Test command
