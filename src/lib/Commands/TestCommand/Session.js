@@ -390,11 +390,21 @@ class Session extends EventEmitter {
   }
 
   set stop(value) {
+
+    // stop log parser
     if (this.logParser) {
-      this.logParser.stop = value;
+      this.logParser.stop = !!value;
     }
 
-    this._stop = value;
+    if (value != /* use weak compare to match null to booleans */ this._stop) {
+      this._stop = !!value;
+
+      // finish
+      if (this._stop) {
+        this._finish();
+      }
+    }
+
   }
 }
 
