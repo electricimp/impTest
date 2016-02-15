@@ -310,8 +310,13 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._session.logsParser.buildAPIClient = this.buildAPIClient;
       this._session.logsParser.debug = this.debug;
 
-      this._session.on('info', this._info.bind(this));
-      this._session.on('test_info', this._testLine.bind(this));
+      this._session.on('message', (e) => {
+        if ('info' === e.type) {
+          this._info(e.message);
+        } else if ('test' === e.type) {
+          this._testLine(e.message);
+        }
+      });
 
       this._session.on('error', (error) => {
         this._onError(error);

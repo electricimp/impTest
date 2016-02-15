@@ -2,8 +2,9 @@
  * Test session
  *
  * Events:
- *  - info(message)
+ *  - message({type, message})
  *  - error(error)
+ *  - started
  *  - done
  */
 
@@ -58,13 +59,20 @@ class Session extends EventEmitter {
    */
   start(deviceCode, agentCode, modelId) {
 
-    this.emit('info', c.blue('Starting test session ') + this.id);
+    this.emit('message', {
+      type: 'info',
+      message: c.blue('Starting test session ') + this.id
+    });
 
     this.buildAPIClient
       .createRevision(modelId, deviceCode, agentCode)
 
       .then((body) => {
-        this.emit('info', c.blue('Created revision: ') + body.revision.version);
+
+        this.emit('message', {
+          type: 'info',
+          message: c.blue('Created revision: ') + body.revision.version
+        });
 
         return this.buildAPIClient
           .restartModel(modelId)
@@ -84,9 +92,15 @@ class Session extends EventEmitter {
    */
   finish(rejectOnFailure, forceReject) {
     if (this.error) {
-      this.emit('info', c.red('Session ') + this.id + c.red(' failed'));
+      this.emit('message', {
+        type: 'info',
+        message: c.red('Session ') + this.id + c.red(' failed')
+      });
     } else {
-      this.emit('info', c.green('Session ') + this.id + c.green(' succeeded'));
+      this.emit('message', {
+        type: 'info',
+        message: c.green('Session ') + this.id + c.green(' succeeded')
+      });
     }
 
     this.emit('done');
@@ -116,7 +130,12 @@ class Session extends EventEmitter {
       case 'DEVICE_CODE_SPACE_USAGE':
 
         if (!this.deviceCodespaceUsage !== value) {
-          this.emit('info', c.blue('Device code space usage: ') + sprintf('%.1f%%', value));
+
+          this.emit('message', {
+            type: 'info',
+            message: c.blue('Device code space usage: ') + sprintf('%.1f%%', value)
+          });
+
           this.deviceCodespaceUsage = value; // avoid duplicate messages
         }
 
@@ -154,13 +173,23 @@ class Session extends EventEmitter {
         break;
 
       case 'POWERSTATE':
-        // todo: researh if any actiones needed
-        this._info(c.blue('Powerstate: ') + value);
+        // ??? any actions needed?
+
+        this.emit('message', {
+          type: 'info',
+          message: c.blue('Powerstate: ') + value
+        });
+
         break;
 
       case 'FIRMWARE':
-        // todo: researh if any actiones needed
-        this._info(c.blue('Firmware: ') + value);
+        // ??? any actions needed?
+
+        this.emit('message', {
+          type: 'info',
+          message: c.blue('Firmware: ') + value
+        });
+
         break;
 
       case 'IMPUNIT':
@@ -171,7 +200,10 @@ class Session extends EventEmitter {
           break;
         }
 
+        this.emit('test_message');
+
         switch (value.type) {
+
           case 'START':
 
             this.emit('started');
@@ -185,21 +217,34 @@ class Session extends EventEmitter {
 
           case 'STATUS':
 
-            this.emit('test_message');
-
             if (this.state !== 'started') {
               throw new errors.TestStateError('Invalid test session state');
             }
 
             if (m = value.message.match(/(.+)::setUp\(\)$/)) {
+
               // setup
-              this.emit('test_info', c.blue('Setting up ') + m[1]);
+              this.emit('message', {
+                type: 'test',
+                message: c.blue('Setting up ') + m[1]
+              });
+
             } else if (m = value.message.match(/(.+)::tearDown\(\)$/)) {
+
               // teardown
-              this.emit('test_info', c.blue('Tearing down ') + m[1]);
+              this.emit('message', {
+                type: 'test',
+                message: c.blue('Tearing down ') + m[1]
+              });
+
             } else {
+
               // status message
-              this.emit('test_info', value.message);
+              this.emit('message', {
+                type: 'test',
+                message: value.message
+              });
+
             }
 
             break;
@@ -215,6 +260,7 @@ class Session extends EventEmitter {
 
           case 'RESULT':
 
+            // testing stopped
             this.emit('stopped');
 
             if (this.state !== 'started') {
@@ -230,10 +276,21 @@ class Session extends EventEmitter {
               `Tests: ${this.tests}, Assertions: ${this.assertions}, Failures: ${this.failures}`;
 
             if (this.failures) {
-              this.emit('test_info', c.red(sessionMessage));
+
+              this.emit('message', {
+                type: 'test',
+                message: c.red(sessionMessage)
+              });
+
               this.emit('error', new errors.SessionFailedError('Session failed'));
+
             } else {
-              this.emit('test_info', c.green(sessionMessage));
+
+              this.emit('message', {
+                type: 'info',
+                message: c.green(sessionMessage)
+              });
+
             }
 
             this.stop = true;
@@ -246,7 +303,12 @@ class Session extends EventEmitter {
         break;
 
       default:
-        this.emit('info', c.blue('Message of type ') + value.type + c.blue(': ') + value.message);
+
+        this.emit('message', {
+          type: 'info',
+          message: c.blue('Message of type ') + value.type + c.blue(': ') + value.message
+        });
+
         break;
     }
   }
