@@ -450,7 +450,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     // big enough to interrupt the session.
     // in combination w/stopOnFailure it makes sense
     // to abort the entire testing
-    if (this._stopSession && this._impTestFile.values.stopOnFailure) {
+    if ((this._stopDevice || this._stopSession) && this._impTestFile.values.stopOnFailure) {
       this._abortTesting = true;
     }
 
