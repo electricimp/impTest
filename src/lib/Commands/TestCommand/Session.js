@@ -412,5 +412,5 @@ class Session extends EventEmitter {
   }
 }
 
-module.exports.Session = Session;
+module.exports = Session;
 module.exports.Errors = Errors;
