@@ -19,8 +19,6 @@ const DebugMixin = require('../../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
 const Errors = require('./SessionErrors');
 
-// todo: move more log parsing outside
-
 class Session extends EventEmitter {
 
   constructor() {
