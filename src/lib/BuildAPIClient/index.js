@@ -1,7 +1,9 @@
 'use strict';
 
 const c = require('colors');
+const Errors = require('./Errors');
 const request = require('request');
+const DebugMixin = require('../DebugMixin');
 const promiseWhile = require('../utils/promiseWhile');
 
 /**
@@ -13,9 +15,10 @@ const promiseWhile = require('../utils/promiseWhile');
 class BuildAPIClient {
 
   constructor() {
-    this.__debug = false;
-    this._apiKey = null;
-    this._apiEndpoint = 'https://build.electricimp.com/v4';
+    DebugMixin.call(this);
+
+    this.apiKey = null;
+    this.apiEndpoint = 'https://build.electricimp.com/v4';
   }
 
   /**
@@ -82,13 +85,17 @@ class BuildAPIClient {
 
           if (result && result.error) {
             // we have an error message from web server {error: {code, message_short, message_full}} response
-            err = new Error('Build API error "' + result.error.code + '": ' + result.error.message_short);
+            err = new Errors.BuildAPIError('Build API error "' + result.error.code + '": ' + result.error.message_short);
           } else if (result && result.code && result.message) {
             // we have bad HTTP status code and {code, message} response
-            err = new Error('Build API error "' + result.code + '": ' + result.message);
+            err = new Errors.BuildAPIError('Build API error "' + result.code + '": ' + result.message);
           } else {
             // we have nothing but it's bad
-            err = new Error('Build API error HTTP/' + response.statusCode);
+            if (response.statusCode == '504') {
+              err = new Errors.TimeoutError();
+            } else {
+              err = new Error('Build API error HTTP/' + response.statusCode);
+            }
           }
 
           /* [debug] */
@@ -237,7 +244,7 @@ class BuildAPIClient {
                     if (error.message.indexOf('InvalidLogToken') !== -1 /* we need to refresh token */) {
                       stop = true;
                       resolve(this.streamDeviceLogs(deviceId, callback));
-                    } else if (error.message.indexOf('HTTP/504') !== -1 /* timeout error */) {
+                    } else if (error instanceof Errors.TimeoutError) {
                       resolve();
                     } else {
                       reject(error);
@@ -252,33 +259,12 @@ class BuildAPIClient {
     });
   }
 
-  /**
-   * Debug print
-   * @param {*} ...objects
-   * @protected
-   */
-  _debug() {
-    if (this.debug) {
-      const args = Array.prototype.slice.call(arguments);
-      args.unshift(c.green('[debug:' + this.constructor.name + ']'));
-      console.log.apply(this, args);
-    }
-  }
-
   set apiKey(value) {
     this._apiKey = value;
   }
 
   get apiKey() {
     return this._apiKey;
-  }
-
-  get debug() {
-    return this.__debug;
-  }
-
-  set debug(value) {
-    this.__debug = value;
   }
 
   get apiEndpoint() {
@@ -291,3 +277,4 @@ class BuildAPIClient {
 }
 
 module.exports = BuildAPIClient;
+module.exports.Errors = Errors;

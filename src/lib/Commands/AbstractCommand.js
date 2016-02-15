@@ -4,6 +4,8 @@ const colors = require('colors');
 const dateformat = require('dateformat');
 const DebugMixin = require('../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
+const ImpTestFile = require('../ImpTestFile');
+const BuildAPIClient = require('../BuildAPIClient');
 
 class AbstractCommand {
 
@@ -38,12 +40,15 @@ class AbstractCommand {
    * @return {Promise}
    */
   run() {
-    return new Promise((resolve, reject) => {
-      this._info('impTest/' + this.version);
-      this.logTiming = true; // enable log timing
-      this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
+    // startup message
+    this._info('impTest/' + this.version);
+    this.logTiming = true; // enable log timing
+    this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
 
-      this.buildAPIClient.apiKey = this.impTestFile.values.apiKey;
+    this._init();
+
+    // run returns a promise
+    return new Promise((resolve, reject) => {
       resolve();
     });
   }
@@ -59,6 +64,21 @@ class AbstractCommand {
     } else {
       process.exit(1);
     }
+  }
+
+  /**
+   * Initialize before run()
+   * @protected
+   */
+  _init() {
+    // config file
+    this._impTestFile = new ImpTestFile(this.configPath);
+    this._impTestFile.debug = this.debug;
+
+    // build api client
+    this._buildAPIClient = new BuildAPIClient();
+    this._buildAPIClient.apiKey = this._impTestFile.values.apiKey;
+    this._buildAPIClient.debug = this.debug;
   }
 
   /**
@@ -126,28 +146,20 @@ class AbstractCommand {
     this._logTiming = value;
   }
 
-  set buildAPIClient(value) {
-    this._buildAPIClient = value;
-  }
-
-  get buildAPIClient() {
-    return this._buildAPIClient;
-  }
-
-  set impTestFile(value) {
-    this._impTestFile = value;
-  }
-
-  get impTestFile() {
-    return this._impTestFile;
-  }
-
   get version() {
     return this._version;
   }
 
   set version(value) {
     this._version = value;
+  }
+
+  get configPath() {
+    return this._configPath;
+  }
+
+  set configPath(value) {
+    this._configPath = value;
   }
 
 // </editor-fold>
