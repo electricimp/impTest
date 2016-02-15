@@ -32,7 +32,7 @@ class LogsParser extends EventEmitter {
     // for historical reasons, device produce server.* messages
     const apiType = {agent: 'agent', device: 'server'}[testType];
 
-    this.buildAPIClient.streamDeviceLogs(deviceId, (data) => {
+    this._buildAPIClient.streamDeviceLogs(deviceId, (data) => {
 
         if (data) {
 

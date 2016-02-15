@@ -5,6 +5,7 @@ const dateformat = require('dateformat');
 const DebugMixin = require('../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
 const ImpTestFile = require('../ImpTestFile');
+const BuildAPIClient = require('../BuildAPIClient');
 
 class AbstractCommand {
 
@@ -39,16 +40,24 @@ class AbstractCommand {
    * @return {Promise}
    */
   run() {
+
+    // startup message
+    this._info('impTest/' + this.version);
+    this.logTiming = true; // enable log timing
+    this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
+
+    // initialization
+
+    // config file
+    this._impTestFile = new ImpTestFile(this.configPath);
+    this._impTestFile.debug = this.debug;
+
+    // build api client
+    this._buildAPIClient = new BuildAPIClient();
+    this._buildAPIClient.apiKey = this._impTestFile.values.apiKey;
+
+    // run returns a promise
     return new Promise((resolve, reject) => {
-      this._info('impTest/' + this.version);
-      this.logTiming = true; // enable log timing
-      this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
-
-      // config file
-      this._impTestFile = new ImpTestFile(this.configPath);
-      this._impTestFile.debug = this.debug;
-
-      this.buildAPIClient.apiKey = this._impTestFile.values.apiKey;
       resolve();
     });
   }
@@ -129,14 +138,6 @@ class AbstractCommand {
 
   set logTiming(value) {
     this._logTiming = value;
-  }
-
-  set buildAPIClient(value) {
-    this._buildAPIClient = value;
-  }
-
-  get buildAPIClient() {
-    return this._buildAPIClient;
   }
 
   get version() {

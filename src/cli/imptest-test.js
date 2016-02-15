@@ -8,7 +8,6 @@ const commander = require('commander');
 const packageJson = require('../../package.json');
 const parseBool = require('../lib/utils/parseBool');
 const TestCommand = require('../lib/Commands/TestCommand');
-const BuildAPIClient = require('../lib/BuildAPIClient');
 const Bundler = require('../lib/Bundler');
 
 commander
@@ -18,10 +17,6 @@ commander
   .parse(process.argv);
 
 // bootstrap command
-
-// build api client
-const buildAPIClient = new BuildAPIClient();
-buildAPIClient.debug = parseBool(commander.debug);
 
 // bundler
 const bundler = new Bundler();
@@ -34,7 +29,6 @@ command.debug = parseBool(commander.debug);
 command.testFrameworkFile = __dirname + '/../impUnit/bundle.nut';
 command.testCaseFile = commander.args[0] || null;
 command.configPath = commander.config;
-command.buildAPIClient = buildAPIClient;
 command.bundler = bundler;
 
 // go

@@ -71,7 +71,7 @@ class Session extends EventEmitter {
       message: c.blue('Starting test session ') + this.id
     });
 
-    this.buildAPIClient
+    this._buildAPIClient
       .createRevision(modelId, deviceCode, agentCode)
 
       .then((body) => {
@@ -81,7 +81,7 @@ class Session extends EventEmitter {
           message: c.blue('Created revision: ') + body.revision.version
         });
 
-        return this.buildAPIClient
+        return this._buildAPIClient
           .restartModel(modelId)
           .then(/* model restarted */ () => {
             this._debug(c.blue('Model restarted'));

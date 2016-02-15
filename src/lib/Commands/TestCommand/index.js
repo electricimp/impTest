@@ -218,7 +218,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
 
     // resolve device info
-    return this.buildAPIClient.getDevice(deviceId)
+    return this._buildAPIClient.getDevice(deviceId)
 
       .then((res) => {
         this._info(c.blue('Using device ' +
@@ -296,10 +296,10 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._initSessionWatchdogs();
 
       this._session.debug = this.debug;
-      this._session.buildAPIClient = this.buildAPIClient;
+      this._session.buildAPIClient = this._buildAPIClient;
 
       this._session.logParser = new LogParser();
-      this._session.logParser.buildAPIClient = this.buildAPIClient;
+      this._session.logParser.buildAPIClient = this._buildAPIClient;
       this._session.logParser.debug = this.debug;
 
       this._session.on('message', (e) => {
