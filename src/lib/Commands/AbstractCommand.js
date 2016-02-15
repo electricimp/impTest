@@ -4,6 +4,7 @@ const colors = require('colors');
 const dateformat = require('dateformat');
 const DebugMixin = require('../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
+const ImpTestFile = require('../ImpTestFile');
 
 class AbstractCommand {
 
@@ -43,7 +44,11 @@ class AbstractCommand {
       this.logTiming = true; // enable log timing
       this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
 
-      this.buildAPIClient.apiKey = this.imptestFile.values.apiKey;
+      // config file
+      this._impTestFile = new ImpTestFile(this.configPath);
+      this._impTestFile.debug = this.debug;
+
+      this.buildAPIClient.apiKey = this._impTestFile.values.apiKey;
       resolve();
     });
   }
@@ -134,20 +139,20 @@ class AbstractCommand {
     return this._buildAPIClient;
   }
 
-  set imptestFile(value) {
-    this._imptestFile = value;
-  }
-
-  get imptestFile() {
-    return this._imptestFile;
-  }
-
   get version() {
     return this._version;
   }
 
   set version(value) {
     this._version = value;
+  }
+
+  get configPath() {
+    return this._configPath;
+  }
+
+  set configPath(value) {
+    this._configPath = value;
   }
 
 // </editor-fold>

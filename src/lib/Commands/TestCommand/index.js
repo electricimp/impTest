@@ -60,7 +60,7 @@ class TestCommand extends AbstractCommand {
         let d = 0;
 
         return promiseWhile(
-          () => d++ < this.imptestFile.values.devices.length && !this._abortTesting,
+          () => d++ < this._impTestFile.values.devices.length && !this._abortTesting,
           () => this._runDevice(d - 1, testFiles).catch(() => {
             this._debug(c.red('Device #' + d + ' run failed'));
           })
@@ -127,8 +127,8 @@ class TestCommand extends AbstractCommand {
       searchPatterns = this.testCaseFile;
     } else {
       // look in config file directory
-      configCwd = this.imptestFile.dir;
-      searchPatterns = this.imptestFile.values.tests;
+      configCwd = this._impTestFile.dir;
+      searchPatterns = this._impTestFile.values.tests;
     }
 
     if (typeof searchPatterns === 'string') {
@@ -173,7 +173,7 @@ class TestCommand extends AbstractCommand {
     this._session = new Session.Session();
 
     // determine device
-    const deviceId = this.imptestFile.values.devices[deviceIndex];
+    const deviceId = this._impTestFile.values.devices[deviceIndex];
 
     /* [info] */
     this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
@@ -187,8 +187,8 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.session = "${this._session.id}";
-  t.timeout = ${parseFloat(this.imptestFile.values.timeout)};
-  t.stopOnFailure = ${!!this.imptestFile.values.stopOnFailure};
+  t.timeout = ${parseFloat(this._impTestFile.values.timeout)};
+  t.stopOnFailure = ${!!this._impTestFile.values.stopOnFailure};
   // poehali!
   t.run();
 });`;
@@ -223,11 +223,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       .then((res) => {
         this._info(c.blue('Using device ' +
                    (deviceIndex + 1) + ' of ' +
-                   this.imptestFile.values.devices.length + ': ')
+                   this._impTestFile.values.devices.length + ': ')
                    + res.device.name + c.blue(' / ') + deviceId);
 
         // check model
-        if (res.device.model_id !== this.imptestFile.values.modelId) {
+        if (res.device.model_id !== this._impTestFile.values.modelId) {
           throw new Errors.WrongModelError('Device is assigned to a wrong model');
         }
 
@@ -256,7 +256,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     this._sessionTestMessagesWatchdog.debug = this.debug;
     this._sessionTestMessagesWatchdog.name = 'test-messages';
     this._sessionTestMessagesWatchdog.timeout =
-      EXTRA_TEST_MESSAGE_TIMEOUT + parseFloat(this.imptestFile.values.timeout);
+      EXTRA_TEST_MESSAGE_TIMEOUT + parseFloat(this._impTestFile.values.timeout);
 
     this._sessionTestMessagesWatchdog.on('timeout', () => {
       this._onError(new Errors.SesstionTestMessagesTimeoutError());
@@ -328,7 +328,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       });
 
       this._session.on('done', () => {
-        if (this._session.error && this.imptestFile.values.stopOnFailure || this._abortTesting) {
+        if (this._session.error && this._impTestFile.values.stopOnFailure || this._abortTesting) {
           reject();
         } else {
           resolve();
@@ -338,7 +338,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._session.run(
         testType,
         deviceId,
-        this.imptestFile.values.modelId,
+        this._impTestFile.values.modelId,
         deviceCode,
         agentCode
       );
@@ -358,7 +358,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     if (error instanceof Session.Errors.TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
-      this._stopSession = this.imptestFile.values.stopOnFailure;
+      this._stopSession = this._impTestFile.values.stopOnFailure;
 
     } else if (error instanceof Session.Errors.TestStateError) {
 
@@ -437,7 +437,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     // big enough to interrupt the session.
     // in combination w/stopOnFailure it makes sense
     // to abort the entire testing
-    if (this._stopSession && this.imptestFile.values.stopOnFailure) {
+    if (this._stopSession && this._impTestFile.values.stopOnFailure) {
       this._abortTesting = true;
     }
 
@@ -473,25 +473,25 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       let sourceFilePath;
 
-      if (this.imptestFile.values.agentFile) {
-        sourceFilePath = path.resolve(this.imptestFile.dir, this.imptestFile.values.agentFile);
+      if (this._impTestFile.values.agentFile) {
+        sourceFilePath = path.resolve(this._impTestFile.dir, this._impTestFile.values.agentFile);
 
         /* [debug] */
         this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
         /* [info] */
         this._info(c.blue('Agent source file: ')
-                   + this.imptestFile.values.agentFile);
+                   + this._impTestFile.values.agentFile);
 
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
       } else {
         this._agentSource = '/* no agent source provided */';
       }
 
-      if (this.imptestFile.values.deviceFile) {
-        sourceFilePath = path.resolve(this.imptestFile.dir, this.imptestFile.values.deviceFile);
+      if (this._impTestFile.values.deviceFile) {
+        sourceFilePath = path.resolve(this._impTestFile.dir, this._impTestFile.values.deviceFile);
 
         this._debug(c.blue('Device source code file path: ') + sourceFilePath);
-        this._info(c.blue('Device source file: ') + this.imptestFile.values.deviceFile);
+        this._info(c.blue('Device source file: ') + this._impTestFile.values.deviceFile);
 
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
       } else {

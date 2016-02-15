@@ -9,7 +9,6 @@ const packageJson = require('../../package.json');
 const parseBool = require('../lib/utils/parseBool');
 const TestCommand = require('../lib/Commands/TestCommand');
 const BuildAPIClient = require('../lib/BuildAPIClient');
-const ImpTestFile = require('../lib/ImpTestFile');
 const Bundler = require('../lib/Bundler');
 
 commander
@@ -24,10 +23,6 @@ commander
 const buildAPIClient = new BuildAPIClient();
 buildAPIClient.debug = parseBool(commander.debug);
 
-// .imptest file
-const impTestFile = new ImpTestFile(commander.config);
-impTestFile.debug = parseBool(commander.debug);
-
 // bundler
 const bundler = new Bundler();
 bundler.debug = parseBool(commander.debug);
@@ -38,7 +33,7 @@ command.version = packageJson.version;
 command.debug = parseBool(commander.debug);
 command.testFrameworkFile = __dirname + '/../impUnit/bundle.nut';
 command.testCaseFile = commander.args[0] || null;
-command.imptestFile = impTestFile;
+command.configPath = commander.config;
 command.buildAPIClient = buildAPIClient;
 command.bundler = bundler;
 
