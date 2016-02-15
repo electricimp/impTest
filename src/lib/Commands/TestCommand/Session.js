@@ -29,6 +29,15 @@ class Session extends EventEmitter {
     this.state = 'initialized';
   }
 
+  /**
+   * Run test session
+   *
+   * @param {string} testType
+   * @param {string} deviceId
+   * @param {string} modelId
+   * @param {string} deviceCode
+   * @param {string} agentCode
+   */
   run(testType, deviceId, modelId, deviceCode, agentCode) {
 
     this.logsParser.parse(testType, deviceId)
