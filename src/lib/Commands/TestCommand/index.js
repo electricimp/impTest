@@ -11,6 +11,7 @@ const path = require('path');
 const glob = require('glob');
 const Errors = require('./Errors');
 const Session = require('./Session');
+const Bundler = require('../../Bundler');
 const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
 const randomstring = require('randomstring');
@@ -48,6 +49,7 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   run() {
+
     return super.run()
       .then(() => {
 
@@ -80,6 +82,18 @@ class TestCommand extends AbstractCommand {
     }
 
     super.finish();
+  }
+
+  /**
+   * Initialize before run()
+   * @protected
+   */
+  _init() {
+    super._init();
+
+    // bundler
+    this._bundler = new Bundler();
+    this._bundler.debug = this.debug;
   }
 
   /**
@@ -513,7 +527,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    */
   get _frameworkCode() {
     if (!this.__frameworkCode) {
-      this.__frameworkCode = this.bundler.process(this.testFrameworkFile).trim();
+      this.__frameworkCode = this._bundler.process(this.testFrameworkFile).trim();
     }
 
     return this.__frameworkCode;
@@ -535,14 +549,6 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
   set testCaseFile(value) {
     this._testCaseFile = value;
-  }
-
-  get bundler() {
-    return this._bundler;
-  }
-
-  set bundler(value) {
-    this._bundler = value;
   }
 
   // </editor-fold>
