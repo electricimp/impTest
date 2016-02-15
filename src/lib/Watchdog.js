@@ -22,6 +22,8 @@ class Watchdog extends EventEmitter {
       this._onTimeout.bind(this),
       this._timeout * 1000
     );
+
+    this._debug(`Watchdog "${this.name}" started`);
   }
 
   reset() {
@@ -34,6 +36,8 @@ class Watchdog extends EventEmitter {
       clearTimeout(this._timerId);
       this._timerId = null;
     }
+
+    this._debug(`Watchdog "${this.name}" stopped`);
   }
 
   _onTimeout() {
