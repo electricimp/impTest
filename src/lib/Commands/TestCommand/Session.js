@@ -50,15 +50,17 @@ class Session extends EventEmitter {
         this._start(deviceCode, agentCode, modelId);
       })
 
-      .on('log', this._handleLog.bind(this))
+      .on('log', (log) => {
+        this._handleLog(log);
+      })
 
       .on('error', (event) => {
         this.emit('error', event.error);
-        // 'done' is emitted on 'error' as well
-        // so no need to call to stop()
       })
 
-      .on('done', this._finish.bind(this));
+      .on('done', () => {
+        this.stop = true;
+      });
   }
 
   /**
@@ -92,7 +94,6 @@ class Session extends EventEmitter {
 
       .catch((error) => {
         this.emit('error', error);
-        this._finish();
       });
   }
 
