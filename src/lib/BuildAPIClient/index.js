@@ -4,6 +4,7 @@ const c = require('colors');
 const request = require('request');
 const promiseWhile = require('../utils/promiseWhile');
 const DebugMixin = require('../DebugMixin');
+const Errors = require('./Errors');
 
 /**
  * Electric Imp Build API client.
@@ -84,13 +85,17 @@ class BuildAPIClient {
 
           if (result && result.error) {
             // we have an error message from web server {error: {code, message_short, message_full}} response
-            err = new Error('Build API error "' + result.error.code + '": ' + result.error.message_short);
+            err = new Errors.BuildAPIError('Build API error "' + result.error.code + '": ' + result.error.message_short);
           } else if (result && result.code && result.message) {
             // we have bad HTTP status code and {code, message} response
-            err = new Error('Build API error "' + result.code + '": ' + result.message);
+            err = new Errors.BuildAPIError('Build API error "' + result.code + '": ' + result.message);
           } else {
             // we have nothing but it's bad
-            err = new Error('Build API error HTTP/' + response.statusCode);
+            if (response.statusCode == '504') {
+              err = new Errors.TimeoutError();
+            } else {
+              err = new Error('Build API error HTTP/' + response.statusCode);
+            }
           }
 
           /* [debug] */
@@ -239,7 +244,7 @@ class BuildAPIClient {
                     if (error.message.indexOf('InvalidLogToken') !== -1 /* we need to refresh token */) {
                       stop = true;
                       resolve(this.streamDeviceLogs(deviceId, callback));
-                    } else if (error.message.indexOf('HTTP/504') !== -1 /* timeout error */) {
+                    } else if (error instanceof Errors.TimeoutError) {
                       resolve();
                     } else {
                       reject(error);
@@ -272,3 +277,4 @@ class BuildAPIClient {
 }
 
 module.exports = BuildAPIClient;
+module.exports.Errors = Errors;
