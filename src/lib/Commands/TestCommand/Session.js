@@ -20,8 +20,6 @@ const sprintf = require('sprintf-js').sprintf;
 const Errors = require('./SessionErrors');
 
 // todo: move more log parsing outside
-// todo: remove debug printouts
-// todo: export session errors
 
 class Session extends EventEmitter {
 
@@ -154,14 +152,18 @@ class Session extends EventEmitter {
         this.emit('error', new Errors.DeviceError('Out of code space'));
         break;
 
+      case 'DEVICE_OUT_OF_MEMORY':
+
+        if (this.state !== 'initialized') {
+          this.emit('error', new Errors.DeviceError('Out of memory'));
+        }
+
+        break;
+
       case 'LASTEXITCODE':
 
         if (this.state !== 'initialized') {
-          if (log.value.match(/out of memory/)) {
-            this.emit('error', new Errors.DeviceError('Out of memory'));
-          } else {
-            this.emit('error', new Errors.DeviceError(log.value));
-          }
+          this.emit('error', new Errors.DeviceError(log.value));
         }
 
         break;

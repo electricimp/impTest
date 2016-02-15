@@ -41,7 +41,7 @@ class LogsParser extends EventEmitter {
             this._debug(c.blue('Log line received: ') + JSON.stringify(log));
 
             // xxx
-            console.log(c.yellow(JSON.stringify(log)));
+            // console.log(c.yellow(JSON.stringify(log)));
 
             let m;
             const message = log.message;
@@ -75,7 +75,13 @@ class LogsParser extends EventEmitter {
 
                 // error
                 case 'lastexitcode':
-                  this.emit('log', {type: 'LASTEXITCODE', value: message});
+
+                  if (message.match(/out of memory/)) {
+                    this.emit('log', {type: 'DEVICE_OUT_OF_MEMORY'});
+                  } else {
+                    this.emit('log', {type: 'LASTEXITCODE', value: message});
+                  }
+
                   break;
 
                 case 'server.log':
