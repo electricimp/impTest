@@ -375,37 +375,37 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   _onError(error) {
     this._debug('Error type: ' + error.constructor.name);
 
-    if (error instanceof Session.errors.TestMethodError) {
+    if (error instanceof Session.Errors.TestMethodError) {
 
       this._testLine(c.red('Test Error: ' + error.message));
       this._stopSession = this.imptestFile.values.stopOnFailure;
 
-    } else if (error instanceof Session.errors.TestStateError) {
+    } else if (error instanceof Session.Errors.TestStateError) {
 
       this._error(error);
       this._stopSession = true;
 
-    } else if (error instanceof Session.errors.SessionFailedError) {
+    } else if (error instanceof Session.Errors.SessionFailedError) {
 
       // do nothing, produced at the end of session anyway
 
-    } else if (error instanceof Session.errors.DeviceDisconnectedError) {
+    } else if (error instanceof Session.Errors.DeviceDisconnectedError) {
 
       this._testLine(c.red('Device disconnected'));
       this._stopSession = true;
       this._stopDevice = true;
 
-    } else if (error instanceof Session.errors.DeviceRuntimeError) {
+    } else if (error instanceof Session.Errors.DeviceRuntimeError) {
 
       this._testLine(c.red('Device Runtime Error: ' + error.message));
       this._stopSession = true;
 
-    } else if (error instanceof Session.errors.AgentRuntimeError) {
+    } else if (error instanceof Session.Errors.AgentRuntimeError) {
 
       this._testLine(c.red('Agent Runtime Error: ' + error.message));
       this._stopSession = true;
 
-    } else if (error instanceof Session.errors.DeviceError) {
+    } else if (error instanceof Session.Errors.DeviceError) {
 
       this._testLine(c.red('Device Error: ' + error.message));
       this._stopSession = true;
