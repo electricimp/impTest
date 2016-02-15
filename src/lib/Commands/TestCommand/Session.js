@@ -34,7 +34,7 @@ class Session extends EventEmitter {
     this.logsParser.parse(testType, deviceId)
 
       .on('ready', () => {
-        this.start(deviceCode, agentCode, modelId);
+        this._start(deviceCode, agentCode, modelId);
       })
 
       .on('log', this._handleLog.bind(this))
@@ -45,7 +45,7 @@ class Session extends EventEmitter {
         // so no need to call to stop()
       })
 
-      .on('done', this.finish.bind(this));
+      .on('done', this._finish.bind(this));
   }
 
   /**
@@ -53,7 +53,7 @@ class Session extends EventEmitter {
    * @param {string} deviceCode
    * @param {string} agentCode
    */
-  start(deviceCode, agentCode, modelId) {
+  _start(deviceCode, agentCode, modelId) {
 
     this.emit('message', {
       type: 'info',
@@ -79,14 +79,14 @@ class Session extends EventEmitter {
 
       .catch((error) => {
         this.emit('error', error);
-        this.finish();
+        this._finish();
       });
   }
 
   /**
    * Finish test session
    */
-  finish(rejectOnFailure, forceReject) {
+  _finish() {
     if (this.error) {
       this.emit('message', {
         type: 'info',
