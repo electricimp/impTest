@@ -387,7 +387,6 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       this._testLine(c.red('Device disconnected'));
       this._stopSession = true;
-      this._stopDevice = true;
 
     } else if (error instanceof Session.Errors.DeviceRuntimeError) {
 
