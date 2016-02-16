@@ -1,6 +1,6 @@
 // test file
 
-class DeviceTestCase extends ImpUnitCase {
+class DeviceTestCase extends ImpTestCase {
   function testSomething() {
   }
 }

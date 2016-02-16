@@ -1,12 +1,12 @@
 // test file
 
-class Case1 extends ImpUnitCase {
+class Case1 extends ImpTestCase {
   function testSomethingSync() {
     this.assertTrue(true);
   }
 }
 
-class Case2 extends ImpUnitCase {
+class Case2 extends ImpTestCase {
   function testSomethingSync() {
     this.assertTrue(false);
   }

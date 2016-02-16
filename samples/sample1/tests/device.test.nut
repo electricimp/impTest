@@ -1,7 +1,7 @@
 /**
  * Device test case #1
  */
-class DeviceTestCase1 extends ImpUnitCase {
+class DeviceTestCase1 extends ImpTestCase {
 
   i = null;
 

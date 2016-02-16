@@ -1,6 +1,6 @@
 // test file
 
-class DeviceTestCase1 extends ImpUnitCase {
+class DeviceTestCase1 extends ImpTestCase {
   function testSomethingSync() {
     this.assertTrue(true);
   }

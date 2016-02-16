@@ -2,7 +2,7 @@
 
 //a = 0;
 
-class DeviceTestCase extends ImpUnitCase {
+class DeviceTestCase extends ImpTestCase {
   function testSomethingSync() {
     this.assertTrue(true);
   }

@@ -1,6 +1,6 @@
 // test file
 
-class Case extends ImpUnitCase {
+class Case extends ImpTestCase {
   function testSomethingSync() {
     this.assertTrue(true);
   }

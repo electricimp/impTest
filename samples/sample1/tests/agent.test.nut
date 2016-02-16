@@ -1,7 +1,7 @@
 /**
  * Agent test case #1
  */
-class MyTestCase1 extends ImpUnitCase {
+class MyTestCase1 extends ImpTestCase {
 
   i = null;
 
@@ -77,7 +77,7 @@ class MyTestCase1 extends ImpUnitCase {
 /**
  * Agent test case #2
  */
-class AnotherCase extends ImpUnitCase {
+class AnotherCase extends ImpTestCase {
 
   i = null;
 

@@ -7,7 +7,7 @@ function w() {
   imp.wakeup(1, w);
 }
 
-class DeviceTestCase1 extends ImpUnitCase {
+class DeviceTestCase1 extends ImpTestCase {
   function testSomethingSync() {
 //    this.assertClose(10, 11, 0.5);
     w();
