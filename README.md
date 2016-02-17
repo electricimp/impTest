@@ -5,7 +5,6 @@
 - [impTest](#imptest)
   - [Installation](#installation)
   - [Commands](#commands)
-    - [init](#init)
     - [test](#test)
   - [Development](#development)
     - [Installation](#installation-1)
@@ -36,18 +35,6 @@ _Please note that this is still under development and published for preview purp
 [Usage at development time](#running) 
 
 ## Commands
-
-### init
-
-```
-imptest init [options]
-
-Options:
-
-  -d, --debug          debug output
-  -c, --config [path]  config file path [default: .imptest]
-  -f, --force          overwrite existing configuration
-```
 
 ### test
 
