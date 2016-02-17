@@ -28,8 +28,10 @@ class ImpTestFile {
 
   get defaultValues() {
     return {
-      apiKey: '',
-        modelId: '',
+      apiKey:
+        process.env.IMP_BUILD_API_KEY
+        || '',
+      modelId: '',
       devices: [],
       agentFile: 'agent.nut',
       deviceFile: 'device.nut',
