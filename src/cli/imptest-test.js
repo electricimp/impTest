@@ -4,22 +4,26 @@
 
 'use strict';
 
-var commander = require('commander');
-var TestCommand = require('../lib/Commands/TestCommand');
-var parseBool = require('../lib/utils/parseBool');
+const commander = require('commander');
+const packageJson = require('../../package.json');
+const parseBool = require('../lib/utils/parseBool');
+const TestCommand = require('../lib/Commands/TestCommand');
 
 commander
+  .usage('[options] <test case file>')
   .option('-d, --debug', 'debug output')
   .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
-  .option('-a, --agent [bool]', 'push agent code [default: true]', true)
-  .option('-i, --imp [bool]', 'push device code [default: true]', true)
   .parse(process.argv);
 
-// run command
-(new TestCommand({
-  debug: parseBool(commander.debug),
-  config: commander.config,
-  agent: parseBool(commander.agent),
-  device: parseBool(commander.imp),
-  testFrameworkFile: __dirname + '/../impunit/impUnit.nut'
-})).run();
+// bootstrap command
+
+const command = new TestCommand();
+
+command.version = packageJson.version;
+command.debug = parseBool(commander.debug);
+command.testFrameworkFile = __dirname + '/../impUnit/bundle.nut';
+command.testCaseFile = commander.args[0] || null;
+command.configPath = commander.config;
+
+// go
+command.tryRun();

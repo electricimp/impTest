@@ -29,7 +29,6 @@
       "single",
       "avoid-escape"
     ],
-    "indent": [2, 2, {"SwitchCase": 1}],
     "comma-spacing": 2,
     "semi": 2,
     "space-infix-ops": 2,
@@ -45,7 +44,7 @@
     "new-parens": 2,
     "max-len": [
       2,
-      120,
+      160,
       2
     ],
     "no-multiple-empty-lines": [
@@ -73,6 +72,8 @@
   "globals": {
     "describe": false,
     "it": false,
-    "expect": false
+    "expect": false,
+    "jasmine": false,
+    "beforeEach": false
   }
 }

@@ -1,60 +1,84 @@
 'use strict';
 
-var ConfigFile = require('../ConfigFile');
-var colors = require('colors');
+const colors = require('colors');
+const dateformat = require('dateformat');
+const DebugMixin = require('../DebugMixin');
+const sprintf = require('sprintf-js').sprintf;
+const ImpTestFile = require('../ImpTestFile');
+const BuildAPIClient = require('../BuildAPIClient');
 
 class AbstractCommand {
 
-  /**
-   * Default options
-   * @returns {{}}
-   */
-  get defaultOptions() {
-    return {
-      debug: false,
-      config: '.imptest'
-    };
+  constructor() {
+    DebugMixin.call(this);
+    this._success = true;
   }
 
   /**
-   * @param {{}} val
+   * Run command with error handling and exit.
+   * Sets the return code to 1 in  case of error.
    */
-  set options(val) {
-    // mix default options with val
-    this._options = Object.assign(
-      this._options || this.defaultOptions,
-      val
-    );
-  }
+  tryRun() {
 
-  /**
-   * @param {{}} options
-   */
-  constructor(options) {
-    this.options = options;
+    try {
+      this.run()
+        .then(() => this.finish())
+        .catch((error) => {
+          throw error;
+        });
+    } catch (e) {
+      this._success = false;
+      this._error(e);
+      this.finish();
+    }
+
   }
 
   /**
    * Run command
+   *
+   * @return {Promise}
    */
   run() {
-    this._debug(
-      colors.blue('Using options:'),
-      this._options
-    );
+    // startup message
+    this._info('impTest/' + this.version);
+    this.logTiming = true; // enable log timing
+    this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
 
-    this._readConfig();
+    this._init();
+
+    // run returns a promise
+    return new Promise((resolve, reject) => {
+      resolve();
+    });
   }
 
   /**
-   * Debug print
-   * @param {*} ...objects
+   * Finish command
+   */
+  finish() {
+    this._debug(colors.blue('Command success: ') + this._success);
+
+    if (this._success) {
+      process.exit(0);
+    } else {
+      process.exit(1);
+    }
+  }
+
+  /**
+   * Initialize before run()
    * @protected
    */
-  _debug() {
-    if (this._options.debug) {
-      this._log('debug', colors.green, arguments);
-    }
+  _init() {
+    // config file
+    this._impTestFile = new ImpTestFile(this.configPath);
+    this._impTestFile.debug = this.debug;
+
+    // build api client
+    this._buildAPIClient = new BuildAPIClient();
+    this._buildAPIClient.apiKey = this._impTestFile.values.apiKey;
+    this._buildAPIClient.debug = this.debug;
   }
 
   /**
@@ -68,11 +92,15 @@ class AbstractCommand {
 
   /**
    * Error message
-   * @param {*} ...objects
+   * @param {*|Error} error
    * @protected
    */
-  _error() {
-    this._log('error', colors.red, arguments);
+  _error(error) {
+    if (error instanceof Error) {
+      error = error.message;
+    }
+
+    this._log('error', colors.red, [colors.red(error)]);
   }
 
   /**
@@ -82,27 +110,59 @@ class AbstractCommand {
    * @private
    */
   _log(type, colorFn, params) {
+
+    let dateMessage = '';
+
+    if (this.logTiming) {
+      const now = new Date();
+      //dateMessage = dateformat(now, 'HH:MM:ss.l');
+
+      if (this._lastLogDate && this._logStartDate) {
+        let dif1 = (now - this._logStartDate) / 1000;
+        let dif2 = (now - this._lastLogDate) / 1000;
+        dif1 = sprintf('%.2f', dif1);
+        dif2 = sprintf('%.2f', dif2);
+        dateMessage += '+' + dif1 + '/' + dif2 + 's ';
+      } else {
+        this._logStartDate = now;
+      }
+
+      this._lastLogDate = now;
+    }
+
     // convert params to true array (from arguments)
     params = Array.prototype.slice.call(params);
-    params.unshift(colorFn('[' + type + ']'));
+    params.unshift(colorFn('[' + dateMessage + type + ']'));
     console.log.apply(this, params);
   }
 
-  /**
-   * Read config file
-   * @protected
-   */
-  _readConfig() {
-    this._config = new ConfigFile(this._options.config);
+  // <editor-fold desc="Accessors" defaultstate="collapsed">
 
-    this._debug(colors.blue('Using config file:'), this._config.path);
-
-    if (!this._config.exists()) {
-      this._debug(colors.yellow('Config file not found'));
-    }
-
-    this._debug(colors.blue('Config:'), this._config.values);
+  get logTiming() {
+    return this._logTiming;
   }
+
+  set logTiming(value) {
+    this._logTiming = value;
+  }
+
+  get version() {
+    return this._version;
+  }
+
+  set version(value) {
+    this._version = value;
+  }
+
+  get configPath() {
+    return this._configPath;
+  }
+
+  set configPath(value) {
+    this._configPath = value;
+  }
+
+// </editor-fold>
 }
 
 module.exports = AbstractCommand;

@@ -6,10 +6,11 @@
 
 'use strict';
 
-var commander = require('commander');
+const commander = require('commander');
+const packageJson = require('../../package.json');
 
 commander
-  .command('init', 'Initialize .impconfig file')
+  .version(packageJson.version)
   .command('test', 'Run tests')
   .parse(process.argv);
 
