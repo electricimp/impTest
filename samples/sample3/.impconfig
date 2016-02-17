@@ -1,8 +1,0 @@
-{
-	"apiKey": "df6762b0dbb28739f37f509bfb3ec7e2",
-	"modelName": "TestModel",
-	"modelId": "0-hqUHryRd-G",
-	"devices": [],
-	"deviceFile": "testmodel.device.nut",
-	"agentFile": "testmodel.agent.nut"
-}
