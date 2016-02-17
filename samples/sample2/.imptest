@@ -5,6 +5,5 @@
   ],
   "deviceFile": "device.nut",
   "agentFile": "agent.nut",
-  "stopOnFailure": false,
-  "timeout": 3
+  "stopOnFailure": false
 }

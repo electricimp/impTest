@@ -3,6 +3,7 @@
 
 
 - [.imptest File Specification](#imptest-file-specification)
+  - [Environment Variables](#environment-variables)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -22,3 +23,8 @@ __.imptest__ file is used to configure tests execution.
     "timeout":        {number}            // Async test methods timeout, seconds. Default: 10
 }
 ```
+
+### Environment Variables
+
+Environment variables used in place of missing keys:
+- **apiKey** – `IMP_BUILD_API_KEY`

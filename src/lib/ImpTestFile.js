@@ -28,8 +28,10 @@ class ImpTestFile {
 
   get defaultValues() {
     return {
-      apiKey: '',
-        modelId: '',
+      apiKey:
+        process.env.IMP_BUILD_API_KEY
+        || '',
+      modelId: '',
       devices: [],
       agentFile: 'agent.nut',
       deviceFile: 'device.nut',
@@ -53,7 +55,14 @@ class ImpTestFile {
       values = stripJsonComments(values);
       values = JSON.parse(values);
       values = Object.assign(this.defaultValues, values);
-      this._debug(c.blue('Config values:'), values);
+
+      if (this.debug) {
+        // hide api key
+        const debugValues = /* clone value */ JSON.parse(JSON.stringify(values));
+        debugValues.apiKey = '[hidden]';
+        this._debug(c.blue('Config values:'), debugValues);
+      }
+
     } else {
       this._debug(c.red('Config file not found'));
     }

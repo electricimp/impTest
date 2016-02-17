@@ -58,8 +58,12 @@ class BuildAPIClient {
       // add headers passed
       Object.assign(options.headers, headers);
 
-      /* [debug] */
-      this._debug(c.blue('Doing the request with options:'), options);
+      // hide authorization header
+      if (this.debug) {
+        const debugOptions = /* trick to clone and obj */ JSON.parse(JSON.stringify(options));
+        debugOptions.headers.Authorization = '[hidden]';
+        this._debug(c.blue('Doing the request with options:'), debugOptions);
+      }
 
       // do request to build api
       request(options, (error, response, result) => {
@@ -71,8 +75,6 @@ class BuildAPIClient {
         // handle result
 
         if (error) {
-
-          /* [debug] */
           this._debug(c.red('Request error:'), error);
 
           // we're completely screwed
@@ -98,9 +100,7 @@ class BuildAPIClient {
             }
           }
 
-          /* [debug] */
           this._debug(c.red(err.message));
-
           reject(err);
 
           // todo: handle rate limit hit
