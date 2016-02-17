@@ -11,6 +11,10 @@
   },
   "author": "mikhail@electricimp.com",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/electricimp/impTest.git"
+  },
   "dependencies": {
     "colors": "^1.1.2",
     "commander": "^2.9.0",
@@ -25,5 +29,21 @@
   },
   "devDependencies": {
     "jasmine": "^2.4.1"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/electricimp/impTest/issues"
+  },
+  "homepage": "https://github.com/electricimp/impTest",
+  "directories": {
+    "doc": "docs"
+  },
+  "keywords": [
+    "squirrel",
+    "electric imp",
+    "electric",
+    "imp",
+    "test",
+    "impunit",
+    "unit"
+  ]
 }
