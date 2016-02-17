@@ -62,6 +62,24 @@ The following assertions are available:
 * `this.assertEqual(expected, actual, [message]);`
 * `this.assertClose(expected, actual, maxDifference, [message]);`
 
+### Environment Variables
+
+Environment variables can be used in Squirrel source code and test cases like `#{env:VARNAME}`. Access to _IMP_BUILD_API_KEY_ (used in place of missing _apiKey_ parameter in _.imptest_ file) is not allowed.
+
+### \_\_FILE\_\_ & \_\_LINE\_\_
+
+*\_\_FILE\_\_* and *\_\_LINE\_\_* variables are defined Squirrel source code and test cases, which may be useful for debugging information. Here is the usage example:
+
+```squirrel
+this.assertEqual(
+  expected,
+  actual,
+  "Failed to assert that values are"
+    + " equal in '#{__FILE__}'"
+    + " at line #{__LINE__}"
+);
+```
+
 ### Running Tests Manually
 
 Tests can be executed manually with human-readable output with the following bootstrapping procedure:
