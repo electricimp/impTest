@@ -28,6 +28,7 @@ class CodeProcessor {
     for (let line = 0; line < source.length; line++) {
 
       const variables = source[line].match(lineVariablesRegex);
+      if (!variables) continue;
 
       this._variables.__LINE__ = line + 1;
 
@@ -87,7 +88,7 @@ class CodeProcessor {
     this._variables = value;
   }
 
-// </editor-fold>
+  // </editor-fold>
 }
 
 module.exports = CodeProcessor;
