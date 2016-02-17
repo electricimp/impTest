@@ -19,8 +19,9 @@ class CodeProcessor {
     this.blockedEnvVars = [];
   }
 
-  process() {
-    const source = this.source.split(/\r\n|\n/);
+  process(source) {
+    source = source.split(/\r\n|\n/);
+
     const lineVariablesRegex = new RegExp(VARIABLE_PATTERN, 'ig');
     const variablesPartsRegex = new RegExp(VARIABLE_PATTERN, 'i');
 
@@ -69,14 +70,6 @@ class CodeProcessor {
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
-
-  get source() {
-    return this._source;
-  }
-
-  set source(value) {
-    this._source = value;
-  }
 
   get blockedEnvVars() {
     return this._blockedEnvVars;

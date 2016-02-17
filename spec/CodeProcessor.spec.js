@@ -14,11 +14,11 @@ describe('CodeProcessor test suite', () => {
     process.env.__TEST_ENV_VAR__ = 123;
     c.variables.__FILE__ = 'SomeFile';
 
-    c.source = 'local abc = ${env:__TEST_ENV_VAR__}; // ${__LINE__},${__LINE__}\n' +
+    const source = 'local abc = ${env:__TEST_ENV_VAR__}; // ${__LINE__},${__LINE__}\n' +
                'local def = ${__LINE__}\n' +
                'local ghi = "${__FILE__}"';
 
-    const result = c.process();
+    const result = c.process(source);
 
     expect(result).toBe('local abc = 123; // 1,1\n' +
                         'local def = 2\n' +
@@ -27,8 +27,8 @@ describe('CodeProcessor test suite', () => {
 
   it('should throw error on undefined var', () => {
     expect(() => {
-      c.sourcce = '${UNDEFINED_VAR}';
-      c.process();
+      const sourcce = '${UNDEFINED_VAR}';
+      c.process(sourcce);
     }).toThrow();
   });
 
@@ -36,8 +36,8 @@ describe('CodeProcessor test suite', () => {
     expect(() => {
       process.env.__BLOCKED_VAR__ = 123;
       c.blockedEnvVars = ['__BLOCKED_VAR__'];
-      c.source = '${env:__BLOCKED_VAR__}';
-      c.process();
+      const source = '${env:__BLOCKED_VAR__}';
+      c.process(source);
     }).toThrow();
   });
 
