@@ -2,7 +2,12 @@
 
 class Case extends ImpTestCase {
   function testSomethingSync() {
-    this.assertTrue(${__LINE__} == 5);
-    this.assertTrue("${__FILE__}" == "a-device.test.nut");
+    this.assertEqual(
+      1,
+      2,
+      "Failed to assert that values are"
+        + " equal in '#{__FILE__}'"
+        + " at line #{__LINE__}"
+    );
   }
 }

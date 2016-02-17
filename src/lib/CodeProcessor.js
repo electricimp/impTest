@@ -6,7 +6,7 @@
 
 'use strict';
 
-const VARIABLE_PATTERN = '\\$\\{(env:)?([a-z_][a-z0-9_]*)\\}';
+const VARIABLE_PATTERN = '\\#\\{(env:)?([a-z_][a-z0-9_]*)\\}';
 
 class CodeProcessor {
 
