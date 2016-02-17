@@ -15,6 +15,7 @@ const Bundler = require('../../Bundler');
 const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
 const randomstring = require('randomstring');
+const CodeProcessor = require('../../CodeProcessor');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
 //</editor-fold>
@@ -37,6 +38,11 @@ const STARTUP_TIMEOUT = 60;
  * treating test as timed out on a tool siode.
  */
 const EXTRA_TEST_MESSAGE_TIMEOUT = 5;
+
+/**
+ * Name for BuildAPI key env var
+ */
+const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
 
 /**
  * Test command
@@ -213,17 +219,23 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     // triggers device code space usage message, which also serves as revision launch indicator for device
     const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
+    // get test code
+    let testCode = fs.readFileSync(file.path, 'utf-8').trim();
+    this._codeProcessor.variables.__FILE__ = path.basename(file.path);
+    testCode = this._codeProcessor.process(testCode);
+
     if ('agent' === file.type) {
+
       agentCode = this._frameworkCode + '\n\n' +
                   this._sourceCode.agent + '\n\n' +
-                  fs.readFileSync(file.path, 'utf-8').trim() + '\n\n' +
+                  testCode + '\n\n' +
                   bootstrapCode;
       deviceCode = this._sourceCode.device + '\n\n' +
                    reloadTrigger;
     } else {
       deviceCode = this._frameworkCode + '\n\n' +
                    this._sourceCode.device + '\n\n' +
-                   fs.readFileSync(file.path, 'utf-8').trim() + '\n\n' +
+                   testCode + '\n\n' +
                    bootstrapCode + '\n\n' +
                    reloadTrigger;
       agentCode = this._sourceCode.agent;
@@ -496,7 +508,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         this._info(c.blue('Agent source file: ')
                    + this._impTestFile.values.agentFile);
 
+        // read/process agent source
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
+        this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
+        this._agentSource = this._codeProcessor.process(this._agentSource);
+
       } else {
         this._agentSource = '/* no agent source provided */';
       }
@@ -507,7 +523,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         this._debug(c.blue('Device source code file path: ') + sourceFilePath);
         this._info(c.blue('Device source file: ') + this._impTestFile.values.deviceFile);
 
+        // read/process device source
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
+        this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
+        this._deviceSource = this._codeProcessor.process(this._deviceSource);
+
       } else {
         this._deviceSource = '/* no device source provided */';
       }
@@ -531,6 +551,20 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     }
 
     return this.__frameworkCode;
+  }
+
+  /**
+   * Configure and return an instance of CodeProcessor
+   * @return {CodeProcessor}
+   * @private
+   */
+  get _codeProcessor() {
+    if (!this.__codeProcessor) {
+      this.__codeProcessor = new CodeProcessor();
+      this.__codeProcessor.blockedEnvVars = [BUILD_API_KEY_ENV_VAR]; // block access to Build API key
+    }
+
+    return this.__codeProcessor;
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
