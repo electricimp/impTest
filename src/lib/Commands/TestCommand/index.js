@@ -381,7 +381,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    * Handle test error
    * @param {Error|string} error
    * @return {boolean} stop test session?
-   * @private
+   * @protected
    */
   _onError(error) {
     this._debug('Error type: ' + error.constructor.name);
@@ -473,6 +473,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
     // command has not succeeded
     this._success = false;
+
+    // print stack trace
+    if (this.debug) {
+      console.trace(error);
+    }
   }
 
   /**

@@ -136,8 +136,8 @@ class AbstractCommand {
    * @protected
    */
   _onError(error) {
+    this._error(error);
     this._success = false;
-    this._error(colors.red(error));
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
