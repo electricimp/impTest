@@ -456,6 +456,8 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       this._error(error);
       this._stopSession = true;
+      this._stopDevice = true;
+      this._stopCommand = true;
 
     }
 
