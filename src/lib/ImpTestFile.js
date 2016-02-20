@@ -55,16 +55,16 @@ class ImpTestFile {
       values = stripJsonComments(values);
       values = JSON.parse(values);
       values = Object.assign(this.defaultValues, values);
-
-      if (this.debug) {
-        // hide api key
-        const debugValues = /* clone value */ JSON.parse(JSON.stringify(values));
-        debugValues.apiKey = '[hidden]';
-        this._debug(c.blue('Config values:'), debugValues);
-      }
-
     } else {
       this._debug(c.red('Config file not found'));
+      values = this.defaultValues;
+    }
+
+    if (this.debug) {
+      // hide api key
+      const debugValues = /* clone value */ JSON.parse(JSON.stringify(values));
+      debugValues.apiKey = '[hidden]';
+      this._debug(c.blue('Config values:'), debugValues);
     }
 
     return values;
