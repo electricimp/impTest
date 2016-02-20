@@ -508,15 +508,20 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         /* [debug] */
         this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
         /* [info] */
-        this._info(c.blue('Agent source file: ')
-                   + this._impTestFile.values.agentFile);
+        this._info(c.blue('Using ') + 'agent' + c.blue(' source file: ') + this._impTestFile.values.agentFile);
 
         // read/process agent source
+
+        if (!fs.existsSync(sourceFilePath)) {
+          throw new Error(`Agent source file "${sourceFilePath}" not found.`);
+        }
+
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
         this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
         this._agentSource = this._codeProcessor.process(this._agentSource);
 
       } else {
+        this._info(c.blue('Have no ') + 'agent' + c.blue(' source file, using blank'));
         this._agentSource = '/* no agent source provided */';
       }
 
@@ -524,14 +529,20 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         sourceFilePath = path.resolve(this._impTestFile.dir, this._impTestFile.values.deviceFile);
 
         this._debug(c.blue('Device source code file path: ') + sourceFilePath);
-        this._info(c.blue('Device source file: ') + this._impTestFile.values.deviceFile);
+        this._info(c.blue('Using ') + 'device' + c.blue(' source file: ') + this._impTestFile.values.deviceFile);
 
         // read/process device source
+
+        if (!fs.existsSync(sourceFilePath)) {
+          throw new Error(`Device source file "${sourceFilePath}" not found.`);
+        }
+
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
         this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
         this._deviceSource = this._codeProcessor.process(this._deviceSource);
 
       } else {
+        this._info(c.blue('Have no ') + 'device' + c.blue(' source file, using blank'));
         this._deviceSource = '/* no device source provided */';
       }
 

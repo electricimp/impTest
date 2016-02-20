@@ -33,8 +33,8 @@ class ImpTestFile {
         || '',
       modelId: '',
       devices: [],
-      agentFile: 'agent.nut',
-      deviceFile: 'device.nut',
+      agentFile: '',
+      deviceFile: '',
       stopOnFailure: false,
       timeout: 10,
       tests: ['*.test.nut', 'tests/**/*.test.nut']
