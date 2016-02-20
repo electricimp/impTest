@@ -19,19 +19,14 @@ class AbstractCommand {
    * Sets the return code to 1 in  case of error.
    */
   tryRun() {
-
-    try {
-      this.run()
-        .then(() => this.finish())
-        .catch((error) => {
-          throw error;
-        });
-    } catch (e) {
-      this._success = false;
-      this._error(e);
-      this.finish();
-    }
-
+    this.run()
+      .catch((error) => {
+        this._success = false;
+        this._onError(error);
+      })
+      .then(() => {
+        this.finish();
+      });
   }
 
   /**
@@ -40,15 +35,15 @@ class AbstractCommand {
    * @return {Promise}
    */
   run() {
-    // startup message
-    this._info('impTest/' + this.version);
-    this.logTiming = true; // enable log timing
-    this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
-
-    this._init();
-
-    // run returns a promise
     return new Promise((resolve, reject) => {
+      // startup message
+      this._info('impTest/' + this.version);
+      this.logTiming = true; // enable log timing
+      this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
+
+      // initlization
+      this._init();
+
       resolve();
     });
   }
@@ -134,6 +129,16 @@ class AbstractCommand {
     params = Array.prototype.slice.call(params);
     params.unshift(colorFn('[' + dateMessage + type + ']'));
     console.log.apply(this, params);
+  }
+
+  /**
+   * Error handler
+   * @param {Error|*} error
+   * @protected
+   */
+  _onError(error) {
+    this._success = false;
+    this._error(colors.red(error));
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">

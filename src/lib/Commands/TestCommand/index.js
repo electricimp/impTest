@@ -55,7 +55,6 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   run() {
-
     return super.run()
       .then(() => {
 
@@ -69,9 +68,7 @@ class TestCommand extends AbstractCommand {
 
         return promiseWhile(
           () => d++ < this._impTestFile.values.devices.length && !this._abortTesting,
-          () => this._runDevice(d - 1, testFiles).catch(() => {
-            this._debug(c.red('Device #' + d + ' run failed'));
-          })
+          () => this._runDevice(d - 1, testFiles)
         );
 
       });
@@ -186,24 +183,26 @@ class TestCommand extends AbstractCommand {
    */
   _runTestFile(file, deviceIndex) {
 
-    this._blankLine();
+    return new Promise((resolve, reject) => {
 
-    // init test session
+      this._blankLine();
 
-    this._session = new Session();
-    this._info(c.blue('Starting test session ') + this._session.id);
+      // init test session
 
-    // determine device
-    const deviceId = this._impTestFile.values.devices[deviceIndex];
+      this._session = new Session();
+      this._info(c.blue('Starting test session ') + this._session.id);
 
-    /* [info] */
-    this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
+      // determine device
+      const deviceId = this._impTestFile.values.devices[deviceIndex];
 
-    // create complete codebase
+      /* [info] */
+      this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
 
-    // bootstrap code
-    const bootstrapCode =
-      `// bootstrap tests
+      // create complete codebase
+
+      // bootstrap code
+      const bootstrapCode =
+        `// bootstrap tests
 imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
@@ -214,62 +213,63 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   t.run();
 });`;
 
-    let agentCode, deviceCode;
+      let agentCode, deviceCode;
 
-    // triggers device code space usage message, which also serves as revision launch indicator for device
-    const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
+      // triggers device code space usage message, which also serves as revision launch indicator for device
+      const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
-    // get test code
-    let testCode = fs.readFileSync(file.path, 'utf-8').trim();
-    this._codeProcessor.variables.__FILE__ = path.basename(file.path);
-    testCode = this._codeProcessor.process(testCode);
+      // get test code
+      let testCode = fs.readFileSync(file.path, 'utf-8').trim();
+      this._codeProcessor.variables.__FILE__ = path.basename(file.path);
+      testCode = this._codeProcessor.process(testCode);
 
-    if ('agent' === file.type) {
+      if ('agent' === file.type) {
 
-      agentCode = this._frameworkCode + '\n\n' +
-                  this._sourceCode.agent + '\n\n' +
-                  testCode + '\n\n' +
-                  bootstrapCode;
-      deviceCode = this._sourceCode.device + '\n\n' +
-                   reloadTrigger;
-    } else {
-      deviceCode = this._frameworkCode + '\n\n' +
-                   this._sourceCode.device + '\n\n' +
-                   testCode + '\n\n' +
-                   bootstrapCode + '\n\n' +
-                   reloadTrigger;
-      agentCode = this._sourceCode.agent;
-    }
+        agentCode = this._frameworkCode + '\n\n' +
+                    this._sourceCode.agent + '\n\n' +
+                    testCode + '\n\n' +
+                    bootstrapCode;
+        deviceCode = this._sourceCode.device + '\n\n' +
+                     reloadTrigger;
+      } else {
+        deviceCode = this._frameworkCode + '\n\n' +
+                     this._sourceCode.device + '\n\n' +
+                     testCode + '\n\n' +
+                     bootstrapCode + '\n\n' +
+                     reloadTrigger;
+        agentCode = this._sourceCode.agent;
+      }
 
-    this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
-    this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
+      this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
+      this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
 
-    // resolve device info
-    return this._buildAPIClient.getDevice(deviceId)
+      // resolve device info
+      return this._buildAPIClient.getDevice(deviceId)
 
-      .then((res) => {
-        this._info(c.blue('Using device ' +
-                   (deviceIndex + 1) + ' of ' +
-                   this._impTestFile.values.devices.length + ': ')
-                   + res.device.name + c.blue(' / ') + deviceId);
+        .then((res) => {
+          this._info(c.blue('Using device ' +
+                     (deviceIndex + 1) + ' of ' +
+                     this._impTestFile.values.devices.length + ': ')
+                     + res.device.name + c.blue(' / ') + deviceId);
 
-        // check model
-        if (res.device.model_id !== this._impTestFile.values.modelId) {
-          throw new Errors.WrongModelError('Device is assigned to a wrong model');
-        }
+          // check model
+          if (res.device.model_id !== this._impTestFile.values.modelId) {
+            throw new Errors.WrongModelError('Device is assigned to a wrong model');
+          }
 
-        // check online state
-        if (res.device.powerstate !== 'online') {
-          throw new Errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
-        }
-      })
+          // check online state
+          if (res.device.powerstate !== 'online') {
+            throw new Errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
+          }
+        })
 
-      // run test session
-      .then(() => this._runSession(deviceId, deviceCode, agentCode, file.type))
+        // run test session
+        .then(() => this._runSession(deviceId, deviceCode, agentCode, file.type))
 
-      .catch((error) => {
-        this._onError(error);
-      });
+        .catch((error) => {
+          this._onError(error);
+        });
+    });
   }
 
   /**
