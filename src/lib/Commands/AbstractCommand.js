@@ -18,10 +18,9 @@ class AbstractCommand {
    * Run command with error handling and exit.
    * Sets the return code to 1 in  case of error.
    */
-  tryRun() {
-    this.run()
+  run() {
+    this._run()
       .catch((error) => {
-        this._success = false;
         this._onError(error);
       })
       .then(() => {
@@ -31,10 +30,10 @@ class AbstractCommand {
 
   /**
    * Run command
-   *
    * @return {Promise}
+   * @protected
    */
-  run() {
+  _run() {
     return new Promise((resolve, reject) => {
       // startup message
       this._info('impTest/' + this.version);

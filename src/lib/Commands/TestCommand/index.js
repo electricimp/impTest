@@ -52,10 +52,10 @@ class TestCommand extends AbstractCommand {
   /**
    * Run command
    * @return {Promise}
-   * @private
+   * @protected
    */
-  run() {
-    return super.run()
+  _run() {
+    return super._run()
       .then(() => {
 
         // find test case files
@@ -182,9 +182,9 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _runTestFile(file, deviceIndex) {
-
     return new Promise((resolve, reject) => {
 
+      // blank line
       this._blankLine();
 
       // init test session
@@ -266,6 +266,10 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         // run test session
         .then(() => this._runSession(deviceId, deviceCode, agentCode, file.type))
 
+        // next session
+        .then(resolve)
+
+        // error
         .catch((error) => {
           this._onError(error);
         });
