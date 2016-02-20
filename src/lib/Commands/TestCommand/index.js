@@ -67,7 +67,7 @@ class TestCommand extends AbstractCommand {
         let d = 0;
 
         return promiseWhile(
-          () => d++ < this._impTestFile.values.devices.length && !this._abortTesting,
+          () => d++ < this._impTestFile.values.devices.length && !this._stopCommand,
           () => this._runDevice(d - 1, testFiles)
         );
 
@@ -79,9 +79,8 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   finish() {
-    if (this._abortTesting) {
-      // testing was aborted
-      this._error('Testing Aborted' + (this._testingAbortReason ? (': ' + this._testingAbortReason) : ''));
+    if (this._stopCommand) {
+      this._debug(c.red('Command was forced to stop'));
     }
 
     super.finish();
@@ -359,7 +358,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       });
 
       this._session.on('done', () => {
-        if (this._session.error && this._impTestFile.values.stopOnFailure || this._abortTesting) {
+        if (this._session.error && this._impTestFile.values.stopOnFailure || this._stopCommand) {
           reject();
         } else {
           resolve();
@@ -449,7 +448,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     } else if (error instanceof Error) {
 
       this._error(error.message);
-      this._stopSession = true;
+      this._stopCommand = true;
 
     } else {
 
@@ -468,16 +467,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     // in combination w/stopOnFailure it makes sense
     // to abort the entire testing
     if ((this._stopDevice || this._stopSession) && this._impTestFile.values.stopOnFailure) {
-      this._abortTesting = true;
+      this._stopCommand = true;
     }
 
     // command has not succeeded
     this._success = false;
-
-    // print stack trace
-    if (this.debug) {
-      console.trace(error);
-    }
   }
 
   /**

@@ -56,8 +56,7 @@ class ImpTestFile {
       values = JSON.parse(values);
       values = Object.assign(this.defaultValues, values);
     } else {
-      this._debug(c.red('Config file not found'));
-      values = this.defaultValues;
+      throw new Error('Config file not found');
     }
 
     if (this.debug) {
