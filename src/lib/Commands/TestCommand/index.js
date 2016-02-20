@@ -389,7 +389,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
     if (error instanceof Session.Errors.TestMethodError) {
 
-      this._testLine(c.red('Test Error: ' + error.message));
+      this._testLine(c.red('Failure: ' + error.message));
       this._stopSession = this._impTestFile.values.stopOnFailure;
 
     } else if (error instanceof Session.Errors.TestStateError) {
