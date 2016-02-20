@@ -513,7 +513,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         // read/process agent source
 
         if (!fs.existsSync(sourceFilePath)) {
-          throw new Error(`Agent source file "${sourceFilePath}" not found.`);
+          throw new Error(`Agent source file "${sourceFilePath}" not found`);
         }
 
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
@@ -534,7 +534,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         // read/process device source
 
         if (!fs.existsSync(sourceFilePath)) {
-          throw new Error(`Device source file "${sourceFilePath}" not found.`);
+          throw new Error(`Device source file "${sourceFilePath}" not found`);
         }
 
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
