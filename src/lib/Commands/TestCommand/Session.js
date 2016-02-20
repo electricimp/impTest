@@ -225,31 +225,11 @@ class Session extends EventEmitter {
               throw new Errors.TestStateError('Invalid test session state');
             }
 
-            if (m = log.value.message.match(/(.+)::setUp\(\)$/)) {
-
-              // setup
-              this.emit('message', {
-                type: 'test',
-                message: c.blue('Setting up ') + m[1]
-              });
-
-            } else if (m = log.value.message.match(/(.+)::tearDown\(\)$/)) {
-
-              // teardown
-              this.emit('message', {
-                type: 'test',
-                message: c.blue('Tearing down ') + m[1]
-              });
-
-            } else {
-
-              // status message
-              this.emit('message', {
-                type: 'test',
-                message: log.value.message
-              });
-
-            }
+            // status message
+            this.emit('message', {
+              type: 'test',
+              message: log.value.message
+            });
 
             break;
 
@@ -301,6 +281,22 @@ class Session extends EventEmitter {
             break;
 
           case 'TEST_OK':
+
+            let message;
+
+            if (typeof log.value.message === 'string') {
+              message = log.value.message;
+            } else {
+              message = JSON.stringify(log.value.message);
+            }
+
+            this.emit('message', {
+              type: 'info',
+              message: null !== log.value.message
+                ? (c.green('Success: ') + message)
+                : c.green('Success')
+            });
+
             break;
 
           default:
