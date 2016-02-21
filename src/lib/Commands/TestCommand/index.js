@@ -114,7 +114,7 @@ class TestCommand extends AbstractCommand {
     this._stopDevice = false;
 
     return promiseWhile(
-      () => t++ < testFiles.length && !this._stopDevice,
+      () => t++ < testFiles.length && !(this._stopDevice || this._stopCommand),
       () => this._runTestFile(testFiles[t - 1], deviceIndex)
     );
   }
@@ -359,13 +359,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         this._sessionTestMessagesWatchdog.stop();
       });
 
-      this._session.on('done', () => {
-        if (this._session.error && this._impTestFile.values.stopOnFailure || this._stopCommand) {
-          reject();
-        } else {
-          resolve();
-        }
-      });
+      this._session.on('done', resolve);
 
       this._session.run(
         testType,

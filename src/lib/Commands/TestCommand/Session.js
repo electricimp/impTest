@@ -115,7 +115,6 @@ class Session extends EventEmitter {
    * @private
    */
   _handleLog(log) {
-    let m;
 
     switch (log.type) {
 
