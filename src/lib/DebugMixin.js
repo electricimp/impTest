@@ -4,6 +4,8 @@
  * Adds:
  *  - "debug" property
  *  - "_debug()"
+ *
+ *  @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';

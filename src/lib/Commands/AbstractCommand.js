@@ -1,3 +1,10 @@
+/**
+ * Command base
+ *
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
+ */
+
+
 'use strict';
 
 const colors = require('colors');

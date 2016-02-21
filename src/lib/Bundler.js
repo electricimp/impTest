@@ -1,5 +1,7 @@
 /**
  * Bundles .nut files
+ *
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';

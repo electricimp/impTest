@@ -1,5 +1,7 @@
 /**
  * Session errors
+ * 
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';

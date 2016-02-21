@@ -1,3 +1,9 @@
+/**
+ * Loop with promises
+ * 
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
+ */
+
 'use strict';
 
 /**

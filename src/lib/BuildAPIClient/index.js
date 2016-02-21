@@ -1,3 +1,11 @@
+/**
+ * Electric Imp Build API client.
+ * Will be published as package eventually.
+ *
+ * @see https://electricimp.com/docs/buildapi/
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
+ */
+
 'use strict';
 
 const c = require('colors');
@@ -5,13 +13,6 @@ const Errors = require('./Errors');
 const request = require('request');
 const DebugMixin = require('../DebugMixin');
 const promiseWhile = require('../utils/promiseWhile');
-
-/**
- * Electric Imp Build API client.
- * Will be published as package eventually.
- *
- * @see https://electricimp.com/docs/buildapi/
- */
 class BuildAPIClient {
 
   constructor() {
