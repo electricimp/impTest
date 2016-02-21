@@ -248,10 +248,10 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       return this._buildAPIClient.getDevice(deviceId)
 
         .then((res) => {
-          this._info(c.blue('Using device ' +
-                     (deviceIndex + 1) + ' of ' +
-                     this._impTestFile.values.devices.length + ': ')
-                     + res.device.name + c.blue(' / ') + deviceId);
+
+          this._info(
+            c.blue('Using device ') + res.device.name + c.blue(' [') + deviceId + c.blue('] (') +
+            c.blue((deviceIndex + 1) + '/' + this._impTestFile.values.devices.length + ') '));
 
           // check model
           if (res.device.model_id !== this._impTestFile.values.modelId) {
@@ -262,6 +262,13 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
           if (res.device.powerstate !== 'online') {
             throw new Errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
           }
+        })
+
+        .then(() => {
+          return this._buildAPIClient.getModel(this._impTestFile.values.modelId)
+            .then((res) => {
+              this._info(c.blue('Using model ') + res.model.name + c.blue(' [') + res.model.id + c.blue(']'));
+            });
         })
 
         // run test session
