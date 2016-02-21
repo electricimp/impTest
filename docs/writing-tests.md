@@ -64,6 +64,7 @@ The following assertions are available:
 * `this.assertTrue(value, [message]);`
 * `this.assertEqual(expected, actual, [message]);`
 * `this.assertClose(expected, actual, maxDifference, [message]);`
+* `this.assertDeepEqual(expected, actual, [message]);`
 
 ### Environment Variables
 
