@@ -9,6 +9,7 @@
   - [Assertions](#assertions)
   - [Environment Variables](#environment-variables)
   - [\_\_FILE\_\_ & \_\_LINE\_\_](#%5C_%5C_file%5C_%5C_-&-%5C_%5C_line%5C_%5C_)
+  - [Diagniostic Messages](#diagniostic-messages)
   - [Running Tests Manually](#running-tests-manually)
   - [Test Case Example](#test-case-example)
 
@@ -32,7 +33,7 @@ class MyTestCase extends ImpUnitTestCase {
 
 ### Test Case Lifecycle: setUp() and tearDown()
 
-Each test case has __setUp()__ and __tearDown()__ methods for instantiating the environment and cleaning-up afterwards.
+Each test case can have __setUp()__ and __tearDown()__ methods for instantiating the environment and cleaning-up afterwards.
 
 ### Asynchronous Testing
 
@@ -81,6 +82,12 @@ this.assertEqual(
     + " at line #{__LINE__}"
 );
 ```
+
+### Diagniostic Messages
+
+Return values (other than *null*) are displayed in the console when test succeds and can be used to output diagnostic messages, like:
+
+<img src="diagnostic-messages.png" width=497>
 
 ### Running Tests Manually
 

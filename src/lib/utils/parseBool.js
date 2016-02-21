@@ -1,3 +1,9 @@
+/**
+ * Parse value to boolean
+ * 
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
+ */
+
 'use strict';
 
 /**

@@ -2,6 +2,8 @@
  * Processes the code
  *  - replace the env variables
  *  - replace ${__LINE__}, ${__FILE__}
+ *
+ *  @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';

@@ -1,5 +1,6 @@
 /**
  * Test command
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';
