@@ -6,6 +6,8 @@
  *  - log
  *  - error
  *  - done
+ *
+ *  @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';

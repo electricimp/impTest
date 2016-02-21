@@ -1,5 +1,6 @@
 /**
  * Test command
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';
@@ -52,11 +53,10 @@ class TestCommand extends AbstractCommand {
   /**
    * Run command
    * @return {Promise}
-   * @private
+   * @protected
    */
-  run() {
-
-    return super.run()
+  _run() {
+    return super._run()
       .then(() => {
 
         // find test case files
@@ -68,8 +68,8 @@ class TestCommand extends AbstractCommand {
         let d = 0;
 
         return promiseWhile(
-          () => d++ < this._impTestFile.values.devices.length && !this._abortTesting,
-          () => this._runDevice(d - 1, testFiles).catch(() => {
+          () => d++ < this._impTestFile.values.devices.length && !this._stopCommand,
+          () => this._runDevice(d - 1, testFiles).catch((e) => {
             this._debug(c.red('Device #' + d + ' run failed'));
           })
         );
@@ -82,9 +82,8 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   finish() {
-    if (this._abortTesting) {
-      // testing was aborted
-      this._error('Testing Aborted' + (this._testingAbortReason ? (': ' + this._testingAbortReason) : ''));
+    if (this._stopCommand) {
+      this._debug(c.red('Command was forced to stop'));
     }
 
     super.finish();
@@ -116,7 +115,7 @@ class TestCommand extends AbstractCommand {
     this._stopDevice = false;
 
     return promiseWhile(
-      () => t++ < testFiles.length && !this._stopDevice,
+      () => t++ < testFiles.length && !(this._stopDevice || this._stopCommand),
       () => this._runTestFile(testFiles[t - 1], deviceIndex)
     );
   }
@@ -185,25 +184,27 @@ class TestCommand extends AbstractCommand {
    * @private
    */
   _runTestFile(file, deviceIndex) {
+    return new Promise((resolve, reject) => {
 
-    this._blankLine();
+      // blank line
+      this._blankLine();
 
-    // init test session
+      // init test session
 
-    this._session = new Session();
-    this._info( c.blue('Starting test session ') + this._session.id);
+      this._session = new Session();
+      this._info(c.blue('Starting test session ') + this._session.id);
 
-    // determine device
-    const deviceId = this._impTestFile.values.devices[deviceIndex];
+      // determine device
+      const deviceId = this._impTestFile.values.devices[deviceIndex];
 
-    /* [info] */
-    this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
+      /* [info] */
+      this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
 
-    // create complete codebase
+      // create complete codebase
 
-    // bootstrap code
-    const bootstrapCode =
-      `// bootstrap tests
+      // bootstrap code
+      const bootstrapCode =
+        `// bootstrap tests
 imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
@@ -214,62 +215,74 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   t.run();
 });`;
 
-    let agentCode, deviceCode;
+      let agentCode, deviceCode;
 
-    // triggers device code space usage message, which also serves as revision launch indicator for device
-    const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
+      // triggers device code space usage message, which also serves as revision launch indicator for device
+      const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
-    // get test code
-    let testCode = fs.readFileSync(file.path, 'utf-8').trim();
-    this._codeProcessor.variables.__FILE__ = path.basename(file.path);
-    testCode = this._codeProcessor.process(testCode);
+      // get test code
+      let testCode = fs.readFileSync(file.path, 'utf-8').trim();
+      this._codeProcessor.variables.__FILE__ = path.basename(file.path);
+      testCode = this._codeProcessor.process(testCode);
 
-    if ('agent' === file.type) {
+      if ('agent' === file.type) {
 
-      agentCode = this._frameworkCode + '\n\n' +
-                  this._sourceCode.agent + '\n\n' +
-                  testCode + '\n\n' +
-                  bootstrapCode;
-      deviceCode = this._sourceCode.device + '\n\n' +
-                   reloadTrigger;
-    } else {
-      deviceCode = this._frameworkCode + '\n\n' +
-                   this._sourceCode.device + '\n\n' +
-                   testCode + '\n\n' +
-                   bootstrapCode + '\n\n' +
-                   reloadTrigger;
-      agentCode = this._sourceCode.agent;
-    }
+        agentCode = this._frameworkCode + '\n\n' +
+                    this._sourceCode.agent + '\n\n' +
+                    testCode + '\n\n' +
+                    bootstrapCode;
+        deviceCode = this._sourceCode.device + '\n\n' +
+                     reloadTrigger;
+      } else {
+        deviceCode = this._frameworkCode + '\n\n' +
+                     this._sourceCode.device + '\n\n' +
+                     testCode + '\n\n' +
+                     bootstrapCode + '\n\n' +
+                     reloadTrigger;
+        agentCode = this._sourceCode.agent;
+      }
 
-    this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
-    this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
+      this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
+      this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
 
-    // resolve device info
-    return this._buildAPIClient.getDevice(deviceId)
+      // resolve device info
+      return this._buildAPIClient.getDevice(deviceId)
 
-      .then((res) => {
-        this._info(c.blue('Using device ' +
-                   (deviceIndex + 1) + ' of ' +
-                   this._impTestFile.values.devices.length + ': ')
-                   + res.device.name + c.blue(' / ') + deviceId);
+        .then((res) => {
 
-        // check model
-        if (res.device.model_id !== this._impTestFile.values.modelId) {
-          throw new Errors.WrongModelError('Device is assigned to a wrong model');
-        }
+          this._info(
+            c.blue('Using device ') + res.device.name + c.blue(' [') + deviceId + c.blue('] (') +
+            c.blue((deviceIndex + 1) + '/' + this._impTestFile.values.devices.length + ') '));
 
-        // check online state
-        if (res.device.powerstate !== 'online') {
-          throw new Errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
-        }
-      })
+          // check model
+          if (res.device.model_id !== this._impTestFile.values.modelId) {
+            throw new Errors.WrongModelError('Device is assigned to a wrong model');
+          }
 
-      // run test session
-      .then(() => this._runSession(deviceId, deviceCode, agentCode, file.type))
+          // check online state
+          if (res.device.powerstate !== 'online') {
+            throw new Errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
+          }
+        })
 
-      .catch((error) => {
-        this._onError(error);
-      });
+        .then(() => {
+          return this._buildAPIClient.getModel(this._impTestFile.values.modelId)
+            .then((res) => {
+              this._info(c.blue('Using model ') + res.model.name + c.blue(' [') + res.model.id + c.blue(']'));
+            });
+        })
+
+        // run test session
+        .then(() => this._runSession(deviceId, deviceCode, agentCode, file.type))
+
+        // next session
+        .then(resolve)
+
+        // error
+        .catch((error) => {
+          this._onError(error);
+        });
+    });
   }
 
   /**
@@ -354,13 +367,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         this._sessionTestMessagesWatchdog.stop();
       });
 
-      this._session.on('done', () => {
-        if (this._session.error && this._impTestFile.values.stopOnFailure || this._abortTesting) {
-          reject();
-        } else {
-          resolve();
-        }
-      });
+      this._session.on('done', resolve);
 
       this._session.run(
         testType,
@@ -377,14 +384,14 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    * Handle test error
    * @param {Error|string} error
    * @return {boolean} stop test session?
-   * @private
+   * @protected
    */
   _onError(error) {
     this._debug('Error type: ' + error.constructor.name);
 
     if (error instanceof Session.Errors.TestMethodError) {
 
-      this._testLine(c.red('Test Error: ' + error.message));
+      this._testLine(c.red('Failure: ' + error.message));
       this._stopSession = this._impTestFile.values.stopOnFailure;
 
     } else if (error instanceof Session.Errors.TestStateError) {
@@ -446,11 +453,15 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       this._error(error.message);
       this._stopSession = true;
+      this._stopDevice = true;
+      this._stopCommand = true;
 
     } else {
 
       this._error(error);
       this._stopSession = true;
+      this._stopDevice = true;
+      this._stopCommand = true;
 
     }
 
@@ -464,7 +475,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     // in combination w/stopOnFailure it makes sense
     // to abort the entire testing
     if ((this._stopDevice || this._stopSession) && this._impTestFile.values.stopOnFailure) {
-      this._abortTesting = true;
+      this._stopCommand = true;
     }
 
     // command has not succeeded
@@ -505,15 +516,20 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         /* [debug] */
         this._debug(c.blue('Agent source code file path: ') + sourceFilePath);
         /* [info] */
-        this._info(c.blue('Agent source file: ')
-                   + this._impTestFile.values.agentFile);
+        this._info(c.blue('Using ') + 'agent' + c.blue(' source file: ') + this._impTestFile.values.agentFile);
 
         // read/process agent source
+
+        if (!fs.existsSync(sourceFilePath)) {
+          throw new Error(`Agent source file "${sourceFilePath}" not found`);
+        }
+
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
         this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
         this._agentSource = this._codeProcessor.process(this._agentSource);
 
       } else {
+        this._info(c.blue('Have no ') + 'agent' + c.blue(' source file, using blank'));
         this._agentSource = '/* no agent source provided */';
       }
 
@@ -521,14 +537,20 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         sourceFilePath = path.resolve(this._impTestFile.dir, this._impTestFile.values.deviceFile);
 
         this._debug(c.blue('Device source code file path: ') + sourceFilePath);
-        this._info(c.blue('Device source file: ') + this._impTestFile.values.deviceFile);
+        this._info(c.blue('Using ') + 'device' + c.blue(' source file: ') + this._impTestFile.values.deviceFile);
 
         // read/process device source
+
+        if (!fs.existsSync(sourceFilePath)) {
+          throw new Error(`Device source file "${sourceFilePath}" not found`);
+        }
+
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
         this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
         this._deviceSource = this._codeProcessor.process(this._deviceSource);
 
       } else {
+        this._info(c.blue('Have no ') + 'device' + c.blue(' source file, using blank'));
         this._deviceSource = '/* no device source provided */';
       }
 

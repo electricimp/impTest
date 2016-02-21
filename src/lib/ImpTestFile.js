@@ -1,3 +1,10 @@
+/**
+ * .imptest file abstraction
+ *
+ * @see https://github.com/electricimp/impTest/blob/develop/docs/imptest-spec.md
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
+ */
+
 'use strict';
 
 const c = require('colors');
@@ -33,8 +40,8 @@ class ImpTestFile {
         || '',
       modelId: '',
       devices: [],
-      agentFile: 'agent.nut',
-      deviceFile: 'device.nut',
+      agentFile: '',
+      deviceFile: '',
       stopOnFailure: false,
       timeout: 10,
       tests: ['*.test.nut', 'tests/**/*.test.nut']
@@ -55,16 +62,15 @@ class ImpTestFile {
       values = stripJsonComments(values);
       values = JSON.parse(values);
       values = Object.assign(this.defaultValues, values);
-
-      if (this.debug) {
-        // hide api key
-        const debugValues = /* clone value */ JSON.parse(JSON.stringify(values));
-        debugValues.apiKey = '[hidden]';
-        this._debug(c.blue('Config values:'), debugValues);
-      }
-
     } else {
-      this._debug(c.red('Config file not found'));
+      throw new Error('Config file not found');
+    }
+
+    if (this.debug) {
+      // hide api key
+      const debugValues = /* clone value */ JSON.parse(JSON.stringify(values));
+      debugValues.apiKey = '[hidden]';
+      this._debug(c.blue('Config values:'), debugValues);
     }
 
     return values;

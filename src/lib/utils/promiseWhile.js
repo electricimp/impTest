@@ -1,3 +1,9 @@
+/**
+ * Loop with promises
+ * 
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
+ */
+
 'use strict';
 
 /**
@@ -7,19 +13,18 @@
  * @return {Priomise}
  */
 module.exports = function promiseWhile(condition, action) {
-  const resolver = Promise.defer();
+  return new Promise((resolve, reject) => {
 
-  const loop = () => {
-    if (!condition()) {
-      return resolver.resolve();
-    }
+    const loop = () => {
+      if (condition()) {
+        action().then(() => {
+          process.nextTick(loop);
+        }, reject);
+      } else {
+        resolve();
+      }
+    };
 
-    return Promise.resolve(action())
-      .then(loop)
-      .catch(resolver.reject);
-  };
-
-  process.nextTick(loop);
-
-  return resolver.promise;
+    process.nextTick(loop);
+  });
 };

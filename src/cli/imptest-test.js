@@ -1,5 +1,7 @@
 /**
  * Test command
+ * 
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';
@@ -26,4 +28,4 @@ command.testCaseFile = commander.args[0] || null;
 command.configPath = commander.config;
 
 // go
-command.tryRun();
+command.run();
