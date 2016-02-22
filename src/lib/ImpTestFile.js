@@ -54,17 +54,17 @@ class ImpTestFile {
    * @private
    */
   _read() {
-    let values = {};
     this._debug(c.blue('Using config file:'), this.path);
+
+    let values = {};
 
     if (this.exists()) {
       values = fs.readFileSync(this.path).toString();
       values = stripJsonComments(values);
       values = JSON.parse(values);
-      values = Object.assign(this.defaultValues, values);
-    } else {
-      throw new Error('Config file not found');
     }
+
+    values = Object.assign(this.defaultValues, values);
 
     if (this.debug) {
       // hide api key
