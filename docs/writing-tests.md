@@ -72,7 +72,7 @@ Environment variables can be used in Squirrel source code and test cases like `#
 
 ### \_\_FILE\_\_ & \_\_LINE\_\_
 
-*\_\_FILE\_\_* and *\_\_LINE\_\_* variables are defined Squirrel source code and test cases, which may be useful for debugging information. Here is the usage example:
+*\_\_FILE\_\_* and *\_\_LINE\_\_* variables are defined in Squirrel source code and test cases, which may be useful for debugging information. Here is the usage example:
 
 ```squirrel
 this.assertEqual(
