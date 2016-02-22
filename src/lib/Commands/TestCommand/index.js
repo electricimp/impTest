@@ -96,6 +96,10 @@ class TestCommand extends AbstractCommand {
   _init() {
     super._init();
 
+    if (!this._impTestFile.exists()) {
+      throw new Error('Config file not found');
+    }
+
     // bundler
     this._bundler = new Bundler();
     this._bundler.debug = this.debug;
