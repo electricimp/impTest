@@ -39,9 +39,9 @@ class InitCommand extends AbstractCommand {
       return this
         ._promptApiKey()
         .then(() => this._getAccount())
+        .then(() => this._promptDevices())
 
         .catch((err) => {
-          this._blankLine();
           this._onError(err);
         });
     });
@@ -56,12 +56,49 @@ class InitCommand extends AbstractCommand {
     return new Promise((resolve, reject) => {
       prompt.multi([{
         key: 'apiKey',
-        label: c.blue('Build API key (leave blank to use IMP_BULD_API_KEY env var)'),
+        label: c.yellow('> Build API key (leave blank to use IMP_BULD_API_KEY env var)'),
         type: 'string',
         'default': ''
       }], (input) => {
         this._impTestFile.values.apiKey = input.apiKey ? input.apiKey : null;
         resolve();
+      });
+    });
+  }
+
+  /**
+   * Prompt device ids
+   * @return {Promise}
+   * @private
+   */
+  _promptDevices() {
+    return new Promise((resolve, reject) => {
+      prompt.multi([{
+        key: 'devices',
+        label: c.yellow('> Device IDs, comma-separated'),
+        type: 'string',
+        'default': ''
+      }], (input) => {
+        if (!input.devices) {
+
+          this._error('Please specify at least one device');
+          return this._promptDevices();
+
+        } else {
+
+          const devices = input.devices.split(',').map((v) => v.trim());
+          const accountDeviceIds = this._devices.map((v) => v.id);
+
+          for (const d of devices) {
+            if (accountDeviceIds.indexOf(d) === -1) {
+              this._error('Device ID ' + d + ' no found on your account');
+              return this._promptDevices();
+            }
+          }
+
+          this._impTestFile.values.devices = devices;
+          resolve();
+        }
       });
     });
   }
@@ -81,9 +118,17 @@ class InitCommand extends AbstractCommand {
       this._buildAPIClient
         .getDevices().then((res) => {
           this._devices = res.devices;
+          this._info(
+            c.blue('Your devices: ')
+            + this._devices.map((v) => v.id + ' (' + v.name + ')').join(', ')
+          );
         })
         .then(() => this._buildAPIClient.getModels().then((res) => {
           this._models = res.models;
+          this._info(
+            c.blue('Your models: ')
+            + this._models.map((v) => v.id + ' (' + v.name + ')').join(', ')
+          );
         }))
         .then(resolve)
         .catch(reject);
