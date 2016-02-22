@@ -14,6 +14,11 @@ const sprintf = require('sprintf-js').sprintf;
 const ImpTestFile = require('../ImpTestFile');
 const BuildAPIClient = require('../BuildAPIClient');
 
+/**
+ * Name for BuildAPI key env var
+ */
+const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
+
 class AbstractCommand {
 
   constructor() {
@@ -78,7 +83,7 @@ class AbstractCommand {
 
     // build api client
     this._buildAPIClient = new BuildAPIClient();
-    this._buildAPIClient.apiKey = this._impTestFile.values.apiKey;
+    this._buildAPIClient.apiKey = this._impTestFile.values.apiKey || process.env[BUILD_API_KEY_ENV_VAR];
     this._buildAPIClient.debug = this.debug;
   }
 
@@ -149,7 +154,7 @@ class AbstractCommand {
 
   /**
    * Print blank line
-   * @private
+   * @protected
    */
   _blankLine() {
     console.log(colors.gray(''));
