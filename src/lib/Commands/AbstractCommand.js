@@ -147,6 +147,14 @@ class AbstractCommand {
     this._success = false;
   }
 
+  /**
+   * Print blank line
+   * @private
+   */
+  _blankLine() {
+    console.log(colors.gray(''));
+  }
+
   // <editor-fold desc="Accessors" defaultstate="collapsed">
 
   get logTiming() {
@@ -173,7 +181,7 @@ class AbstractCommand {
     this._configPath = value;
   }
 
-// </editor-fold>
+  // </editor-fold>
 }
 
 module.exports = AbstractCommand;
