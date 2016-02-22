@@ -25,4 +25,4 @@ command.version = packageJson.version;
 command.configPath = commander.config;
 
 // go
-command.tryRun();
+command.run();
