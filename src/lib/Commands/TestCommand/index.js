@@ -496,14 +496,6 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   }
 
   /**
-   * Print blank line
-   * @private
-   */
-  _blankLine() {
-    console.log(c.gray(''));
-  }
-
-  /**
    * Read source code
    * @return {{agent, device}}
    * @private
