@@ -71,6 +71,7 @@ class TestCommand extends AbstractCommand {
           () => d++ < this._impTestFile.values.devices.length && !this._stopCommand,
           () => this._runDevice(d - 1, testFiles).catch((e) => {
             this._debug(c.red('Device #' + d + ' run failed'));
+            this._onError(e);
           })
         );
 
