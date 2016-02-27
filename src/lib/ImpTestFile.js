@@ -33,6 +33,13 @@ class ImpTestFile {
     return fs.existsSync(this._path);
   }
 
+  /**
+   * Write config
+   */
+  write() {
+    fs.writeFileSync(this.path, this.json);
+  }
+
   get defaultValues() {
     return {
       apiKey: null,
@@ -83,6 +90,18 @@ class ImpTestFile {
     }
 
     return this._values;
+  }
+
+  /**
+   * Get config as json
+   * @return {*}
+   */
+  get json() {
+    const v = this.values;
+    if (v.apiKey === null) delete v.apiKey;
+    if (v.deviceFile === null) v.deviceFile = false;
+    if (v.agentFile === null) v.agentFile = false;
+    return JSON.stringify(v, null, 4);
   }
 
   /**

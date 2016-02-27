@@ -56,6 +56,7 @@ class InitCommand extends AbstractCommand {
           .then(() => this._promptDevices())
           .then(() => this._promptFiles())
           .then(() => this._promtpOptions())
+          .then(() => this._writeConfig())
           .catch((err) => {
             this._onError(err);
           });
@@ -95,7 +96,7 @@ class InitCommand extends AbstractCommand {
   _getAccount() {
     return new Promise((resolve, reject) => {
 
-      console.log(c.grey('Retrieving your devices...'));
+      this._info('Retrieving your devices...');
 
       this._buildAPIClient.apiKey =
         this._impTestFile.values.apiKey
@@ -287,6 +288,65 @@ class InitCommand extends AbstractCommand {
     });
   }
 
+  _writeConfig() {
+    return new Promise((resolve, reject) => {
+
+      this._info(
+        'Your config: \n' 
+        + this._jsonHighlight(this._impTestFile.json)
+      );
+
+      prompt.multi([
+          {
+            key: 'write',
+            label: c.yellow('> Write to ' + this.configPath + '?'),
+            type: 'boolean',
+            'default': 'yes'
+          }
+        ],
+        (input) => {
+          if (input.write) {
+            this._impTestFile.write();
+            this._info('Config file saved');
+          }
+          resolve();
+        });
+    });
+  }
+
+  /**
+   * Syntax highlight JSON
+   * @param json
+   * @return {*}
+   * @private
+   */
+  _jsonHighlight(json) {
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      let cls = 'number';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'key';
+        } else {
+          cls = 'string';
+        }
+      } else if (/true|false/.test(match)) {
+        cls = 'boolean';
+      } else if (/null/.test(match)) {
+        cls = 'null';
+      }
+
+      const color = {
+        number: 'grey',
+        key: 'blue',
+        string: 'grey',
+        'boolean': 'grey',
+        'null': 'grey'
+      }[cls];
+
+      return c[color](match);
+    });
+  }
+
   get force() {
     return this._force;
   }
@@ -295,5 +355,6 @@ class InitCommand extends AbstractCommand {
     this._force = value;
   }
 }
+
 
 module.exports = InitCommand;
