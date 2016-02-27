@@ -96,39 +96,54 @@ class InitCommand extends AbstractCommand {
 
       this._buildAPIClient
         .getDevices().then((res) => {
-          this._devices = res.devices;
+          this._devices = {};
+          for (const device of res.devices) {
+            this._devices[device.id] = device;
+          }
         })
         .then(() => this._buildAPIClient.getModels().then((res) => {
-          this._models = res.models;
-
-          const table = new CliTable({
-            head: [
-              c.blue('Device ID'),
-              c.blue('Device Name'),
-              c.blue('Model ID'),
-              c.blue('Model Name')
-            ]
-          });
-
-          const deviceNames = {};
-
-          for (const device of this._devices) {
-            deviceNames[device.id] = device.name;
+          this._models = {};
+          for (const model of res.models) {
+            this._models[model.id] = model;
           }
-
-          for (const model of this._models) {
-            for (const deviceId of model.devices) {
-              table.push([deviceId, deviceNames[deviceId], model.id, model.name]);
-            }
-          }
-
-          console.log(table.toString());
         }))
+        .then(() => this._displayAccount())
         .then(resolve)
         .catch(reject);
     });
   }
 
+  /**
+   * Display account devices/models
+   * @private
+   */
+  _displayAccount() {
+    const table = new CliTable({
+      head: [
+        c.blue('Device ID'),
+        c.blue('Device Name'),
+        c.blue('Model ID'),
+        c.blue('Model Name'),
+        c.blue('State')
+      ]
+    });
+
+    for (const modelId in this._models) {
+      for (const deviceId of  this._models[modelId].devices) {
+        table.push([
+          deviceId,
+          this._devices[deviceId].name,
+          this._models[modelId].id,
+          this._models[modelId].name,
+          this._devices[deviceId].powerstate === 'online'
+            ? c.green(this._devices[deviceId].powerstate)
+            : c.red(this._devices[deviceId].powerstate)
+        ]);
+      }
+    }
+
+    this._info(table.toString());
+  }
 
   /**
    * Prompt device ids
@@ -137,36 +152,68 @@ class InitCommand extends AbstractCommand {
    */
   _promptDevices() {
     return new Promise((resolve, reject) => {
-      prompt.multi([{
-        key: 'devices',
-        label: c.yellow('> Device IDs to run tests on (comma-separated)'),
-        type: 'string',
-        'default': ''
-      }], (input) => {
-        if (!input.devices) {
 
-          this._error('Please specify at least one device');
-          return this._promptDevices();
+      prompt.multi([
+        {
+          key: 'devices',
+          label: c.yellow('> Device IDs to run tests on (comma-separated)'),
+          type: 'string',
+          'default': '',
+          validate: (value) => {
+            const devices = value.split(',').map((v) => v.trim());
+            const accountDeviceIds = this._devices.map((v) => v.id);
+            const models = new Set();
 
-        } else {
+            for (const d of devices) {
 
-          const devices = input.devices.split(',').map((v) => v.trim());
-          const accountDeviceIds = this._devices.map((v) => v.id);
+              if (accountDeviceIds.indexOf(d) === -1) {
+                this._error('Device ID ' + d + ' not found on your account');
+                return false;
+              }
 
-          for (const d of devices) {
-            if (accountDeviceIds.indexOf(d) === -1) {
-              this._error('Device ID ' + d + ' not found on your account');
-              return this._promptDevices();
+              if (!models.has(d.model_id)) {
+                models.add(d.model_id);
+              }
+
+              if (models.size > 1) {
+                this._error('Devices should be attached to the same model');
+                return false;
+              }
+
             }
-          }
 
-          this._impTestFile.values.devices = devices;
-          resolve();
-        }
+            return true;
+          }
+        },
+        {
+          key: 'model',
+          label: c.yellow('> Model ID'),
+          type: 'string',
+          'default': '',
+          validate: (value) => {
+            const devices = value.split(',').map((v) => v.trim());
+            const accountDeviceIds = this._devices.map((v) => v.id);
+
+            for (const d of devices) {
+              if (accountDeviceIds.indexOf(d) === -1) {
+                this._error('Device ID ' + d + ' not found on your account');
+                return false;
+              }
+            }
+
+            return true;
+          }
+        },
+      ], (input) => {
+        const devices = input.devices.split(',').map((v) => v.trim());
+        this._impTestFile.values.devices = devices;
+        resolve();
       });
+
     });
   }
 
+  // _prompt
 
   get force() {
     return this._force;
