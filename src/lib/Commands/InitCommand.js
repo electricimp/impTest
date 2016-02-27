@@ -47,7 +47,6 @@ class InitCommand extends AbstractCommand {
 
       return this
         ._promptApiKey()
-        .then(() => this._getAccount())
         .then(() => this._promptDevices())
 
         .catch((err) => {
@@ -65,14 +64,17 @@ class InitCommand extends AbstractCommand {
     return new Promise((resolve, reject) => {
       prompt.multi([{
         key: 'apiKey',
-        label: c.blue('> Build API key'),
+        label: c.yellow('> Build API key'),
         type: 'string',
         'default': '<IMP_BULD_API_KEY>'
       }], (input) => {
         this._impTestFile.values.apiKey = input.apiKey && input.apiKey !== '<IMP_BULD_API_KEY>'
           ? input.apiKey
           : null;
-        resolve();
+        resolve(this._getAccount().catch((e) => {
+          this._onError(e);
+          return this._promptApiKey();
+        }));
       });
     });
   }
