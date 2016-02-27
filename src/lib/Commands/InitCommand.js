@@ -7,6 +7,7 @@
 const c = require('colors');
 const prompt = require('cli-prompt');
 const AbstractCommand = require('./AbstractCommand');
+const CliTable = require('cli-table');
 
 /**
  * Name for BuildAPI key env var
@@ -64,11 +65,11 @@ class InitCommand extends AbstractCommand {
     return new Promise((resolve, reject) => {
       prompt.multi([{
         key: 'apiKey',
-        label: c.yellow('> Build API key'),
+        label: c.yellow('> Build API key (IMP_BULD_API_KEY environment variable is used if blank)'),
         type: 'string',
-        'default': '<IMP_BULD_API_KEY>'
+        'default': ''
       }], (input) => {
-        this._impTestFile.values.apiKey = input.apiKey && input.apiKey !== '<IMP_BULD_API_KEY>'
+        this._impTestFile.values.apiKey = input.apiKey
           ? input.apiKey
           : null;
         resolve(this._getAccount().catch((e) => {
@@ -80,6 +81,56 @@ class InitCommand extends AbstractCommand {
   }
 
   /**
+   * Get account info
+   * @return {Promise}
+   * @private
+   */
+  _getAccount() {
+    return new Promise((resolve, reject) => {
+
+      console.log(c.grey('Retrieving your devices...'));
+
+      this._buildAPIClient.apiKey =
+        this._impTestFile.values.apiKey
+        || process.env[BUILD_API_KEY_ENV_VAR];
+
+      this._buildAPIClient
+        .getDevices().then((res) => {
+          this._devices = res.devices;
+        })
+        .then(() => this._buildAPIClient.getModels().then((res) => {
+          this._models = res.models;
+
+          const table = new CliTable({
+            head: [
+              c.blue('Device ID'),
+              c.blue('Device Name'),
+              c.blue('Model ID'),
+              c.blue('Model Name')
+            ]
+          });
+
+          const deviceNames = {};
+
+          for (const device of this._devices) {
+            deviceNames[device.id] = device.name;
+          }
+
+          for (const model of this._models) {
+            for (const deviceId of model.devices) {
+              table.push([deviceId, deviceNames[deviceId], model.id, model.name]);
+            }
+          }
+
+          console.log(table.toString());
+        }))
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
+
+  /**
    * Prompt device ids
    * @return {Promise}
    * @private
@@ -88,7 +139,7 @@ class InitCommand extends AbstractCommand {
     return new Promise((resolve, reject) => {
       prompt.multi([{
         key: 'devices',
-        label: c.yellow('> Device IDs, comma-separated'),
+        label: c.yellow('> Device IDs to run tests on (comma-separated)'),
         type: 'string',
         'default': ''
       }], (input) => {
@@ -104,7 +155,7 @@ class InitCommand extends AbstractCommand {
 
           for (const d of devices) {
             if (accountDeviceIds.indexOf(d) === -1) {
-              this._error('Device ID ' + d + ' no found on your account');
+              this._error('Device ID ' + d + ' not found on your account');
               return this._promptDevices();
             }
           }
@@ -116,37 +167,6 @@ class InitCommand extends AbstractCommand {
     });
   }
 
-  /**
-   * Get account info
-   * @return {Promise}
-   * @private
-   */
-  _getAccount() {
-    return new Promise((resolve, reject) => {
-
-      this._buildAPIClient.apiKey =
-        this._impTestFile.values.apiKey
-        || process.env[BUILD_API_KEY_ENV_VAR];
-
-      this._buildAPIClient
-        .getDevices().then((res) => {
-          this._devices = res.devices;
-          this._info(
-            c.blue('Your devices: ')
-            + this._devices.map((v) => v.id + ' (' + v.name + ')').join(', ')
-          );
-        })
-        .then(() => this._buildAPIClient.getModels().then((res) => {
-          this._models = res.models;
-          this._info(
-            c.blue('Your models: ')
-            + this._models.map((v) => v.id + ' (' + v.name + ')').join(', ')
-          );
-        }))
-        .then(resolve)
-        .catch(reject);
-    });
-  }
 
   get force() {
     return this._force;
