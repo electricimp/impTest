@@ -33,17 +33,22 @@ class ImpTestFile {
     return fs.existsSync(this._path);
   }
 
+  /**
+   * Write config
+   */
+  write() {
+    fs.writeFileSync(this.path, this.json);
+  }
+
   get defaultValues() {
     return {
-      apiKey:
-        process.env.IMP_BUILD_API_KEY
-        || '',
+      apiKey: null,
       modelId: '',
       devices: [],
       agentFile: '',
       deviceFile: '',
       stopOnFailure: false,
-      timeout: 10,
+      timeout: 30,
       tests: ['*.test.nut', 'tests/**/*.test.nut']
     };
   }
@@ -54,17 +59,17 @@ class ImpTestFile {
    * @private
    */
   _read() {
-    let values = {};
     this._debug(c.blue('Using config file:'), this.path);
+
+    let values = {};
 
     if (this.exists()) {
       values = fs.readFileSync(this.path).toString();
       values = stripJsonComments(values);
       values = JSON.parse(values);
-      values = Object.assign(this.defaultValues, values);
-    } else {
-      throw new Error('Config file not found');
     }
+
+    values = Object.assign(this.defaultValues, values);
 
     if (this.debug) {
       // hide api key
@@ -85,6 +90,18 @@ class ImpTestFile {
     }
 
     return this._values;
+  }
+
+  /**
+   * Get config as json
+   * @return {*}
+   */
+  get json() {
+    const v = this.values;
+    if (v.apiKey === null) delete v.apiKey;
+    if (v.deviceFile === null) v.deviceFile = false;
+    if (v.agentFile === null) v.agentFile = false;
+    return JSON.stringify(v, null, 4);
   }
 
   /**

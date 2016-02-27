@@ -13,6 +13,7 @@ const glob = require('glob');
 const Errors = require('./Errors');
 const Session = require('./Session');
 const Bundler = require('../../Bundler');
+const dateformat = require('dateformat');
 const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
 const randomstring = require('randomstring');
@@ -59,6 +60,12 @@ class TestCommand extends AbstractCommand {
     return super._run()
       .then(() => {
 
+        // startup message
+        this._info('impTest/' + this.version);
+        this.logTiming = true; // enable log timing
+        this._info(c.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
+
+
         // find test case files
         const testFiles = this._findTestFiles();
 
@@ -96,6 +103,10 @@ class TestCommand extends AbstractCommand {
    */
   _init() {
     super._init();
+
+    if (!this._impTestFile.exists()) {
+      throw new Error('Config file not found');
+    }
 
     // bundler
     this._bundler = new Bundler();
@@ -490,14 +501,6 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    */
   _testLine() {
     this._log('test', c.grey, arguments);
-  }
-
-  /**
-   * Print blank line
-   * @private
-   */
-  _blankLine() {
-    console.log(c.gray(''));
   }
 
   /**

@@ -8,11 +8,15 @@
 'use strict';
 
 const colors = require('colors');
-const dateformat = require('dateformat');
 const DebugMixin = require('../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
 const ImpTestFile = require('../ImpTestFile');
 const BuildAPIClient = require('../BuildAPIClient');
+
+/**
+ * Name for BuildAPI key env var
+ */
+const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
 
 class AbstractCommand {
 
@@ -42,11 +46,6 @@ class AbstractCommand {
    */
   _run() {
     return new Promise((resolve, reject) => {
-      // startup message
-      this._info('impTest/' + this.version);
-      this.logTiming = true; // enable log timing
-      this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
-
       // initlization
       this._init();
 
@@ -78,7 +77,7 @@ class AbstractCommand {
 
     // build api client
     this._buildAPIClient = new BuildAPIClient();
-    this._buildAPIClient.apiKey = this._impTestFile.values.apiKey;
+    this._buildAPIClient.apiKey = this._impTestFile.values.apiKey || process.env[BUILD_API_KEY_ENV_VAR];
     this._buildAPIClient.debug = this.debug;
   }
 
@@ -108,10 +107,9 @@ class AbstractCommand {
    * Log message
    * @param {string} type
    * @param {[*]} params
-   * @private
+   * @protected
    */
   _log(type, colorFn, params) {
-
     let dateMessage = '';
 
     if (this.logTiming) {
@@ -147,6 +145,14 @@ class AbstractCommand {
     this._success = false;
   }
 
+  /**
+   * Print blank line
+   * @protected
+   */
+  _blankLine() {
+    console.log(colors.gray(''));
+  }
+
   // <editor-fold desc="Accessors" defaultstate="collapsed">
 
   get logTiming() {
@@ -173,7 +179,7 @@ class AbstractCommand {
     this._configPath = value;
   }
 
-// </editor-fold>
+  // </editor-fold>
 }
 
 module.exports = AbstractCommand;
