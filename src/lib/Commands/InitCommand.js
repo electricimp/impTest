@@ -1,5 +1,7 @@
 /**
  * Init command
+ *
+ * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';
@@ -46,7 +48,6 @@ class InitCommand extends AbstractCommand {
    */
   _promt() {
     return new Promise((resolve, reject) => {
-
       if (!this.force && this._impTestFile.exists()) {
         reject(new Error('Config file already exists, use -f option to overwrite'));
       } else {
@@ -55,7 +56,6 @@ class InitCommand extends AbstractCommand {
           .then(() => this._promptDevices())
           .then(() => this._promptFiles())
           .then(() => this._promtpOptions())
-
           .catch((err) => {
             this._onError(err);
           });
