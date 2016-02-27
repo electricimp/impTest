@@ -153,6 +153,8 @@ class InitCommand extends AbstractCommand {
   _promptDevices() {
     return new Promise((resolve, reject) => {
 
+      let defaultModelId = '';
+
       prompt.multi([
         {
           key: 'devices',
@@ -160,45 +162,41 @@ class InitCommand extends AbstractCommand {
           type: 'string',
           'default': '',
           validate: (value) => {
-            const devices = value.split(',').map((v) => v.trim());
-            const accountDeviceIds = this._devices.map((v) => v.id);
-            const models = new Set();
+            if (!value) return false;
 
-            for (const d of devices) {
+            const modelIds = new Set();
 
-              if (accountDeviceIds.indexOf(d) === -1) {
-                this._error('Device ID ' + d + ' not found on your account');
+            for (const deviceId of value.split(',').map((v) => v.trim())) {
+              if (!this._devices[deviceId]) {
+                this._error('Device ID ' + deviceId + ' not found on your account');
                 return false;
               }
 
-              if (!models.has(d.model_id)) {
-                models.add(d.model_id);
+              if (!modelIds.has(this._devices[deviceId].model_id)) {
+                modelIds.add(this._devices[deviceId].model_id);
+                defaultModelId = this._devices[deviceId].model_id;
               }
 
-              if (models.size > 1) {
+              if (modelIds.size > 1) {
                 this._error('Devices should be attached to the same model');
                 return false;
               }
-
             }
 
             return true;
           }
         },
         {
-          key: 'model',
+          key: 'modelId',
           label: c.yellow('> Model ID'),
           type: 'string',
-          'default': '',
+          'default': () => defaultModelId,
           validate: (value) => {
-            const devices = value.split(',').map((v) => v.trim());
-            const accountDeviceIds = this._devices.map((v) => v.id);
+            if (!value) return false;
 
-            for (const d of devices) {
-              if (accountDeviceIds.indexOf(d) === -1) {
-                this._error('Device ID ' + d + ' not found on your account');
-                return false;
-              }
+            if (!this._models[value]) {
+              this._error('Model ID ' + value + ' not found on your account');
+              return false;
             }
 
             return true;
@@ -207,6 +205,7 @@ class InitCommand extends AbstractCommand {
       ], (input) => {
         const devices = input.devices.split(',').map((v) => v.trim());
         this._impTestFile.values.devices = devices;
+        this._impTestFile.values.modelId = input.modelId;
         resolve();
       });
 
