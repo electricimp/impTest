@@ -8,7 +8,6 @@
 'use strict';
 
 const colors = require('colors');
-const dateformat = require('dateformat');
 const DebugMixin = require('../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
 const ImpTestFile = require('../ImpTestFile');
@@ -47,11 +46,6 @@ class AbstractCommand {
    */
   _run() {
     return new Promise((resolve, reject) => {
-      // startup message
-      this._info('impTest/' + this.version);
-      this.logTiming = true; // enable log timing
-      this._info(colors.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
-
       // initlization
       this._init();
 
@@ -113,10 +107,9 @@ class AbstractCommand {
    * Log message
    * @param {string} type
    * @param {[*]} params
-   * @private
+   * @protected
    */
   _log(type, colorFn, params) {
-
     let dateMessage = '';
 
     if (this.logTiming) {
