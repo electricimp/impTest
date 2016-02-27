@@ -52,8 +52,8 @@ class InitCommand extends AbstractCommand {
       } else {
         return this
           ._promptApiKey()
-          // .then(() => this._promptDevices())
-          // .then(() => this._promptFiles())
+          .then(() => this._promptDevices())
+          .then(() => this._promptFiles())
           .then(() => this._promtpOptions())
 
           .catch((err) => {
@@ -167,7 +167,7 @@ class InitCommand extends AbstractCommand {
           key: 'devices',
           label: c.yellow('> Device IDs to run tests on (comma-separated)'),
           type: 'string',
-          'default': '',
+          'default': this._impTestFile.values.devices.join(','),
           validate: (value) => {
             if (!value) return false;
 
@@ -270,13 +270,13 @@ class InitCommand extends AbstractCommand {
             key: 'stopOnFailure',
             label: c.yellow('> Stop testing on failures?'),
             type: 'boolean',
-            'default': 'no'
+            'default': this._impTestFile.values.stopOnFailure ? 'yes' : 'no'
           },
           {
             key: 'timeout',
             label: c.yellow('> Test methods timeout, seconds'),
             type: 'integer',
-            'default': 30
+            'default': this._impTestFile.values.timeout
           },
         ],
         (input) => {
