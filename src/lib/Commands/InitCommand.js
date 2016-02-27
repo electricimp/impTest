@@ -6,6 +6,7 @@
 
 'use strict';
 
+const fs = require('fs');
 const c = require('colors');
 const glob = require('glob');
 const prompt = require('cli-prompt');
@@ -26,7 +27,21 @@ class InitCommand extends AbstractCommand {
 
   _run() {
     return super._run()
-      .then(this._promt.bind(this));
+      .then(() => {
+        if (!this.force && this._impTestFile.exists()) {
+          throw new Error('Config file already exists, use -f option to overwrite');
+        }
+      })
+      .then(() => this._promptApiKey())
+      .then(() => this._promptDevices())
+      .then(() => this._promptFiles())
+      .then(() => this._promtpOptions())
+      .then(() => this._writeConfig())
+      .then((written) => {
+        if (written && (this._impTestFile.values.deviceFile || this._impTestFile.values.agentFile)) {
+          return this._generateBasicTests();
+        }
+      });
   }
 
   /**
@@ -39,29 +54,6 @@ class InitCommand extends AbstractCommand {
     // convert params to true array (from arguments)
     params = Array.prototype.slice.call(params);
     console.log.apply(this, params);
-  }
-
-  /**
-   * Prompt for values
-   * @return {Promise}
-   * @private
-   */
-  _promt() {
-    return new Promise((resolve, reject) => {
-      if (!this.force && this._impTestFile.exists()) {
-        reject(new Error('Config file already exists, use -f option to overwrite'));
-      } else {
-        return this
-          ._promptApiKey()
-          .then(() => this._promptDevices())
-          .then(() => this._promptFiles())
-          .then(() => this._promtpOptions())
-          .then(() => this._writeConfig())
-          .catch((err) => {
-            this._onError(err);
-          });
-      }
-    });
   }
 
   /**
@@ -314,9 +306,77 @@ class InitCommand extends AbstractCommand {
             this._impTestFile.write();
             this._info('Config file saved');
           }
+          resolve(input.write);
+        });
+    });
+  }
+
+  /**
+   * Generate sample tests
+   * @return {Promise}
+   * @private
+   */
+  _generateBasicTests() {
+    return new Promise((resolve, reject) => {
+      prompt.multi([
+          {
+            key: 'generate',
+            label: c.yellow('> Generate sample test cases?'),
+            type: 'boolean',
+            'default': 'yes'
+          }
+        ],
+        (input) => {
+          if (input.generate) {
+            this._writeBasicTest('agent')
+            this._writeBasicTest('device');
+          }
+
           resolve();
         });
     });
+  }
+
+  /**
+   * Write basic test
+   * @param {'agent'|'device'} type
+   * @private
+   */
+  _writeBasicTest(type) {
+
+    if ((type == 'agent' && this._impTestFile.values.agentFile)
+        || (type == 'device' && this._impTestFile.values.deviceFile)) {
+
+      const cwd = this._impTestFile.dir;
+
+      // create dir
+      if (!fs.existsSync(cwd + '/tests')) fs.mkdirSync(cwd + '/tests');
+
+      const fileName = 'tests/' + type + '.test.nut';
+      const file = cwd + '/' + fileName;
+
+      if (!fs.existsSync(file)) {
+        fs.writeFileSync(file,
+          `class ${type === 'agent' ? 'Agent' : 'Device'}TestCase extends ImpTestCase {
+  function setUp() {
+    return 'Hi from #{__FILE__}!';
+  }
+
+  function testSomething() {
+    this.assertTrue(this instanceof ImpTestCase);
+  }
+
+  function tearDown() {
+    return 'Test finished';
+  }
+}\n`
+        );
+        this._info('Created file "' + fileName + '"');
+      } else {
+        this._info('File "' + fileName + '" already exists');
+      }
+    }
+
   }
 
   /**
