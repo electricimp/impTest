@@ -4,7 +4,6 @@
 
 'use strict';
 
-const fs = require('fs');
 const c = require('colors');
 const prompt = require('cli-prompt');
 const AbstractCommand = require('./AbstractCommand');
@@ -27,13 +26,23 @@ class InitCommand extends AbstractCommand {
   }
 
   /**
+   * Log message
+   * @param {string} type
+   * @param {[*]} params
+   * @protected
+   */
+  _log(type, colorFn, params) {
+    // convert params to true array (from arguments)
+    params = Array.prototype.slice.call(params);
+    console.log.apply(this, params);
+  }
+
+  /**
    * Prompt for values
    * @return {Promise}
    * @private
    */
   _promt() {
-    this._blankLine();
-
     return new Promise((resolve, reject) => {
 
       return this
@@ -56,11 +65,13 @@ class InitCommand extends AbstractCommand {
     return new Promise((resolve, reject) => {
       prompt.multi([{
         key: 'apiKey',
-        label: c.yellow('> Build API key (leave blank to use IMP_BULD_API_KEY env var)'),
+        label: c.blue('> Build API key'),
         type: 'string',
-        'default': ''
+        'default': '<IMP_BULD_API_KEY>'
       }], (input) => {
-        this._impTestFile.values.apiKey = input.apiKey ? input.apiKey : null;
+        this._impTestFile.values.apiKey = input.apiKey && input.apiKey !== '<IMP_BULD_API_KEY>'
+          ? input.apiKey
+          : null;
         resolve();
       });
     });
