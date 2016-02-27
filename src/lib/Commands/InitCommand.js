@@ -359,7 +359,7 @@ class InitCommand extends AbstractCommand {
         fs.writeFileSync(file,
           `class ${type === 'agent' ? 'Agent' : 'Device'}TestCase extends ImpTestCase {
   function setUp() {
-    return 'Hi from #{__FILE__}!';
+    return "Hi from #{__FILE__}!";
   }
 
   function testSomething() {
@@ -367,7 +367,7 @@ class InitCommand extends AbstractCommand {
   }
 
   function tearDown() {
-    return 'Test finished';
+    return "Test finished";
   }
 }\n`
         );
