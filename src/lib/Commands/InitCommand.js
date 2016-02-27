@@ -49,8 +49,9 @@ class InitCommand extends AbstractCommand {
 
       return this
         ._promptApiKey()
-        .then(() => this._promptDevices())
-        .then(() => this._promptFiles())
+        // .then(() => this._promptDevices())
+        // .then(() => this._promptFiles())
+        .then(() => this._promtpOptions())
 
         .catch((err) => {
           this._onError(err);
@@ -148,7 +149,7 @@ class InitCommand extends AbstractCommand {
   }
 
   /**
-   * Prompt device ids
+   * Prompt device ids/model id
    * @return {Promise}
    * @private
    */
@@ -214,6 +215,11 @@ class InitCommand extends AbstractCommand {
     });
   }
 
+  /**
+   * Proimpt files
+   * @return {Promise}
+   * @private
+   */
   _promptFiles() {
     return new Promise((resolve, reject) => {
 
@@ -243,6 +249,35 @@ class InitCommand extends AbstractCommand {
             input.agentFile && input.agentFile !== '-'
             && input.agentFile !== '<no file>'
               ? input.agentFile : null;
+          resolve();
+        });
+    });
+  }
+
+  /**
+   * Prompt options
+   * @return {Promise}
+   * @private
+   */
+  _promtpOptions() {
+    return new Promise((resolve, reject) => {
+      prompt.multi([
+          {
+            key: 'stopOnFailure',
+            label: c.yellow('> Stop testing on failures?'),
+            type: 'boolean',
+            'default': 'no'
+          },
+          {
+            key: 'timeout',
+            label: c.yellow('> Test methods timeout, seconds'),
+            type: 'integer',
+            'default': 30
+          },
+        ],
+        (input) => {
+          this._impTestFile.values.stopOnFailure = input.stopOnFailure;
+          this._impTestFile.values.timeout = input.timeout;
           resolve();
         });
     });
