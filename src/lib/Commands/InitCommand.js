@@ -288,11 +288,16 @@ class InitCommand extends AbstractCommand {
     });
   }
 
+  /**
+   * Write config
+   * @return {Promise}
+   * @private
+   */
   _writeConfig() {
     return new Promise((resolve, reject) => {
 
       this._info(
-        'Your config: \n' 
+        'Your config: \n'
         + this._jsonHighlight(this._impTestFile.json)
       );
 
