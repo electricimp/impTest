@@ -47,15 +47,19 @@ class InitCommand extends AbstractCommand {
   _promt() {
     return new Promise((resolve, reject) => {
 
-      return this
-        ._promptApiKey()
-        // .then(() => this._promptDevices())
-        // .then(() => this._promptFiles())
-        .then(() => this._promtpOptions())
+      if (!this.force && this._impTestFile.exists()) {
+        reject(new Error('Config file already exists, use -f option to overwrite'));
+      } else {
+        return this
+          ._promptApiKey()
+          // .then(() => this._promptDevices())
+          // .then(() => this._promptFiles())
+          .then(() => this._promtpOptions())
 
-        .catch((err) => {
-          this._onError(err);
-        });
+          .catch((err) => {
+            this._onError(err);
+          });
+      }
     });
   }
 
