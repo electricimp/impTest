@@ -5,6 +5,7 @@
 'use strict';
 
 const c = require('colors');
+const glob = require('glob');
 const prompt = require('cli-prompt');
 const AbstractCommand = require('./AbstractCommand');
 const CliTable = require('cli-table');
@@ -49,6 +50,7 @@ class InitCommand extends AbstractCommand {
       return this
         ._promptApiKey()
         .then(() => this._promptDevices())
+        .then(() => this._promptFiles())
 
         .catch((err) => {
           this._onError(err);
@@ -212,7 +214,39 @@ class InitCommand extends AbstractCommand {
     });
   }
 
-  // _prompt
+  _promptFiles() {
+    return new Promise((resolve, reject) => {
+
+      const deviceFiles = glob.sync('**/*device*.nut', {cwd: this._impTestFile.dir});
+      const agentFiles = glob.sync('**/*agent*.nut', {cwd: this._impTestFile.dir});
+
+      prompt.multi([
+          {
+            key: 'deviceFile',
+            label: c.yellow('> Device file' + (deviceFiles[0] ? ' (type "-" for no device file)' : '')),
+            type: 'string',
+            'default': () => deviceFiles[0] || '<no file>'
+          },
+          {
+            key: 'agentFile',
+            label: c.yellow('> Agent file' + (agentFiles[0] ? ' (type "-" for no agent file)' : '')),
+            type: 'string',
+            'default': () => agentFiles[0] || '<no file>'
+          }
+        ],
+        (input) => {
+          this._impTestFile.values.deviceFile =
+            input.deviceFile && input.deviceFile !== '-'
+            && input.deviceFile !== '<no file>'
+              ? input.deviceFile : null;
+          this._impTestFile.values.agentFile =
+            input.agentFile && input.agentFile !== '-'
+            && input.agentFile !== '<no file>'
+              ? input.agentFile : null;
+          resolve();
+        });
+    });
+  }
 
   get force() {
     return this._force;
