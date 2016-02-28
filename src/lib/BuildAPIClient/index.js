@@ -190,28 +190,6 @@ class BuildAPIClient {
   /**
    * Get model
    *
-   * @see https://electricimp.com/docs/buildapi/model/get/
-   * @param {string} modelId
-   * @return {Promise}
-   */
-  getModel(modelId) {
-    return this.request('GET', '/models/' + modelId);
-  }
-
-  /**
-   * Restart model
-   * @see https://electricimp.com/docs/buildapi/model/restart/
-   *
-   * @param {string} modelId
-   * @returns {Promise}
-   */
-  restartModel(modelId) {
-    return this.request('POST', `/models/${modelId}/restart`);
-  }
-
-  /**
-   * Get model
-   *
    * @see https://electricimp.com/docs/buildapi/model/create/
    * @param {string} name
    * @return {Promise}
@@ -234,6 +212,17 @@ class BuildAPIClient {
   }
 
   /**
+   * Get model
+   *
+   * @see https://electricimp.com/docs/buildapi/model/get/
+   * @param {string} modelId
+   * @return {Promise}
+   */
+  getModel(modelId) {
+    return this.request('GET', '/models/' + modelId);
+  }
+
+  /**
    * Update model
    *
    * @see https://electricimp.com/docs/buildapi/model/update/
@@ -249,15 +238,14 @@ class BuildAPIClient {
   }
 
   /**
-   * Get code revision
+   * Restart model
+   * @see https://electricimp.com/docs/buildapi/model/restart/
    *
-   * @see https://electricimp.com/docs/buildapi/coderev/get/
-   * @param modelId
-   * @param buildNumber
-   * @return {Promise}
+   * @param {string} modelId
+   * @returns {Promise}
    */
-  getRevision(modelId, buildNumber) {
-    return this.request('GET', `/models/${modelId}/revisions/${buildNumber}`);
+  restartModel(modelId) {
+    return this.request('POST', `/models/${modelId}/restart`);
   }
 
   /**
@@ -302,6 +290,18 @@ class BuildAPIClient {
       release_notes: releaseNotes || undefined
     });
   };
+
+  /**
+   * Get code revision
+   *
+   * @see https://electricimp.com/docs/buildapi/coderev/get/
+   * @param modelId
+   * @param buildNumber
+   * @return {Promise}
+   */
+  getRevision(modelId, buildNumber) {
+    return this.request('GET', `/models/${modelId}/revisions/${buildNumber}`);
+  }
 
   /**
    * Get device logs
