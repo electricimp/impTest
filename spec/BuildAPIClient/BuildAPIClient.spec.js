@@ -11,6 +11,7 @@ describe('BuildAPIClient test suite', () => {
   let client;
   let device;
   let model;
+  let revision;
 
   beforeEach(() => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
@@ -80,7 +81,10 @@ describe('BuildAPIClient test suite', () => {
       `server.log("hi there from device @ ${(new Date()).toUTCString()}")`,
       `server.log("hi there from agent @ ${(new Date()).toUTCString()}")`
       )
-      .then(done)
+      .then((res) => {
+        revision  = res.revision;
+        done();
+      })
       .catch((error) => {
         done.fail(error);
       });
@@ -150,6 +154,14 @@ describe('BuildAPIClient test suite', () => {
       .then((res) => {
         expect(res.revisions).toBeArray();
         expect(res.revisions.length).toBe(1);
+      })
+      .then(done, done.fail);
+  });
+
+  it('should get a revision', (done) => {
+    client.getRevision(config.model_id, revision.version)
+      .then((res) => {
+        expect(res.revision).toEqual(revision);
       })
       .then(done, done.fail);
   });

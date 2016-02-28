@@ -199,6 +199,18 @@ class BuildAPIClient {
   }
 
   /**
+   * Get code revision
+   *
+   * @see https://electricimp.com/docs/buildapi/coderev/get/
+   * @param modelId
+   * @param buildNumber
+   * @return {Promise}
+   */
+  getRevision(modelId, buildNumber) {
+    return this.request('GET', `/models/${modelId}/revisions/${buildNumber}`);
+  }
+
+  /**
    * Upload a new code revision
    * @see https://electricimp.com/docs/buildapi/coderev/upload/
    *
