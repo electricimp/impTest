@@ -1,3 +1,7 @@
 [submodule "src/impUnit"]
 	path = src/impUnit
 	url = https://github.com/electricimp/impUnit.git
+
+[submodule "src/lib/BuilAPIClient"]
+	path = src/lib/BuilAPIClient
+	url = https://github.com/electricimp/imp-build-api-v4.git

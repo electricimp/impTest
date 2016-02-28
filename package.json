@@ -25,7 +25,6 @@
     "preprocessor": "^1.4.0",
     "random-words": "0.0.1",
     "randomstring": "^1.1.3",
-    "request": "^2.67.0",
     "sprintf-js": "^1.0.3",
     "strip-json-comments": "^2.0.0"
   },
