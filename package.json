@@ -30,7 +30,8 @@
     "strip-json-comments": "^2.0.0"
   },
   "devDependencies": {
-    "jasmine": "^2.4.1"
+    "jasmine": "^2.4.1",
+    "jasmine-expect": "^2.0.2"
   },
   "bugs": {
     "url": "https://github.com/electricimp/impTest/issues"

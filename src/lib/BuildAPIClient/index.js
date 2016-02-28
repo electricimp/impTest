@@ -151,17 +151,16 @@ class BuildAPIClient {
    *
    * @see https://electricimp.com/docs/buildapi/device/update/
    * @see https://electricimp.com/docs/buildapi/device/
-   *
    * @param {string} deviceId
    * @param {string} name
    * @param {string} modelId
+   * @return {Promise}
    */
   updateDevice(deviceId, name, modelId) {
-    const body = {};
-    if (name !== undefined) body.name = name;
-    if (modelId !== undefined) body.model_id = modelId;
-
-    return this.request('PUT', '/devices/' + deviceId, body);
+    return this.request('PUT', '/devices/' + deviceId, {
+      name,
+      model_id: modelId
+    });
   }
 
   /**
@@ -211,11 +210,36 @@ class BuildAPIClient {
    */
   createRevision(modelId, deviceCode, agentCode, releaseNotes) {
     return this.request('POST', `/models/${modelId}/revisions`, {
-      device_code: deviceCode,
-      agent_code: agentCode,
-      release_notes: releaseNotes
+      device_code: deviceCode || undefined,
+      agent_code: agentCode || undefined,
+      release_notes: releaseNotes || undefined
     });
   };
+
+  /**
+   * List code revisions
+   *
+   * @see https://electricimp.com/docs/buildapi/coderev/list/
+   *
+   * @param {string} modelId
+   * @param {Date|string} [since=undefined] - start date (string in ISO 8601 format or Date instance)
+   * @param {Date|string} [until=undefined] - end date (string in ISO 8601 format or Date instance)
+   * @param {number} [buildMin=undefined] - start revision
+   * @param {number} [buildMax=undefined] - end revison
+   * @returns {Promise}
+   */
+  listRevisions(modelId, since, until, buildMin, buildMax) {
+    // convert since/until to ISO 8601 format
+    since && (since instanceof Date) && (since = since.toISOString());
+    until && (until instanceof Date) && (until = until.toISOString());
+
+    return this.request('GET', '/models/' + modelId + '/revisions', {
+      since: since || undefined,
+      until: until || undefined,
+      build_min: buildMin || undefined,
+      build_max: buildMax || undefined
+    });
+  }
 
   /**
    * Restart model
@@ -230,9 +254,9 @@ class BuildAPIClient {
 
   /**
    * Get device logs
+   *
    * @see https://electricimp.com/docs/buildapi/logentry/list/
    * @see https://electricimp.com/docs/buildapi/logentry/
-   *
    * @param deviceId
    * @param {Date|string} [since=undefined] - start date (string in ISO 8601 format or Date instance)
    * @returns {Promise}
@@ -244,10 +268,12 @@ class BuildAPIClient {
   }
 
   /**
+   * Stream device logs
    *
    * @param deviceID
    * @param {function(data)} [callback] Data callback. If it returns false, streaming stops.
    *  Callback with no data means we've obtained the poll url.
+   * @return {Promise}
    */
   streamDeviceLogs(deviceId, callback) {
     return new Promise((resolve, reject) => {

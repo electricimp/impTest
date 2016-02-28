@@ -1,5 +1,7 @@
 'use strict';
 
+require('jasmine-expect');
+
 var config = require('../config');
 var BuildAPIClient = require('../../src/lib/BuildAPIClient');
 var parseBool = require('../../src/lib/utils/parseBool');
@@ -131,6 +133,24 @@ describe('BuildAPIClient test suite', () => {
       .then((res) => expect(res.device.name).toBe(newName))
       .then(() => client.updateDevice(config.device_id, oldName))
       .then((res) => expect(res.device.name).toBe(oldName))
+      .then(done, done.fail);
+  });
+
+  it('should list all revisions', (done) => {
+    client.listRevisions(config.model_id)
+      .then((res) => {
+        expect(res.revisions).toBeArray();
+        expect(res.revisions.length).toBeGreaterThan(0);
+      })
+      .then(done, done.fail);
+  });
+
+  it('should list first revision', (done) => {
+    client.listRevisions(config.model_id, undefined, undefined, undefined, 1 /* buildMax*/)
+      .then((res) => {
+        expect(res.revisions).toBeArray();
+        expect(res.revisions.length).toBe(1);
+      })
       .then(done, done.fail);
   });
 });
