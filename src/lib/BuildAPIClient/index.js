@@ -69,9 +69,11 @@ class BuildAPIClient {
       // do request to build api
       request(options, (error, response, result) => {
 
-        // debug output
-        response && this._debug(c.blue('Response code:'), response.statusCode);
-        result && this._debug(c.blue('Response:'), result);
+        if (response) {
+          this._debug(c.blue('Response body:'), response.body);
+          this._debug(c.blue('Response code:'), response.statusCode);
+          this._debug(c.blue('Response headers:'), response.headers);
+        }
 
         // handle result
 
