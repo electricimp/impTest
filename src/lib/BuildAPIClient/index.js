@@ -199,6 +199,17 @@ class BuildAPIClient {
   }
 
   /**
+   * Restart model
+   * @see https://electricimp.com/docs/buildapi/model/restart/
+   *
+   * @param {string} modelId
+   * @returns {Promise}
+   */
+  restartModel(modelId) {
+    return this.request('POST', `/models/${modelId}/restart`);
+  }
+
+  /**
    * Get code revision
    *
    * @see https://electricimp.com/docs/buildapi/coderev/get/
@@ -209,24 +220,6 @@ class BuildAPIClient {
   getRevision(modelId, buildNumber) {
     return this.request('GET', `/models/${modelId}/revisions/${buildNumber}`);
   }
-
-  /**
-   * Upload a new code revision
-   * @see https://electricimp.com/docs/buildapi/coderev/upload/
-   *
-   * @param {string} modelId
-   * @param {string} [deviceCode=undefined]
-   * @param {string} [agentCode=undefined]
-   * @param {string} [releaseNotes=undefined]
-   * @returns {Promise}
-   */
-  createRevision(modelId, deviceCode, agentCode, releaseNotes) {
-    return this.request('POST', `/models/${modelId}/revisions`, {
-      device_code: deviceCode || undefined,
-      agent_code: agentCode || undefined,
-      release_notes: releaseNotes || undefined
-    });
-  };
 
   /**
    * List code revisions
@@ -254,15 +247,22 @@ class BuildAPIClient {
   }
 
   /**
-   * Restart model
-   * @see https://electricimp.com/docs/buildapi/model/restart/
+   * Upload a new code revision
+   * @see https://electricimp.com/docs/buildapi/coderev/upload/
    *
    * @param {string} modelId
+   * @param {string} [deviceCode=undefined]
+   * @param {string} [agentCode=undefined]
+   * @param {string} [releaseNotes=undefined]
    * @returns {Promise}
    */
-  restartModel(modelId) {
-    return this.request('POST', `/models/${modelId}/restart`);
-  }
+  createRevision(modelId, deviceCode, agentCode, releaseNotes) {
+    return this.request('POST', `/models/${modelId}/revisions`, {
+      device_code: deviceCode || undefined,
+      agent_code: agentCode || undefined,
+      release_notes: releaseNotes || undefined
+    });
+  };
 
   /**
    * Get device logs
