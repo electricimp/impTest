@@ -147,6 +147,17 @@ class BuildAPIClient {
   }
 
   /**
+   * Restart a device
+   *
+   * @see https://electricimp.com/docs/buildapi/device/restart/
+   * @param {string} deviceId
+   * @return {Promise}
+   */
+  restartDevice(deviceId) {
+    return this.request('POST', '/devices/' + deviceId + '/restart');
+  }
+
+  /**
    * Get models
    *
    * @see https://electricimp.com/docs/buildapi/model/list/

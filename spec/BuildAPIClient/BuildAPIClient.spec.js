@@ -110,16 +110,10 @@ describe('BuildAPIClient test suite', () => {
 
   });
 
-  it('should stream device logs', (done) => {
+  it('should restart a device', (done) => {
 
-    let n = 0;
-
-    client.streamDeviceLogs(config.device_id, function (data) {
-      return ++n < 5;
-    }).then(() => {
-      expect(n).toBe(5);
-      done();
-    }).catch(done.fail);
+    client.restartDevice(config.device_id)
+      .then(done, done.fail);
 
   });
 
