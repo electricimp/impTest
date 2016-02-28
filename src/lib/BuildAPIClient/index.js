@@ -223,6 +223,17 @@ class BuildAPIClient {
   }
 
   /**
+   * Get model
+   *
+   * @see https://electricimp.com/docs/buildapi/model/delete/
+   * @param {string} modelId
+   * @return {Promise}
+   */
+  deleteModel(modelId) {
+    return this.request('DELETE', '/models/' + modelId);
+  }
+
+  /**
    * Get code revision
    *
    * @see https://electricimp.com/docs/buildapi/coderev/get/

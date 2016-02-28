@@ -82,7 +82,7 @@ describe('BuildAPIClient test suite', () => {
       `server.log("hi there from agent @ ${(new Date()).toUTCString()}")`
       )
       .then((res) => {
-        revision  = res.revision;
+        revision = res.revision;
         done();
       })
       .catch((error) => {
@@ -166,17 +166,31 @@ describe('BuildAPIClient test suite', () => {
       .then(done, done.fail);
   });
 
-  it('should create a model', (done) => {
+  it('should create and delete a model', (done) => {
+
     let newModel;
     const newModelName = 'model_'
-                    + parseInt(Math.random() * 1e6).toString()
-                    + parseInt(Math.random() * 1e6).toString();
+                         + parseInt(Math.random() * 1e6).toString()
+                         + parseInt(Math.random() * 1e6).toString();
 
 
     client.createModel(newModelName)
       .then((res) => {
         expect(res.model.name).toBe(newModelName);
         newModel = res.model;
+      })
+      .then(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            client.deleteModel(newModel.id).then(resolve, reject);
+          }, 1000);
+        });
+      })
+      .then(() => client.getModels())
+      .then((res) => {
+        for (const model of res.models) {
+          expect(model.id).not.toBe(newModel.id);
+        }
       })
       .then(done, done.fail);
   });
