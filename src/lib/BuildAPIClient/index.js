@@ -147,6 +147,24 @@ class BuildAPIClient {
   }
 
   /**
+   * Update device properties
+   *
+   * @see https://electricimp.com/docs/buildapi/device/update/
+   * @see https://electricimp.com/docs/buildapi/device/
+   *
+   * @param {string} deviceId
+   * @param {string} name
+   * @param {string} modelId
+   */
+  updateDevice(deviceId, name, modelId) {
+    const body = {};
+    if (name !== undefined) body.name = name;
+    if (modelId !== undefined) body.model_id = modelId;
+
+    return this.request('PUT', '/devices/' + deviceId, body);
+  }
+
+  /**
    * Restart a device
    *
    * @see https://electricimp.com/docs/buildapi/device/restart/

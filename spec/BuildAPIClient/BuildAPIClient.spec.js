@@ -7,8 +7,8 @@ var parseBool = require('../../src/lib/utils/parseBool');
 describe('BuildAPIClient test suite', () => {
 
   let client;
-  let modelId;
-  let deviceId;
+  let device;
+  let model;
 
   beforeEach(() => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
@@ -22,7 +22,7 @@ describe('BuildAPIClient test suite', () => {
     client.getDevices()
       .then((res) => {
         expect(res.devices.length).toBeGreaterThan(0);
-        deviceId = res.devices[0].id;
+        device = res.devices[0];
         done();
       })
       .catch((error) => {
@@ -33,9 +33,9 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get a device', (done) => {
 
-    client.getDevice(deviceId)
+    client.getDevice(device.id)
       .then((res) => {
-        expect(res.device.id).toBe(deviceId);
+        expect(res.device.id).toBe(device.id);
         done();
       })
       .catch((error) => {
@@ -49,7 +49,7 @@ describe('BuildAPIClient test suite', () => {
     client.getModels()
       .then((res) => {
         expect(res.models.length).toBeGreaterThan(0);
-        modelId = res.models[0].id;
+        model = res.models[0];
         done();
       })
       .catch((error) => {
@@ -60,9 +60,9 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get a model', (done) => {
 
-    client.getModel(modelId)
+    client.getModel(model.id)
       .then((res) => {
-        expect(res.model.id).toBe(modelId);
+        expect(res.model.id).toBe(model.id);
         done();
       })
       .catch((error) => {
@@ -74,9 +74,9 @@ describe('BuildAPIClient test suite', () => {
   it('should push a new revision', (done) => {
 
     client.createRevision(
-        config.model_id,
-        `server.log("hi there from device @ ${(new Date()).toUTCString()}")`,
-        `w <- function() { server.log("Now: " + time()); imp.wakeup(0.2, w); } w();`
+      config.model_id,
+      `server.log("hi there from device @ ${(new Date()).toUTCString()}")`,
+      `server.log("hi there from agent @ ${(new Date()).toUTCString()}")`
       )
       .then(done)
       .catch((error) => {
@@ -117,4 +117,20 @@ describe('BuildAPIClient test suite', () => {
 
   });
 
+  it('should update a device', (done) => {
+
+    let oldName;
+    const newName = 'dev_'
+                    + parseInt(Math.random() * 1e6).toString()
+                    + parseInt(Math.random() * 1e6).toString();
+
+    client.getDevice(config.device_id)
+      .then((res) => oldName = res.device.name)
+      .then(() => client.updateDevice(config.device_id, newName))
+      .then(() => client.getDevice(config.device_id))
+      .then((res) => expect(res.device.name).toBe(newName))
+      .then(() => client.updateDevice(config.device_id, oldName))
+      .then((res) => expect(res.device.name).toBe(oldName))
+      .then(done, done.fail);
+  });
 });
