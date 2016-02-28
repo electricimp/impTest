@@ -166,30 +166,38 @@ describe('BuildAPIClient test suite', () => {
       .then(done, done.fail);
   });
 
-  it('should create and delete a model', (done) => {
+  it('should create, update and delete a model', (done) => {
 
     let newModel;
-    const newModelName = 'model_'
-                         + parseInt(Math.random() * 1e6).toString()
-                         + parseInt(Math.random() * 1e6).toString();
+    let newModelName = 'model_'
+                       + parseInt(Math.random() * 1e6).toString()
+                       + parseInt(Math.random() * 1e6).toString();
 
+    const delay = (time) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(resolve, time);
+      });
+    };
 
     client.createModel(newModelName)
       .then((res) => {
         expect(res.model.name).toBe(newModelName);
         newModel = res.model;
+        newModelName += '_';
       })
-      .then(() => {
-        return new Promise((resolve, reject) => {
-          setTimeout(() => {
-            client.deleteModel(newModel.id).then(resolve, reject);
-          }, 1000);
-        });
-      })
+      .then(() => delay(1000))
+      .then(() => client.updateModel(newModel.id, newModelName))
+      .then(() => delay(1000))
+      .then(() => client.getModel(newModel.id))
+      .then((res) => expect(res.model.name).toBe(newModelName))
+      .then(() => delay(1000))
+      .then(() => client.deleteModel(newModel.id))
+      .then(() => delay(1000))
       .then(() => client.getModels())
       .then((res) => {
         for (const model of res.models) {
           expect(model.id).not.toBe(newModel.id);
+          expect(model.name).not.toBe(newModel.id);
         }
       })
       .then(done, done.fail);

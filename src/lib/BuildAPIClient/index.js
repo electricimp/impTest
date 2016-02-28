@@ -129,9 +129,9 @@ class BuildAPIClient {
    */
   getDevices(name, deviceId, modelId) {
     return this.request('GET', '/devices', {
-      device_id: deviceId,
-      model_id: modelId,
-      name: name
+      device_id: deviceId || undefined,
+      model_id: modelId || undefined,
+      name: name || undefined
     });
   }
 
@@ -152,14 +152,14 @@ class BuildAPIClient {
    * @see https://electricimp.com/docs/buildapi/device/update/
    * @see https://electricimp.com/docs/buildapi/device/
    * @param {string} deviceId
-   * @param {string} name
-   * @param {string} modelId
+   * @param {string} [name]
+   * @param {string} [modelId]
    * @return {Promise}
    */
   updateDevice(deviceId, name, modelId) {
     return this.request('PUT', '/devices/' + deviceId, {
-      name,
-      model_id: modelId
+      name: name || undefined,
+      model_id: modelId || undefined
     });
   }
 
@@ -183,7 +183,7 @@ class BuildAPIClient {
    */
   getModels(name) {
     return this.request('GET', '/models', {
-      name: name
+      name: name || undefined
     });
   }
 
@@ -234,6 +234,21 @@ class BuildAPIClient {
   }
 
   /**
+   * Update model
+   *
+   * @see https://electricimp.com/docs/buildapi/model/update/
+   * @see https://electricimp.com/docs/buildapi/model/
+   * @param {string} modelId
+   * @param {string} [name]
+   * @return {Promise}
+   */
+  updateModel(modelId, name) {
+    return this.request('PUT', '/models/' + modelId, {
+      name: name || undefined
+    });
+  }
+
+  /**
    * Get code revision
    *
    * @see https://electricimp.com/docs/buildapi/coderev/get/
@@ -251,10 +266,10 @@ class BuildAPIClient {
    * @see https://electricimp.com/docs/buildapi/coderev/list/
    *
    * @param {string} modelId
-   * @param {Date|string} [since=undefined] - start date (string in ISO 8601 format or Date instance)
-   * @param {Date|string} [until=undefined] - end date (string in ISO 8601 format or Date instance)
-   * @param {number} [buildMin=undefined] - start revision
-   * @param {number} [buildMax=undefined] - end revison
+   * @param {Date|string} [since] - start date (string in ISO 8601 format or Date instance)
+   * @param {Date|string} [until] - end date (string in ISO 8601 format or Date instance)
+   * @param {number} [buildMin] - start revision
+   * @param {number} [buildMax] - end revison
    * @returns {Promise}
    */
   listRevisions(modelId, since, until, buildMin, buildMax) {
@@ -275,9 +290,9 @@ class BuildAPIClient {
    * @see https://electricimp.com/docs/buildapi/coderev/upload/
    *
    * @param {string} modelId
-   * @param {string} [deviceCode=undefined]
-   * @param {string} [agentCode=undefined]
-   * @param {string} [releaseNotes=undefined]
+   * @param {string} [deviceCode]
+   * @param {string} [agentCode]
+   * @param {string} [releaseNotes]
    * @returns {Promise}
    */
   createRevision(modelId, deviceCode, agentCode, releaseNotes) {
@@ -294,7 +309,7 @@ class BuildAPIClient {
    * @see https://electricimp.com/docs/buildapi/logentry/list/
    * @see https://electricimp.com/docs/buildapi/logentry/
    * @param deviceId
-   * @param {Date|string} [since=undefined] - start date (string in ISO 8601 format or Date instance)
+   * @param {Date|string} [since] - start date (string in ISO 8601 format or Date instance)
    * @returns {Promise}
    */
   getDeviceLogs(deviceId, since) {
