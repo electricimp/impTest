@@ -45,7 +45,7 @@ class Session extends EventEmitter {
     this.logParser.parse(testType, deviceId)
 
       .on('ready', () => {
-        this._start(deviceCode, agentCode, modelId);
+        this._start(deviceCode, agentCode, modelId, deviceId);
       })
 
       .on('log', (log) => {
@@ -65,8 +65,10 @@ class Session extends EventEmitter {
    * Start session
    * @param {string} deviceCode
    * @param {string} agentCode
+   * @param {string} modelId
+   * @param {string} deviceId
    */
-  _start(deviceCode, agentCode, modelId) {
+  _start(deviceCode, agentCode, modelId, deviceId) {
 
     this._buildAPIClient
       .createRevision(modelId, deviceCode, agentCode)
@@ -79,9 +81,9 @@ class Session extends EventEmitter {
         });
 
         return this._buildAPIClient
-          .restartModel(modelId)
-          .then(/* model restarted */ () => {
-            this._debug(c.blue('Model restarted'));
+          .restartDevice(deviceId)
+          .then(/* device restarted */ () => {
+            this._debug(c.blue('Device restarted'));
           });
       })
 
