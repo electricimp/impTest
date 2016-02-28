@@ -210,6 +210,19 @@ class BuildAPIClient {
   }
 
   /**
+   * Get model
+   *
+   * @see https://electricimp.com/docs/buildapi/model/create/
+   * @param {string} name
+   * @return {Promise}
+   */
+  createModel(name) {
+    return this.request('POST', '/models', {
+      name
+    });
+  }
+
+  /**
    * Get code revision
    *
    * @see https://electricimp.com/docs/buildapi/coderev/get/

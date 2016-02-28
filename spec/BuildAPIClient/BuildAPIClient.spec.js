@@ -165,4 +165,19 @@ describe('BuildAPIClient test suite', () => {
       })
       .then(done, done.fail);
   });
+
+  it('should create a model', (done) => {
+    let newModel;
+    const newModelName = 'model_'
+                    + parseInt(Math.random() * 1e6).toString()
+                    + parseInt(Math.random() * 1e6).toString();
+
+
+    client.createModel(newModelName)
+      .then((res) => {
+        expect(res.model.name).toBe(newModelName);
+        newModel = res.model;
+      })
+      .then(done, done.fail);
+  });
 });
