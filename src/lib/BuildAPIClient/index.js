@@ -127,7 +127,7 @@ class BuildAPIClient {
    * @param {string} [modelId] - List devices whose model ID exactly matches the supplied string
    * @return {Promise}
    */
-  getDevices(name, deviceId, modelId) {
+  listDevices(name, deviceId, modelId) {
     return this.request('GET', '/devices', {
       device_id: deviceId || undefined,
       model_id: modelId || undefined,

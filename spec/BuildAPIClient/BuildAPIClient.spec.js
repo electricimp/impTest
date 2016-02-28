@@ -22,7 +22,7 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get list a of devices', (done) => {
 
-    client.getDevices()
+    client.listDevices()
       .then((res) => {
         expect(res.devices.length).toBeGreaterThan(0);
         device = res.devices[0];
