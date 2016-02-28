@@ -1,5 +1,7 @@
 'use strict';
 
+require('jasmine-expect');
+
 var config = require('../config');
 var BuildAPIClient = require('../../src/lib/BuildAPIClient');
 var parseBool = require('../../src/lib/utils/parseBool');
@@ -7,8 +9,9 @@ var parseBool = require('../../src/lib/utils/parseBool');
 describe('BuildAPIClient test suite', () => {
 
   let client;
-  let modelId;
-  let deviceId;
+  let device;
+  let model;
+  let revision;
 
   beforeEach(() => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
@@ -19,10 +22,10 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get list a of devices', (done) => {
 
-    client.getDevices()
+    client.listDevices()
       .then((res) => {
         expect(res.devices.length).toBeGreaterThan(0);
-        deviceId = res.devices[0].id;
+        device = res.devices[0];
         done();
       })
       .catch((error) => {
@@ -33,9 +36,9 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get a device', (done) => {
 
-    client.getDevice(deviceId)
+    client.getDevice(device.id)
       .then((res) => {
-        expect(res.device.id).toBe(deviceId);
+        expect(res.device.id).toBe(device.id);
         done();
       })
       .catch((error) => {
@@ -46,10 +49,10 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get list a of models', (done) => {
 
-    client.getModels()
+    client.listModels()
       .then((res) => {
         expect(res.models.length).toBeGreaterThan(0);
-        modelId = res.models[0].id;
+        model = res.models[0];
         done();
       })
       .catch((error) => {
@@ -60,9 +63,9 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get a model', (done) => {
 
-    client.getModel(modelId)
+    client.getModel(model.id)
       .then((res) => {
-        expect(res.model.id).toBe(modelId);
+        expect(res.model.id).toBe(model.id);
         done();
       })
       .catch((error) => {
@@ -74,11 +77,14 @@ describe('BuildAPIClient test suite', () => {
   it('should push a new revision', (done) => {
 
     client.createRevision(
-        config.model_id,
-        `server.log("hi there from device @ ${(new Date()).toUTCString()}")`,
-        `w <- function() { server.log("Now: " + time()); imp.wakeup(0.2, w); } w();`
+      config.model_id,
+      `server.log("hi there from device @ ${(new Date()).toUTCString()}")`,
+      `server.log("hi there from agent @ ${(new Date()).toUTCString()}")`
       )
-      .then(done)
+      .then((res) => {
+        revision = res.revision;
+        done();
+      })
       .catch((error) => {
         done.fail(error);
       });
@@ -110,17 +116,90 @@ describe('BuildAPIClient test suite', () => {
 
   });
 
-  it('should stream device logs', (done) => {
+  it('should restart a device', (done) => {
 
-    let n = 0;
-
-    client.streamDeviceLogs(config.device_id, function (data) {
-      return ++n < 5;
-    }).then(() => {
-      expect(n).toBe(5);
-      done();
-    }).catch(done.fail);
+    client.restartDevice(config.device_id)
+      .then(done, done.fail);
 
   });
 
+  it('should update a device', (done) => {
+
+    let oldName;
+    const newName = 'dev_'
+                    + parseInt(Math.random() * 1e6).toString()
+                    + parseInt(Math.random() * 1e6).toString();
+
+    client.getDevice(config.device_id)
+      .then((res) => oldName = res.device.name)
+      .then(() => client.updateDevice(config.device_id, newName))
+      .then(() => client.getDevice(config.device_id))
+      .then((res) => expect(res.device.name).toBe(newName))
+      .then(() => client.updateDevice(config.device_id, oldName))
+      .then((res) => expect(res.device.name).toBe(oldName))
+      .then(done, done.fail);
+  });
+
+  it('should list all revisions', (done) => {
+    client.listRevisions(config.model_id)
+      .then((res) => {
+        expect(res.revisions).toBeArray();
+        expect(res.revisions.length).toBeGreaterThan(0);
+      })
+      .then(done, done.fail);
+  });
+
+  it('should list first revision', (done) => {
+    client.listRevisions(config.model_id, undefined, undefined, undefined, 1 /* buildMax*/)
+      .then((res) => {
+        expect(res.revisions).toBeArray();
+        expect(res.revisions.length).toBe(1);
+      })
+      .then(done, done.fail);
+  });
+
+  it('should get a revision', (done) => {
+    client.getRevision(config.model_id, revision.version)
+      .then((res) => {
+        expect(res.revision).toEqual(revision);
+      })
+      .then(done, done.fail);
+  });
+
+  it('should create, update and delete a model', (done) => {
+
+    let newModel;
+    let newModelName = 'model_'
+                       + parseInt(Math.random() * 1e6).toString()
+                       + parseInt(Math.random() * 1e6).toString();
+
+    const delay = (time) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(resolve, time);
+      });
+    };
+
+    client.createModel(newModelName)
+      .then((res) => {
+        expect(res.model.name).toBe(newModelName);
+        newModel = res.model;
+        newModelName += '_';
+      })
+      .then(() => delay(1000))
+      .then(() => client.updateModel(newModel.id, newModelName))
+      .then(() => delay(1000))
+      .then(() => client.getModel(newModel.id))
+      .then((res) => expect(res.model.name).toBe(newModelName))
+      .then(() => delay(1000))
+      .then(() => client.deleteModel(newModel.id))
+      .then(() => delay(1000))
+      .then(() => client.listModels())
+      .then((res) => {
+        for (const model of res.models) {
+          expect(model.id).not.toBe(newModel.id);
+          expect(model.name).not.toBe(newModel.id);
+        }
+      })
+      .then(done, done.fail);
+  });
 });

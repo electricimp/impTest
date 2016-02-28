@@ -10,8 +10,8 @@ const fs = require('fs');
 const c = require('colors');
 const glob = require('glob');
 const prompt = require('cli-prompt');
-const AbstractCommand = require('./AbstractCommand');
 const CliTable = require('cli-table');
+const AbstractCommand = require('./AbstractCommand');
 
 /**
  * Name for BuildAPI key env var
@@ -95,13 +95,13 @@ class InitCommand extends AbstractCommand {
         || process.env[BUILD_API_KEY_ENV_VAR];
 
       this._buildAPIClient
-        .getDevices().then((res) => {
+        .listDevices().then((res) => {
           this._devices = {};
           for (const device of res.devices) {
             this._devices[device.id] = device;
           }
         })
-        .then(() => this._buildAPIClient.getModels().then((res) => {
+        .then(() => this._buildAPIClient.listModels().then((res) => {
           this._models = {};
           for (const model of res.models) {
             this._models[model.id] = model;

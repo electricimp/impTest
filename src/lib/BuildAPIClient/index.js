@@ -127,11 +127,11 @@ class BuildAPIClient {
    * @param {string} [modelId] - List devices whose model ID exactly matches the supplied string
    * @return {Promise}
    */
-  getDevices(name, deviceId, modelId) {
+  listDevices(name, deviceId, modelId) {
     return this.request('GET', '/devices', {
-      device_id: deviceId,
-      model_id: modelId,
-      name: name
+      device_id: deviceId || undefined,
+      model_id: modelId || undefined,
+      name: name || undefined
     });
   }
 
@@ -147,16 +147,68 @@ class BuildAPIClient {
   }
 
   /**
+   * Update device properties
+   *
+   * @see https://electricimp.com/docs/buildapi/device/update/
+   * @see https://electricimp.com/docs/buildapi/device/
+   * @param {string} deviceId
+   * @param {string} [name]
+   * @param {string} [modelId]
+   * @return {Promise}
+   */
+  updateDevice(deviceId, name, modelId) {
+    return this.request('PUT', '/devices/' + deviceId, {
+      name: name || undefined,
+      model_id: modelId || undefined
+    });
+  }
+
+  /**
+   * Restart a device
+   *
+   * @see https://electricimp.com/docs/buildapi/device/restart/
+   * @param {string} deviceId
+   * @return {Promise}
+   */
+  restartDevice(deviceId) {
+    return this.request('POST', '/devices/' + deviceId + '/restart');
+  }
+
+  /**
    * Get models
    *
    * @see https://electricimp.com/docs/buildapi/model/list/
    * @param {string} [name] - List models whose name contains the supplied string fragment (case-insensitive)
    * @return {Promise}
    */
-  getModels(name) {
+  listModels(name) {
     return this.request('GET', '/models', {
-      name: name
+      name: name || undefined
     });
+  }
+
+  /**
+   * Get model
+   *
+   * @see https://electricimp.com/docs/buildapi/model/create/
+   * @param {string} name
+   * @return {Promise}
+   */
+  createModel(name) {
+    return this.request('POST', '/models', {
+      name
+    });
+  }
+
+  /**
+   * Get model
+   *
+   * @see https://electricimp.com/docs/buildapi/model/delete/
+   * @param {string} modelId
+   * @return {Promise}
+   */
+  deleteModel(modelId) {
+    return this.request('DELETE', '/models/' + modelId);
   }
 
   /**
@@ -171,22 +223,19 @@ class BuildAPIClient {
   }
 
   /**
-   * Upload a new code revision
-   * @see https://electricimp.com/docs/buildapi/coderev/upload/
+   * Update model
    *
+   * @see https://electricimp.com/docs/buildapi/model/update/
+   * @see https://electricimp.com/docs/buildapi/model/
    * @param {string} modelId
-   * @param {string} [deviceCode=undefined]
-   * @param {string} [agentCode=undefined]
-   * @param {string} [releaseNotes=undefined]
-   * @returns {Promise}
+   * @param {string} [name]
+   * @return {Promise}
    */
-  createRevision(modelId, deviceCode, agentCode, releaseNotes) {
-    return this.request('POST', `/models/${modelId}/revisions`, {
-      device_code: deviceCode,
-      agent_code: agentCode,
-      release_notes: releaseNotes
+  updateModel(modelId, name) {
+    return this.request('PUT', '/models/' + modelId, {
+      name: name || undefined
     });
-  };
+  }
 
   /**
    * Restart model
@@ -200,12 +249,67 @@ class BuildAPIClient {
   }
 
   /**
+   * List code revisions
+   *
+   * @see https://electricimp.com/docs/buildapi/coderev/list/
+   *
+   * @param {string} modelId
+   * @param {Date|string} [since] - start date (string in ISO 8601 format or Date instance)
+   * @param {Date|string} [until] - end date (string in ISO 8601 format or Date instance)
+   * @param {number} [buildMin] - start revision
+   * @param {number} [buildMax] - end revison
+   * @returns {Promise}
+   */
+  listRevisions(modelId, since, until, buildMin, buildMax) {
+    // convert since/until to ISO 8601 format
+    since && (since instanceof Date) && (since = since.toISOString());
+    until && (until instanceof Date) && (until = until.toISOString());
+
+    return this.request('GET', '/models/' + modelId + '/revisions', {
+      since: since || undefined,
+      until: until || undefined,
+      build_min: buildMin || undefined,
+      build_max: buildMax || undefined
+    });
+  }
+
+  /**
+   * Upload a new code revision
+   * @see https://electricimp.com/docs/buildapi/coderev/upload/
+   *
+   * @param {string} modelId
+   * @param {string} [deviceCode]
+   * @param {string} [agentCode]
+   * @param {string} [releaseNotes]
+   * @returns {Promise}
+   */
+  createRevision(modelId, deviceCode, agentCode, releaseNotes) {
+    return this.request('POST', `/models/${modelId}/revisions`, {
+      device_code: deviceCode || undefined,
+      agent_code: agentCode || undefined,
+      release_notes: releaseNotes || undefined
+    });
+  };
+
+  /**
+   * Get code revision
+   *
+   * @see https://electricimp.com/docs/buildapi/coderev/get/
+   * @param modelId
+   * @param buildNumber
+   * @return {Promise}
+   */
+  getRevision(modelId, buildNumber) {
+    return this.request('GET', `/models/${modelId}/revisions/${buildNumber}`);
+  }
+
+  /**
    * Get device logs
+   *
    * @see https://electricimp.com/docs/buildapi/logentry/list/
    * @see https://electricimp.com/docs/buildapi/logentry/
-   *
    * @param deviceId
-   * @param {Date|string} [since=undefined] - start date (string in ISO 8601 format or Date instance)
+   * @param {Date|string} [since] - start date (string in ISO 8601 format or Date instance)
    * @returns {Promise}
    */
   getDeviceLogs(deviceId, since) {
@@ -215,10 +319,12 @@ class BuildAPIClient {
   }
 
   /**
+   * Stream device logs
    *
    * @param deviceID
    * @param {function(data)} [callback] Data callback. If it returns false, streaming stops.
    *  Callback with no data means we've obtained the poll url.
+   * @return {Promise}
    */
   streamDeviceLogs(deviceId, callback) {
     return new Promise((resolve, reject) => {
