@@ -49,7 +49,7 @@ describe('BuildAPIClient test suite', () => {
 
   it('should get list a of models', (done) => {
 
-    client.getModels()
+    client.listModels()
       .then((res) => {
         expect(res.models.length).toBeGreaterThan(0);
         model = res.models[0];
@@ -193,7 +193,7 @@ describe('BuildAPIClient test suite', () => {
       .then(() => delay(1000))
       .then(() => client.deleteModel(newModel.id))
       .then(() => delay(1000))
-      .then(() => client.getModels())
+      .then(() => client.listModels())
       .then((res) => {
         for (const model of res.models) {
           expect(model.id).not.toBe(newModel.id);

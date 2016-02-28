@@ -101,7 +101,7 @@ class InitCommand extends AbstractCommand {
             this._devices[device.id] = device;
           }
         })
-        .then(() => this._buildAPIClient.getModels().then((res) => {
+        .then(() => this._buildAPIClient.listModels().then((res) => {
           this._models = {};
           for (const model of res.models) {
             this._models[model.id] = model;

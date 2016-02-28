@@ -181,7 +181,7 @@ class BuildAPIClient {
    * @param {string} [name] - List models whose name contains the supplied string fragment (case-insensitive)
    * @return {Promise}
    */
-  getModels(name) {
+  listModels(name) {
     return this.request('GET', '/models', {
       name: name || undefined
     });
