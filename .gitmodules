@@ -2,6 +2,6 @@
 	path = src/impUnit
 	url = https://github.com/electricimp/impUnit.git
 
-[submodule "src/lib/BuilAPIClient"]
-	path = src/lib/BuilAPIClient
+[submodule "src/BuildAPIClient"]
+	path = src/BuildAPIClient
 	url = https://github.com/electricimp/imp-build-api-v4.git
