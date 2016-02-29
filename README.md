@@ -23,13 +23,10 @@
 
 ## Installation
 
-`npm install -g imptest`
+`npm i -g imptest`
+```
 
-*Requirements:*
-
-|Dependency|OS X Installation|
-|:--|:--|
-|Node.js 5.1+|`brew install nodejs`|
+Node.js 4.0+ is required.
 
 [Usage at development time](#running) 
 
