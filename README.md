@@ -11,6 +11,7 @@
     - [Installation](#installation-1)
     - [Running](#running)
     - [Testing](#testing)
+  - [[Quick Start](docs/quick-start.md)](#quick-startdocsquick-startmd)
   - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
   - [[.imptest File Specification](docs/imptest-spec.md)](#imptest-file-specificationdocsimptest-specmd)
   - [License](#license)
@@ -27,7 +28,7 @@
 
 Node.js 4.0+ is required.
 
-[Usage at development time](#running) 
+[Usage at development time](#running)
 
 ## Commands
 
@@ -83,6 +84,8 @@ Copy __spec/config.js.dist__ to __config.js__ and fill-in the neccesary settings
 ```bash
 SPEC_DEBUG=<true|false> npm test
 ```
+
+## [Quick Start](docs/quick-start.md)
 
 ## [Writing Tests](docs/writing-tests.md)
 
