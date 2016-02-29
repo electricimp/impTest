@@ -11,7 +11,7 @@ const colors = require('colors');
 const DebugMixin = require('../DebugMixin');
 const sprintf = require('sprintf-js').sprintf;
 const ImpTestFile = require('../ImpTestFile');
-const BuildAPIClient = require('../BuildAPIClient');
+const BuildAPIClient = require('../../BuildAPIClient');
 
 /**
  * Name for BuildAPI key env var
