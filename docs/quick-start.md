@@ -37,4 +37,4 @@ imptest test
 ## More Info
 
 - [Writing Tests](./writing-tests.md)
-- [.impTest Specification](./writing-tests.md)
+- [.imptest File Specification](./imptest-spec.md)
