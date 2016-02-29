@@ -275,7 +275,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
             c.blue((deviceIndex + 1) + '/' + this._impTestFile.values.devices.length + ') '));
 
           // check model
-          if (!testIsAgentOnly && res.device.model_id !== this._impTestFile.values.modelId) {
+          if (res.device.model_id !== this._impTestFile.values.modelId) {
             throw new Errors.WrongModelError('Device is assigned to a wrong model');
           }
 
