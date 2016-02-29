@@ -244,7 +244,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
                     this._sourceCode.agent + '\n\n' +
                     testCode + '\n\n' +
                     bootstrapCode;
-        deviceCode = this._sourceCode.device + '\n\n' +
+        deviceCode = (this._sourceCode.device || '/* no device source */') + '\n\n' +
                      reloadTrigger;
       } else {
         deviceCode = this._frameworkCode + '\n\n' +
@@ -252,7 +252,14 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
                      testCode + '\n\n' +
                      bootstrapCode + '\n\n' +
                      reloadTrigger;
-        agentCode = this._sourceCode.agent;
+        agentCode = this._sourceCode.agent || '/* no agent source */';
+      }
+
+      // is test agent-only?
+      const testIsAgentOnly = !this._sourceCode.device && 'agent' === file.type;
+
+      if (testIsAgentOnly) {
+        this._info(c.blue('Test session is') + ' agent-only');
       }
 
       this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
@@ -268,12 +275,12 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
             c.blue((deviceIndex + 1) + '/' + this._impTestFile.values.devices.length + ') '));
 
           // check model
-          if (res.device.model_id !== this._impTestFile.values.modelId) {
+          if (!testIsAgentOnly && res.device.model_id !== this._impTestFile.values.modelId) {
             throw new Errors.WrongModelError('Device is assigned to a wrong model');
           }
 
           // check online state
-          if (res.device.powerstate !== 'online') {
+          if (!testIsAgentOnly && res.device.powerstate !== 'online') {
             throw new Errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
           }
         })
@@ -565,7 +572,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    */
   get _sourceCode() {
 
-    if (!this._agentSource || !this._deviceSource) {
+    if (undefined === this._agentSource || undefined === this._deviceSource) {
 
       let sourceFilePath;
 
@@ -589,7 +596,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       } else {
         this._info(c.blue('Have no ') + 'agent' + c.blue(' source file, using blank'));
-        this._agentSource = '/* no agent source provided */';
+        this._agentSource = false;
       }
 
       if (this._impTestFile.values.deviceFile) {
@@ -610,7 +617,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       } else {
         this._info(c.blue('Have no ') + 'device' + c.blue(' source file, using blank'));
-        this._deviceSource = '/* no device source provided */';
+        this._deviceSource = false;
       }
 
     }
