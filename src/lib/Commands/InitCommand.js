@@ -191,9 +191,26 @@ class InitCommand extends AbstractCommand {
           }
         },
       ], (input) => {
+        // save device names
+
+        const deviceNames = {};
+
+        for (const deviceId in this._devices) {
+          deviceNames[deviceId] = this._devices[deviceId].name;
+        }
+
+        this._impTestFile.deviceNames = deviceNames;
+
+        // save device ids
         const devices = input.devices.split(',').map((v) => v.trim());
         this._impTestFile.values.devices = devices;
+
+        // save model id
         this._impTestFile.values.modelId = input.modelId;
+
+        // save model name
+        this._impTestFile.modelName = this._models[input.modelId].name;
+
         resolve();
       });
 
