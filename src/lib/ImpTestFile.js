@@ -23,6 +23,7 @@ class ImpTestFile {
    */
   constructor(configPath) {
     DebugMixin.call(this);
+    this._deviceNames = {};
     this._path = path.resolve(configPath);
   }
 
@@ -101,7 +102,28 @@ class ImpTestFile {
     if (v.apiKey === null) delete v.apiKey;
     if (v.deviceFile === null) v.deviceFile = false;
     if (v.agentFile === null) v.agentFile = false;
-    return JSON.stringify(v, null, 4);
+
+    let json = JSON.stringify(v, null, 4);
+
+    // insert device name
+    for (const deviceId in this.deviceNames) {
+      if (this.deviceNames[deviceId]) {
+        json = json.replace(
+          '"' + deviceId + '"',
+          '"' + deviceId + '" /* ' + this.deviceNames[deviceId] + ' */'
+        );
+      }
+    }
+
+    // insert model name
+    if (this.modelName) {
+      json = json.replace(
+        '"' + this.values.modelId + '"',
+        '"' + this.values.modelId + '" /* ' + this.modelName + ' */'
+      );
+    }
+
+    return json;
   }
 
   /**
@@ -116,6 +138,34 @@ class ImpTestFile {
    */
   get dir() {
     return path.dirname(this._path);
+  }
+
+  /**
+   * @return {id: name}
+   */
+  get deviceNames() {
+    return this._deviceNames;
+  }
+
+  /**
+   * @param {id: name} value
+   */
+  set deviceNames(value) {
+    this._deviceNames = value;
+  }
+
+  /**
+   * @return {string|null}
+   */
+  get modelName() {
+    return this._modelName;
+  }
+
+  /**
+   * @param {string|null} value
+   */
+  set modelName(value) {
+    this._modelName = value;
   }
 }
 
