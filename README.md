@@ -24,7 +24,6 @@
 ## Installation
 
 `npm i -g imptest`
-```
 
 Node.js 4.0+ is required.
 
