@@ -45,18 +45,6 @@ class InitCommand extends AbstractCommand {
   }
 
   /**
-   * Log message
-   * @param {string} type
-   * @param {[*]} params
-   * @protected
-   */
-  _log(type, colorFn, params) {
-    // convert params to true array (from arguments)
-    params = Array.prototype.slice.call(params);
-    console.log.apply(this, params);
-  }
-
-  /**
    * Prompt apiKey
    * @return {Promise}
    * @private

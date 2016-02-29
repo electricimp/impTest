@@ -9,7 +9,6 @@
 
 const colors = require('colors');
 const DebugMixin = require('../DebugMixin');
-const sprintf = require('sprintf-js').sprintf;
 const ImpTestFile = require('../ImpTestFile');
 const BuildAPIClient = require('../../BuildAPIClient');
 
@@ -82,57 +81,28 @@ class AbstractCommand {
   }
 
   /**
-   * Log info message
-   * @param {*} ...objects
-   * @protected
-   */
-  _info() {
-    this._log('info', colors.grey, arguments);
-  }
-
-  /**
-   * Error message
-   * @param {*|Error} error
-   * @protected
-   */
-  _error(error) {
-    if (error instanceof Error) {
-      error = error.message;
-    }
-
-    this._log('error', colors.red, [colors.red(error)]);
-  }
-
-  /**
    * Log message
-   * @param {string} type
-   * @param {[*]} params
+   * @param {string} message
    * @protected
    */
-  _log(type, colorFn, params) {
-    let dateMessage = '';
+  _log() {
+    console.log.apply(this, arguments);
+  }
 
-    if (this.logTiming) {
-      const now = new Date();
-      //dateMessage = dateformat(now, 'HH:MM:ss.l');
+  _info() {
+    return this._log.apply(this, arguments);
+  }
 
-      if (this._lastLogDate && this._logStartDate) {
-        let dif1 = (now - this._logStartDate) / 1000;
-        let dif2 = (now - this._lastLogDate) / 1000;
-        dif1 = sprintf('%.2f', dif1);
-        dif2 = sprintf('%.2f', dif2);
-        dateMessage += '+' + dif1 + '/' + dif2 + 's ';
-      } else {
-        this._logStartDate = now;
-      }
+  _error(message) {
+    return this._log(colors.red(message));
+  }
 
-      this._lastLogDate = now;
-    }
-
-    // convert params to true array (from arguments)
-    params = Array.prototype.slice.call(params);
-    params.unshift(colorFn('[' + dateMessage + type + ']'));
-    console.log.apply(this, params);
+  /**
+   * Print blank line
+   * @protected
+   */
+  _blank() {
+    console.log('');
   }
 
   /**
@@ -143,14 +113,6 @@ class AbstractCommand {
   _onError(error) {
     this._error(error);
     this._success = false;
-  }
-
-  /**
-   * Print blank line
-   * @protected
-   */
-  _blankLine() {
-    console.log(colors.gray(''));
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">

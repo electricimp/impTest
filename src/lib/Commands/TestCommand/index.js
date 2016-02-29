@@ -17,6 +17,7 @@ const dateformat = require('dateformat');
 const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
 const randomstring = require('randomstring');
+const sprintf = require('sprintf-js').sprintf;
 const CodeProcessor = require('../../CodeProcessor');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
@@ -199,7 +200,7 @@ class TestCommand extends AbstractCommand {
     return new Promise((resolve, reject) => {
 
       // blank line
-      this._blankLine();
+      this._blank();
 
       // init test session
 
@@ -492,6 +493,60 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
     // command has not succeeded
     this._success = false;
+  }
+
+  /**
+   * Log message
+   * @param {string} type
+   * @param {[*]} params
+   * @protected
+   */
+  _log(type, colorFn, params) {
+    let dateMessage = '';
+
+    if (this.logTiming) {
+      const now = new Date();
+      //dateMessage = dateformat(now, 'HH:MM:ss.l');
+
+      if (this._lastLogDate && this._logStartDate) {
+        let dif1 = (now - this._logStartDate) / 1000;
+        let dif2 = (now - this._lastLogDate) / 1000;
+        dif1 = sprintf('%.2f', dif1);
+        dif2 = sprintf('%.2f', dif2);
+        dateMessage += '+' + dif1 + '/' + dif2 + 's ';
+      } else {
+        this._logStartDate = now;
+      }
+
+      this._lastLogDate = now;
+    }
+
+    // convert params to true array (from arguments)
+    params = Array.prototype.slice.call(params);
+    params.unshift(colorFn('[' + dateMessage + type + ']'));
+    console.log.apply(this, params);
+  }
+
+  /**
+   * Log info message
+   * @param {*} ...objects
+   * @protected
+   */
+  _info() {
+    this._log('info', c.grey, arguments);
+  }
+
+  /**
+   * Error message
+   * @param {*|Error} error
+   * @protected
+   */
+  _error(error) {
+    if (error instanceof Error) {
+      error = error.message;
+    }
+
+    this._log('error', c.red, [c.red(error)]);
   }
 
   /**
