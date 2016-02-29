@@ -53,7 +53,7 @@ class InitCommand extends AbstractCommand {
     return new Promise((resolve, reject) => {
       prompt.multi([{
         key: 'apiKey',
-        label: c.yellow('> Build API key (IMP_BULD_API_KEY environment variable is used if blank)'),
+        label: c.yellow('> Build API key (' + BUILD_API_KEY_ENV_VAR + ' environment variable is used if blank)'),
         type: 'string',
         'default': ''
       }], (input) => {
