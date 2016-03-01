@@ -23,7 +23,7 @@ const command = new TestCommand();
 
 command.version = packageJson.version;
 command.debug = parseBool(commander.debug);
-command.testFrameworkFile = __dirname + '/../impUnit/bundle.nut';
+command.testFrameworkFile = __dirname + '/../impUnit/index.nut';
 command.testCaseFile = commander.args[0] || null;
 command.configPath = commander.config;
 
