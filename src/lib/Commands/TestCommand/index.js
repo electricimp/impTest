@@ -95,6 +95,14 @@ class TestCommand extends AbstractCommand {
       this._debug(c.red('Command was forced to stop'));
     }
 
+    this._blank();
+
+    if (this._success) {
+      this._info(c.green('Testing succeeded'));
+    } else {
+      this._info(c.red('Testing failed'));
+    }
+
     super.finish();
   }
 
