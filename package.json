@@ -1,6 +1,6 @@
 {
   "name": "imptest",
-  "version": "0.2.0-dev",
+  "version": "0.2.0-rc1",
   "description": "Electric Imp Test Runner",
   "main": "src/cli/imptest.js",
   "scripts": {
