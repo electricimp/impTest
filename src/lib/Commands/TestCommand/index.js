@@ -238,21 +238,42 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._codeProcessor.variables.__FILE__ = path.basename(file.path);
       testCode = this._codeProcessor.process(testCode);
 
+      // agent source file name for line control
+      const agentLineControlFile = this._impTestFile.values.agentFile ?
+                                   path.basename(this._impTestFile.values.agentFile) :
+                                   '_agent_';
+
+      // device source file name for line control
+      const deviceLineControlFile = this._impTestFile.values.deviceFile ?
+                                    path.basename(this._impTestFile.values.deviceFile) :
+                                    '_device_';
+
       if ('agent' === file.type) {
 
-        agentCode = this._frameworkCode + '\n\n' +
-                    this._sourceCode.agent + '\n\n' +
+        agentCode = '#line 1 "_impUnit_"\n' +
+                    this._frameworkCode + '\n\n' +
+                    `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
+                    (this._sourceCode.agent || '/* no agent source */') + '\n\n' +
+                    `#line 1 "${path.basename(file.name).replace('"', '\\"')}"\n` +
                     testCode + '\n\n' +
+                    '#line 1 "_bootstrap_"\n' +
                     bootstrapCode;
-        deviceCode = (this._sourceCode.device || '/* no device source */') + '\n\n' +
+        deviceCode = `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
+                     (this._sourceCode.device || '/* no device source */') + '\n\n' +
+                     '#line 1 "_bootstrap_"\n' +
                      reloadTrigger;
       } else {
-        deviceCode = this._frameworkCode + '\n\n' +
+        deviceCode = '#line 1 "_impUnit_"\n' +
+                     this._frameworkCode + '\n\n' +
+                     `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
                      this._sourceCode.device + '\n\n' +
+                     `#line 1 "${path.basename(file.name).replace('"', '\\"')}"\n` +
                      testCode + '\n\n' +
+                     '#line 1 "_bootstrap_"\n' +
                      bootstrapCode + '\n\n' +
                      reloadTrigger;
-        agentCode = this._sourceCode.agent || '/* no agent source */';
+        agentCode = `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
+                    (this._sourceCode.agent || '/* no agent source */');
       }
 
       // is test agent-only?
