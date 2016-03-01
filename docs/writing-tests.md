@@ -6,7 +6,7 @@
   - [Test Case Lifecycle: setUp() and tearDown()](#test-case-lifecycle-setup-and-teardown)
   - [Asynchronous Testing](#asynchronous-testing)
   - [Timeouts](#timeouts)
-  - [Assertions](#assertions)
+- [[Assertions](./assertions.md)](#assertionsassertionsmd)
   - [Environment Variables](#environment-variables)
   - [\_\_FILE\_\_ & \_\_LINE\_\_](#%5C_%5C_file%5C_%5C_-&-%5C_%5C_line%5C_%5C_)
   - [Diagniostic Messages](#diagniostic-messages)
@@ -57,14 +57,7 @@ function testSomethingAsyncronously() {
 
 __timeout__ parameter on ImpUnitRunner instance sets the timeout after which the tests will fail. Async tests will be interrupted
 
-### Assertions
-
-The following assertions are available:
-
-* `this.assertTrue(value, [message]);`
-* `this.assertEqual(expected, actual, [message]);`
-* `this.assertClose(expected, actual, maxDifference, [message]);`
-* `this.assertDeepEqual(expected, actual, [message]);`
+## [Assertions](./assertions.md)
 
 ### Environment Variables
 

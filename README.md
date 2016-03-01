@@ -13,6 +13,7 @@
     - [Testing](#testing)
   - [[Quick Start](docs/quick-start.md)](#quick-startdocsquick-startmd)
   - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
+    - [[Assertions](./docs/assertions.md)](#assertionsdocsassertionsmd)
   - [[.imptest File Specification](docs/imptest-spec.md)](#imptest-file-specificationdocsimptest-specmd)
   - [License](#license)
 
@@ -88,6 +89,8 @@ SPEC_DEBUG=<true|false> npm test
 ## [Quick Start](docs/quick-start.md)
 
 ## [Writing Tests](docs/writing-tests.md)
+
+### [Assertions](./docs/assertions.md)
 
 ## [.imptest File Specification](docs/imptest-spec.md)
 
