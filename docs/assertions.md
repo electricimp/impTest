@@ -5,8 +5,8 @@
 - [Assertions](#assertions)
   - [assertTrue()](#asserttrue)
   - [assertEqual()](#assertequal)
-- [assertGreater()](#assertgreater)
-- [assertLess()](#assertless)
+  - [assertGreater()](#assertgreater)
+  - [assertLess()](#assertless)
   - [assertClose()](#assertclose)
   - [assertDeepEqual()](#assertdeepequal)
   - [assertBetween()](#assertbetween)
@@ -51,7 +51,7 @@ this.assertEqual(1000 * 0.01, 100 * 0.1);
 this.assertEqual(1, 2);
 ```
 
-# assertGreater()
+## assertGreater()
 
 `this.assertGreater(actual, cmp, [message])`
 
@@ -67,7 +67,7 @@ this.assertGreater(1, 0);
 this.assertGreater(1, 2);
 ```
 
-# assertLess()
+## assertLess()
 
 `this.assertLess(actual, cmp, [message])`
 
