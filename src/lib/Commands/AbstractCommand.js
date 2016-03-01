@@ -10,7 +10,7 @@
 const colors = require('colors');
 const DebugMixin = require('../DebugMixin');
 const ImpTestFile = require('../ImpTestFile');
-const BuildAPIClient = require('../../BuildAPIClient');
+const BuildAPIClient = require('imp-build-api-v4');
 
 /**
  * Name for BuildAPI key env var
