@@ -294,7 +294,7 @@ class Session extends EventEmitter {
             }
 
             this.emit('message', {
-              type: 'info',
+              type: 'test',
               message: null !== log.value.message
                 ? (c.green('Success: ') + message)
                 : c.green('Success')
