@@ -138,7 +138,7 @@ this.assertBetween(10, 11, 12);
 
 `this.assertThrowsError(func, ctx, [args = []], [message])`
 
-Asserts that function _func_ throws an erro when called with arguments _args_ and context _ctx_. Returns error thrown by _func_.
+Asserts that function _func_ throws an error when called with arguments _args_ and context _ctx_. Returns error thrown by _func_.
 
 ```squirrel
 // ok, returns "abc"
