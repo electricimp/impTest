@@ -13,9 +13,11 @@ const glob = require('glob');
 const Errors = require('./Errors');
 const Session = require('./Session');
 const Bundler = require('../../Bundler');
+const dateformat = require('dateformat');
 const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
 const randomstring = require('randomstring');
+const sprintf = require('sprintf-js').sprintf;
 const CodeProcessor = require('../../CodeProcessor');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
@@ -59,6 +61,12 @@ class TestCommand extends AbstractCommand {
     return super._run()
       .then(() => {
 
+        // startup message
+        this._info('impTest/' + this.version);
+        this.logTiming = true; // enable log timing
+        this._info(c.blue('Started at ') + dateformat(new Date(), 'dd mmm yyyy HH:MM:ss Z'));
+
+
         // find test case files
         const testFiles = this._findTestFiles();
 
@@ -71,6 +79,7 @@ class TestCommand extends AbstractCommand {
           () => d++ < this._impTestFile.values.devices.length && !this._stopCommand,
           () => this._runDevice(d - 1, testFiles).catch((e) => {
             this._debug(c.red('Device #' + d + ' run failed'));
+            this._onError(e);
           })
         );
 
@@ -86,6 +95,14 @@ class TestCommand extends AbstractCommand {
       this._debug(c.red('Command was forced to stop'));
     }
 
+    this._blank();
+
+    if (this._success) {
+      this._info(c.green('Testing succeeded'));
+    } else {
+      this._info(c.red('Testing failed'));
+    }
+
     super.finish();
   }
 
@@ -95,6 +112,10 @@ class TestCommand extends AbstractCommand {
    */
   _init() {
     super._init();
+
+    if (!this._impTestFile.exists()) {
+      throw new Error('Config file not found');
+    }
 
     // bundler
     this._bundler = new Bundler();
@@ -187,7 +208,7 @@ class TestCommand extends AbstractCommand {
     return new Promise((resolve, reject) => {
 
       // blank line
-      this._blankLine();
+      this._blank();
 
       // init test session
 
@@ -225,21 +246,49 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._codeProcessor.variables.__FILE__ = path.basename(file.path);
       testCode = this._codeProcessor.process(testCode);
 
+      // agent source file name for line control
+      const agentLineControlFile = this._impTestFile.values.agentFile ?
+                                   path.basename(this._impTestFile.values.agentFile) :
+                                   '_agent_';
+
+      // device source file name for line control
+      const deviceLineControlFile = this._impTestFile.values.deviceFile ?
+                                    path.basename(this._impTestFile.values.deviceFile) :
+                                    '_device_';
+
       if ('agent' === file.type) {
 
-        agentCode = this._frameworkCode + '\n\n' +
-                    this._sourceCode.agent + '\n\n' +
+        agentCode = '#line 1 "_impUnit_"\n' +
+                    this._frameworkCode + '\n\n' +
+                    `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
+                    (this._sourceCode.agent || '/* no agent source */') + '\n\n' +
+                    `#line 1 "${path.basename(file.name).replace('"', '\\"')}"\n` +
                     testCode + '\n\n' +
+                    '#line 1 "_bootstrap_"\n' +
                     bootstrapCode;
-        deviceCode = this._sourceCode.device + '\n\n' +
+        deviceCode = `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
+                     (this._sourceCode.device || '/* no device source */') + '\n\n' +
+                     '#line 1 "_bootstrap_"\n' +
                      reloadTrigger;
       } else {
-        deviceCode = this._frameworkCode + '\n\n' +
+        deviceCode = '#line 1 "_impUnit_"\n' +
+                     this._frameworkCode + '\n\n' +
+                     `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
                      this._sourceCode.device + '\n\n' +
+                     `#line 1 "${path.basename(file.name).replace('"', '\\"')}"\n` +
                      testCode + '\n\n' +
+                     '#line 1 "_bootstrap_"\n' +
                      bootstrapCode + '\n\n' +
                      reloadTrigger;
-        agentCode = this._sourceCode.agent;
+        agentCode = `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
+                    (this._sourceCode.agent || '/* no agent source */');
+      }
+
+      // is test agent-only?
+      const testIsAgentOnly = !this._sourceCode.device && 'agent' === file.type;
+
+      if (testIsAgentOnly) {
+        this._info(c.blue('Test session is') + ' agent-only');
       }
 
       this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
@@ -260,7 +309,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
           }
 
           // check online state
-          if (res.device.powerstate !== 'online') {
+          if (!testIsAgentOnly && res.device.powerstate !== 'online') {
             throw new Errors.DevicePowerstateError('Device is in "' + res.device.powerstate + '" powerstate');
           }
         })
@@ -483,6 +532,60 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   }
 
   /**
+   * Log message
+   * @param {string} type
+   * @param {[*]} params
+   * @protected
+   */
+  _log(type, colorFn, params) {
+    let dateMessage = '';
+
+    if (this.logTiming) {
+      const now = new Date();
+      //dateMessage = dateformat(now, 'HH:MM:ss.l');
+
+      if (this._lastLogDate && this._logStartDate) {
+        let dif1 = (now - this._logStartDate) / 1000;
+        let dif2 = (now - this._lastLogDate) / 1000;
+        dif1 = sprintf('%.2f', dif1);
+        dif2 = sprintf('%.2f', dif2);
+        dateMessage += '+' + dif1 + '/' + dif2 + 's ';
+      } else {
+        this._logStartDate = now;
+      }
+
+      this._lastLogDate = now;
+    }
+
+    // convert params to true array (from arguments)
+    params = Array.prototype.slice.call(params);
+    params.unshift(colorFn('[' + dateMessage + type + ']'));
+    console.log.apply(this, params);
+  }
+
+  /**
+   * Log info message
+   * @param {*} ...objects
+   * @protected
+   */
+  _info() {
+    this._log('info', c.grey, arguments);
+  }
+
+  /**
+   * Error message
+   * @param {*|Error} error
+   * @protected
+   */
+  _error(error) {
+    if (error instanceof Error) {
+      error = error.message;
+    }
+
+    this._log('error', c.red, [c.red(error)]);
+  }
+
+  /**
    * Print [test] message
    * @param {*} ...objects
    * @protected
@@ -492,21 +595,13 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
   }
 
   /**
-   * Print blank line
-   * @private
-   */
-  _blankLine() {
-    console.log(c.gray(''));
-  }
-
-  /**
    * Read source code
    * @return {{agent, device}}
    * @private
    */
   get _sourceCode() {
 
-    if (!this._agentSource || !this._deviceSource) {
+    if (undefined === this._agentSource || undefined === this._deviceSource) {
 
       let sourceFilePath;
 
@@ -530,7 +625,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       } else {
         this._info(c.blue('Have no ') + 'agent' + c.blue(' source file, using blank'));
-        this._agentSource = '/* no agent source provided */';
+        this._agentSource = false;
       }
 
       if (this._impTestFile.values.deviceFile) {
@@ -551,7 +646,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
       } else {
         this._info(c.blue('Have no ') + 'device' + c.blue(' source file, using blank'));
-        this._deviceSource = '/* no device source provided */';
+        this._deviceSource = false;
       }
 
     }
