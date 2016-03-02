@@ -113,7 +113,7 @@ class TestCommand extends AbstractCommand {
   _init() {
     super._init();
 
-    if (!this._impTestFile.exists()) {
+    if (!this._impTestFile.exists) {
       throw new Error('Config file not found');
     }
 
