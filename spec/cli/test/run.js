@@ -5,10 +5,10 @@
 'use strict';
 
 const c = require('colors');
-const packageJson = require('../../package.json');
-const TestCommand = require('../../src/lib/Commands/TestCommand');
+const utils = require('../../utils');
 const interceptStdout = require('intercept-stdout');
-const utils = require('../utils');
+const packageJson = require('../../../package.json');
+const TestCommand = require('../../../src/lib/Commands/TestCommand');
 
 function run(options) {
 
@@ -18,7 +18,7 @@ function run(options) {
     const command = new TestCommand();
     command.version = packageJson.version;
     command.debug = false;
-    command.testFrameworkFile = __dirname + '/../../src/impUnit/index.nut';
+    command.testFrameworkFile = __dirname + '/../../../src/impUnit/index.nut';
     // todo: update device/model from tests config or use single config
     command.configPath = __dirname + options.configPath;
     options.testCaseFile && (command.testCaseFile = __dirname + options.testCaseFile);
