@@ -25,17 +25,20 @@ class AbstractCommand {
   }
 
   /**
-   * Run command with error handling and exit.
-   * Sets the return code to 1 in  case of error.
+   * Run command with error handling
+   * @return {Promise}
    */
   run() {
-    this._run()
-      .catch((error) => {
-        this._onError(error);
-      })
-      .then(() => {
-        this.finish();
-      });
+    return new Promise((resolve, reject) => {
+      this._run()
+        .catch((error) => {
+          this._onError(error);
+        })
+        .then(() => {
+          this.finish();
+          this._success ? resolve() : reject();
+        });
+    });
   }
 
   /**
@@ -54,15 +57,15 @@ class AbstractCommand {
 
   /**
    * Finish command
-   */
-  finish() {
-    this._debug(colors.blue('Command success: ') + this._success);
 
     if (this._success) {
       process.exit(0);
     } else {
       process.exit(1);
     }
+   */
+  finish() {
+    this._debug(colors.blue('Command success: ') + this._success);
   }
 
   /**
