@@ -3,9 +3,9 @@
     "devices": [
         "237d606938a609ee" /* EI.Test.F */
     ],
-    "agentFile": "agent.nut",
+    "agentFile": false,
     "deviceFile": false,
-    "stopOnFailure": false,
+    "stopOnFailure": true,
     "timeout": "30",
     "tests": [
         "*.test.nut",

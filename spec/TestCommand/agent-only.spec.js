@@ -26,7 +26,7 @@ describe('TestCommand test suite for agent-only scenario', () => {
     });
   });
 
-  it('should do something', (done) => {
+  it('should verify the output', (done) => {
     // todo: insert more checks here
     expect(commandSuccess).toBe(true);
     expect(commandOut).not.toBeEmptyString();
