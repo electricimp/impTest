@@ -222,7 +222,7 @@ class TestCommand extends AbstractCommand {
       }
 
       // create agent/device code to run
-      const code = this._createCode(testFile);
+      const code = this._getSessionCode(testFile);
 
       // get device id
       const deviceId = this._impTestFile.values.devices[deviceIndex];
@@ -273,7 +273,7 @@ class TestCommand extends AbstractCommand {
    * @return {{agent: string, device: string}}
    * @private
    */
-  _createCode(testFile) {
+  _getSessionCode(testFile) {
     let agentCode, deviceCode;
 
     /* [info] */
