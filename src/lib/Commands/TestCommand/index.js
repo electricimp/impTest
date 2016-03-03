@@ -199,100 +199,33 @@ class TestCommand extends AbstractCommand {
 
   /**
    * Run test file
-   * @param {name, path, type} file
+   * @param {name, path, type} testFile
    * @param {name, path, type} deviceIndex
    * @returns {Promise}
    * @private
    */
-  _runTestFile(file, deviceIndex) {
+  _runTestFile(testFile, deviceIndex) {
     return new Promise((resolve, reject) => {
 
       // blank line
       this._blank();
 
       // init test session
-
       this._session = new Session();
       this._info(c.blue('Starting test session ') + this._session.id);
 
-      // determine device
-      const deviceId = this._impTestFile.values.devices[deviceIndex];
-
-      /* [info] */
-      this._info(c.blue('Using ') + file.type + c.blue(' test file ') + file.name);
-
-      // create complete codebase
-
-      // bootstrap code
-      const bootstrapCode =
-        `// bootstrap tests
-imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
-  local t = ImpUnitRunner();
-  t.readableOutput = false;
-  t.session = "${this._session.id}";
-  t.timeout = ${parseFloat(this._impTestFile.values.timeout)};
-  t.stopOnFailure = ${!!this._impTestFile.values.stopOnFailure};
-  // poehali!
-  t.run();
-});`;
-
-      let agentCode, deviceCode;
-
-      // triggers device code space usage message, which also serves as revision launch indicator for device
-      const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
-
-      // get test code
-      let testCode = fs.readFileSync(file.path, 'utf-8').trim();
-      this._codeProcessor.variables.__FILE__ = path.basename(file.path);
-      testCode = this._codeProcessor.process(testCode);
-
-      // agent source file name for line control
-      const agentLineControlFile = this._impTestFile.values.agentFile ?
-                                   path.basename(this._impTestFile.values.agentFile) :
-                                   '_agent_';
-
-      // device source file name for line control
-      const deviceLineControlFile = this._impTestFile.values.deviceFile ?
-                                    path.basename(this._impTestFile.values.deviceFile) :
-                                    '_device_';
-
-      if ('agent' === file.type) {
-
-        agentCode = '#line 1 "_impUnit_"\n' +
-                    this._frameworkCode + '\n\n' +
-                    `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
-                    (this._sourceCode.agent || '/* no agent source */') + '\n\n' +
-                    `#line 1 "${path.basename(file.name).replace('"', '\\"')}"\n` +
-                    testCode + '\n\n' +
-                    '#line 1 "_bootstrap_"\n' +
-                    bootstrapCode;
-        deviceCode = `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
-                     (this._sourceCode.device || '/* no device source */') + '\n\n' +
-                     '#line 1 "_bootstrap_"\n' +
-                     reloadTrigger;
-      } else {
-        deviceCode = '#line 1 "_impUnit_"\n' +
-                     this._frameworkCode + '\n\n' +
-                     `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
-                     this._sourceCode.device + '\n\n' +
-                     `#line 1 "${path.basename(file.name).replace('"', '\\"')}"\n` +
-                     testCode + '\n\n' +
-                     '#line 1 "_bootstrap_"\n' +
-                     bootstrapCode + '\n\n' +
-                     reloadTrigger;
-        agentCode = `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
-                    (this._sourceCode.agent || '/* no agent source */');
-      }
-
       // is test agent-only?
-      const testIsAgentOnly = !this._sourceCode.device && 'agent' === file.type;
+      const testIsAgentOnly = !this._sourceCode.device && 'agent' === testFile.type;
 
       if (testIsAgentOnly) {
         this._info(c.blue('Test session is') + ' agent-only');
       }
 
-      this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
-      this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
+      // create agent/device code to run
+      const code = this._createCode(testFile);
+
+      // get device id
+      const deviceId = this._impTestFile.values.devices[deviceIndex];
 
       // resolve device info
       return this._buildAPIClient.getDevice(deviceId)
@@ -322,7 +255,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         })
 
         // run test session
-        .then(() => this._runSession(deviceId, deviceCode, agentCode, file.type))
+        .then(() => this._runSession(deviceId, code.device, code.agent, testFile.type))
 
         // next session
         .then(resolve)
@@ -332,6 +265,87 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
           this._onError(error);
         });
     });
+  }
+
+  /**
+   * Prepare source code
+   * @param testFile
+   * @return {{agent: string, device: string}}
+   * @private
+   */
+  _createCode(testFile) {
+    let agentCode, deviceCode;
+
+    /* [info] */
+    this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
+
+    // read/process test code
+    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim();
+    this._codeProcessor.variables.__FILE__ = path.basename(testFile.path);
+    testCode = this._codeProcessor.process(testCode);
+
+    // triggers device code space usage message, which also serves as revision launch indicator for device
+    const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
+
+    // bootstrap code
+    const bootstrapCode = `
+// bootstrap tests
+imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
+  local t = ImpUnitRunner();
+  t.readableOutput = false;
+  t.session = "${this._session.id}";
+  t.timeout = ${parseFloat(this._impTestFile.values.timeout)};
+  t.stopOnFailure = ${!!this._impTestFile.values.stopOnFailure};
+  // poehali!
+  t.run();
+});`
+      .trim();
+
+    // agent source file name for line control
+    const agentLineControlFile = this._impTestFile.values.agentFile ?
+                                 path.basename(this._impTestFile.values.agentFile) :
+                                 '_agent_';
+
+    // device source file name for line control
+    const deviceLineControlFile = this._impTestFile.values.deviceFile ?
+                                  path.basename(this._impTestFile.values.deviceFile) :
+                                  '_device_';
+
+    if ('agent' === testFile.type) {
+
+      agentCode = '#line 1 "_impUnit_"\n' +
+                  this._frameworkCode + '\n\n' +
+                  `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
+                  (this._sourceCode.agent || '/* no agent source */') + '\n\n' +
+                  `#line 1 "${path.basename(testFile.name).replace('"', '\\"')}"\n` +
+                  testCode + '\n\n' +
+                  '#line 1 "_bootstrap_"\n' +
+                  bootstrapCode;
+      deviceCode = `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
+                   (this._sourceCode.device || '/* no device source */') + '\n\n' +
+                   '#line 1 "_bootstrap_"\n' +
+                   reloadTrigger;
+    } else {
+      deviceCode = '#line 1 "_impUnit_"\n' +
+                   this._frameworkCode + '\n\n' +
+                   `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
+                   this._sourceCode.device + '\n\n' +
+                   `#line 1 "${path.basename(testFile.name).replace('"', '\\"')}"\n` +
+                   testCode + '\n\n' +
+                   '#line 1 "_bootstrap_"\n' +
+                   bootstrapCode + '\n\n' +
+                   reloadTrigger;
+      agentCode = `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
+                  (this._sourceCode.agent || '/* no agent source */');
+    }
+
+    this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
+    this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
+
+    return {
+      agent: agentCode,
+      device: deviceCode
+    };
   }
 
   /**
