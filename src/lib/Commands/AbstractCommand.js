@@ -57,12 +57,6 @@ class AbstractCommand {
 
   /**
    * Finish command
-
-    if (this._success) {
-      process.exit(0);
-    } else {
-      process.exit(1);
-    }
    */
   finish() {
     this._debug(colors.blue('Command success: ') + this._success);
