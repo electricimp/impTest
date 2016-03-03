@@ -430,7 +430,11 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         this._sessionTestMessagesWatchdog.stop();
       });
 
-      this._session.on('done', resolve);
+      this._session.on('done', () => {
+        this._sessionStartWatchdog.stop();
+        this._sessionTestMessagesWatchdog.stop();
+        resolve();
+      });
 
       this._session.run(
         testType,
