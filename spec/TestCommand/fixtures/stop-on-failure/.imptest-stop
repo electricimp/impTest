@@ -1,0 +1,14 @@
+{
+    "modelId": "Lu5WRvxOJHZT" /* April/EnvTail.F */,
+    "devices": [
+        "237d606938a609ee" /* EI.Test.F */
+    ],
+    "agentFile": false,
+    "deviceFile": false,
+    "stopOnFailure": true,
+    "timeout": "30",
+    "tests": [
+        "*.test.nut",
+        "tests/**/*.test.nut"
+    ]
+}

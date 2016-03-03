@@ -25,4 +25,9 @@ command.version = packageJson.version;
 command.configPath = commander.config;
 
 // go
-command.run();
+command.run()
+  .then(() => {
+    process.exit(0);
+  }, () => {
+    process.exit(1);
+  });
