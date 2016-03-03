@@ -8,6 +8,7 @@ const c = require('colors');
 const packageJson = require('../../package.json');
 const TestCommand = require('../../src/lib/Commands/TestCommand');
 const interceptStdout = require('intercept-stdout');
+const utils = require('../utils');
 
 function run(options) {
 
@@ -34,12 +35,13 @@ function run(options) {
     const onDone = (success) => {
       unHook();
       console.log(c.inverse('========= command end ========='));
+      out = utils.clearAnsiColors(out);
       resolve({success, out});
     };
 
     // run command
     command.run().then(() => onDone(true), () => onDone(false));
-    
+
   });
 }
 

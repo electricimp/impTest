@@ -30,6 +30,7 @@ describe('TestCommand test suite for agent-only scenario', () => {
     // todo: insert more checks here
     expect(commandSuccess).toBe(true);
     expect(commandOut).not.toBeEmptyString();
+    expect(commandOut).toMatch(/Test session is agent-only\n/);
     done();
   });
 });
