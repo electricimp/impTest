@@ -151,10 +151,12 @@ class TestCommand extends AbstractCommand {
     let configCwd;
 
     const pushFile = file => {
+      const filePath = path.resolve(configCwd, file);
+
       files.push({
         name: file,
-        path: path.resolve(configCwd, file),
-        type: /\bagent\b/i.test(file) ? 'agent' : 'device'
+        path: filePath,
+        type: this._detectTestFileType(filePath)
       });
     };
 
@@ -195,6 +197,38 @@ class TestCommand extends AbstractCommand {
     );
 
     return files;
+  }
+
+  /**
+   * Detect test file type
+   * @param {string} filePath
+   * @returns {"agent"|"device"}
+   * @private
+   */
+  _detectTestFileType(filePath) {
+    // find "run on ..." statements
+
+    let m;
+    const source = fs.readFileSync(filePath, 'utf-8');
+
+    if (m = /^(\s*\"[a-z\s]+\"\s*;*)+/.exec(source)) {
+
+      for (let statement of m[0].split('\n')) {
+        statement = statement.trim();
+        statement = statement.replace(/;*$/, ''); // remove trailing ;
+
+        if ('"run on device"' === statement) {
+          return 'device';
+        }
+
+        if ('"run on agent"' === statement) {
+          return 'agent';
+        }
+      }
+    }
+
+    // detect by suffix
+    return /\bagent\b/i.test(path.basename(filePath)) ? 'agent' : 'device';
   }
 
   /**
