@@ -384,7 +384,9 @@ class InitCommand extends AbstractCommand {
 
       if (!fs.existsSync(file)) {
         fs.writeFileSync(file,
-          `class ${type === 'agent' ? 'Agent' : 'Device'}TestCase extends ImpTestCase {
+          `"run on ${type}"
+
+class ${type === 'agent' ? 'Agent' : 'Device'}TestCase extends ImpTestCase {
   function setUp() {
     return "Hi from #{__FILE__}!";
   }
