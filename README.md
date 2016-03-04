@@ -14,7 +14,7 @@
   - [[Quick Start](docs/quick-start.md)](#quick-startdocsquick-startmd)
   - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
     - [[Assertions](./docs/assertions.md)](#assertionsdocsassertionsmd)
-  - [[.imptest File Specification](docs/imptest-spec.md)](#imptest-file-specificationdocsimptest-specmd)
+  - [[.imptest Specification](docs/imptest-spec.md)](#imptest-specificationdocsimptest-specmd)
   - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -105,7 +105,7 @@ SPEC_DEBUG=false SPEC_MODEL_ID=Lu55555OJHZT SPEC_DEVICE_IDS=237d555558a609ee npm
 
 ### [Assertions](./docs/assertions.md)
 
-## [.imptest File Specification](docs/imptest-spec.md)
+## [.imptest Specification](docs/imptest-spec.md)
 
 ## License
 
