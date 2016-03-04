@@ -301,7 +301,7 @@ class InitCommand extends AbstractCommand {
         ],
         (input) => {
           this._impTestFile.values.stopOnFailure = input.stopOnFailure;
-          this._impTestFile.values.timeout = input.timeout;
+          this._impTestFile.values.timeout = parseFloat(input.timeout);
           resolve();
         });
     });
