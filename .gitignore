@@ -3,3 +3,4 @@ node_modules
 /src/impunit/research
 /spec/config.js
 /TODO
+*.tmp
