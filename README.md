@@ -19,6 +19,9 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+<br />
+[![Build Status](https://travis-ci.org/electricimp/impTest.svg?branch=master)](https://travis-ci.org/electricimp/impTest)
+
 # impTest
 
 **Electric Imp Test Runner**
