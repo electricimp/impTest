@@ -18,6 +18,7 @@ const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
+const BuildAPIClient = require('imp-build-api-v4');
 const CodeProcessor = require('../../CodeProcessor');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
@@ -518,6 +519,11 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
       // tool-side timeouts are longer than test-side, so they
       // indicate for test session to become unresponsive,
       // so it makes sense to stop it
+      this._stopSession = true;
+
+    } else if (error instanceof BuildAPIClient.Errors.BuildAPIError) {
+
+      this._error(error.message);
       this._stopSession = true;
 
     } else if (error instanceof Error) {
