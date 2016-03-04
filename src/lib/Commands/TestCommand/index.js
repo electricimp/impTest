@@ -418,6 +418,10 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
         this._session.stop = this._stopSession;
       });
 
+      this._session.on('warning', (error) => {
+        this._warning(c.yellow(error instanceof Error ? error.message : error));
+      });
+
       this._session.on('start', () => {
         this._sessionStartWatchdog.stop();
       });
@@ -588,6 +592,15 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    */
   _info() {
     this._log('info', c.grey, arguments);
+  }
+
+  /**
+   * Log warning message
+   * @param {*} ...objects
+   * @protected
+   */
+  _warning() {
+    this._log('warning', c.yellow, arguments);
   }
 
   /**
