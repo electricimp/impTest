@@ -238,7 +238,7 @@ class TestCommand extends AbstractCommand {
 
           // check model
           if (res.device.model_id !== this._impTestFile.values.modelId) {
-            throw new Errors.WrongModelError('Device is assigned to a wrong model');
+            throw new Errors.WrongModelError();
           }
 
           // check online state
@@ -472,22 +472,22 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
     } else if (error instanceof Session.Errors.DeviceDisconnectedError) {
 
-      this._testLine(c.red('Device disconnected'));
+      this._testLine(c.red(error.message));
       this._stopSession = true;
 
     } else if (error instanceof Session.Errors.DeviceRuntimeError) {
 
-      this._testLine(c.red('Device Runtime Error: ' + error.message));
+      this._testLine(c.red(error.message));
       this._stopSession = true;
 
     } else if (error instanceof Session.Errors.AgentRuntimeError) {
 
-      this._testLine(c.red('Agent Runtime Error: ' + error.message));
+      this._testLine(c.red(error.message));
       this._stopSession = true;
 
     } else if (error instanceof Session.Errors.DeviceError) {
 
-      this._testLine(c.red('Device Error: ' + error.message));
+      this._testLine(c.red(error.message));
       this._stopSession = true;
 
     } else if (error instanceof Errors.WrongModelError) {
@@ -504,12 +504,12 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
     } else if (error instanceof Errors.SessionStartTimeoutError) {
 
-      this._error('Session startup timeout');
+      this._error(error.message);
       this._stopSession = true;
 
     } else if (error instanceof Errors.SesstionTestMessagesTimeoutError) {
 
-      this._error('Testing timeout');
+      this._error(error.message);
 
       // tool-side timeouts are longer than test-side, so they
       // indicate for test session to become unresponsive,

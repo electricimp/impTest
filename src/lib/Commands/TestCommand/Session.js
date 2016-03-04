@@ -146,14 +146,14 @@ class Session extends EventEmitter {
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        this.emit('error', new Errors.DeviceError('Out of code space'));
+        this.emit('error', new Errors.DeviceError('Device is out of code space'));
         break;
 
       case 'DEVICE_OUT_OF_MEMORY':
 
         this.emit(
           this.state === 'started' ? 'error' : 'warning',
-          new Errors.DeviceError('Out of memory')
+          new Errors.DeviceError('Device is out of memory')
         );
 
         break;
@@ -162,7 +162,7 @@ class Session extends EventEmitter {
 
         this.emit(
           this.state === 'started' ? 'error' : 'warning',
-          new Errors.DeviceError(log.value)
+          new Errors.DeviceError('Device Error: ' + log.value)
         );
 
         break;
@@ -171,7 +171,7 @@ class Session extends EventEmitter {
 
         this.emit(
           this.state === 'started' ? 'error' : 'warning',
-          new Errors.DeviceRuntimeError(log.value)
+          new Errors.DeviceRuntimeError('Device Runtime Error: ' + log.value)
         );
 
         break;
@@ -180,7 +180,7 @@ class Session extends EventEmitter {
 
         this.emit(
           this.state === 'started' ? 'error' : 'warning',
-          new Errors.AgentRuntimeError(log.value)
+          new Errors.AgentRuntimeError('Agent Runtime Error: ' + log.value)
         );
 
         break;
@@ -234,7 +234,7 @@ class Session extends EventEmitter {
             this.emit('start');
 
             if (this.state !== 'ready') {
-              throw new Errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError();
             }
 
             this.state = 'started';
@@ -243,7 +243,7 @@ class Session extends EventEmitter {
           case 'TEST_START':
 
             if (this.state !== 'started') {
-              throw new Errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError();
             }
 
             // status message
@@ -257,7 +257,7 @@ class Session extends EventEmitter {
           case 'TEST_FAIL':
 
             if (this.state !== 'started') {
-              throw new Errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError();
             }
 
             this.emit('error', new Errors.TestMethodError(log.value.message));
@@ -268,7 +268,7 @@ class Session extends EventEmitter {
             this.emit('result');
 
             if (this.state !== 'started') {
-              throw new Errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError();
             }
 
             this.tests = log.value.message.tests;
