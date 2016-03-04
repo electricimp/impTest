@@ -59,6 +59,7 @@ function run(options) {
     });
 
     const onDone = (success) => {
+      fs.unlinkSync(command.configPath); // delete temporarry config
       unHook();
       console.log(c.inverse('</command>'));
       out = utils.clearAnsiColors(out);
