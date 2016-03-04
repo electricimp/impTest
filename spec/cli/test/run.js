@@ -21,7 +21,12 @@ function run(options) {
     command.testFrameworkFile = __dirname + '/../../../src/impUnit/index.nut';
     // todo: update device/model from tests config or use single config
     command.configPath = __dirname + options.configPath;
-    options.testCaseFile && (command.testCaseFile = __dirname + options.testCaseFile);
+
+    // optional options
+    options.testCaseFile !== undefined && (command.testCaseFile = __dirname + options.testCaseFile);
+    options.startupDelay !== undefined && (command.startupDelay = options.startupDelay);
+    options.extraTestTimeout !== undefined && (command.extraTestTimeout = options.extraTestTimeout);
+    options.sessionStartTimeout !== undefined && (command.sessionStartTimeout = options.sessionStartTimeout);
 
     console.log(c.inverse('======== command start ========'));
 

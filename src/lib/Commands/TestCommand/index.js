@@ -29,18 +29,18 @@ const promiseWhile = require('../../utils/promiseWhile');
  * service messages to be before tests output.
  * [s]
  */
-const STARTUP_DELAY = 2;
+const DEFAULT_STARTUP_DELAY = 2;
 
 /**
  * Timeout before session startup
  */
-const STARTUP_TIMEOUT = 60;
+const DEFAULT_STARTUP_TIMEOUT = 60;
 
 /**
  * Allow extra time on top of .imptest.timeout before
  * treating test as timed out on a tool siode.
  */
-const EXTRA_TEST_MESSAGE_TIMEOUT = 5;
+const DEFAULT_EXTRA_TEST_MESSAGE_TIMEOUT = 5;
 
 /**
  * Name for BuildAPI key env var
@@ -238,7 +238,7 @@ class TestCommand extends AbstractCommand {
 
           // check model
           if (res.device.model_id !== this._impTestFile.values.modelId) {
-            throw new Errors.WrongModelError('Device is assigned to a wrong model');
+            throw new Errors.WrongModelError();
           }
 
           // check online state
@@ -290,7 +290,7 @@ class TestCommand extends AbstractCommand {
     // bootstrap code
     const bootstrapCode = `
 // bootstrap tests
-imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
+imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service messages to be before tests output */}, function() {
   local t = ImpUnitRunner();
   t.readableOutput = false;
   t.session = "${this._session.id}";
@@ -359,7 +359,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     this._sessionTestMessagesWatchdog.debug = this.debug;
     this._sessionTestMessagesWatchdog.name = 'test-messages';
     this._sessionTestMessagesWatchdog.timeout =
-      EXTRA_TEST_MESSAGE_TIMEOUT + parseFloat(this._impTestFile.values.timeout);
+      this.extraTestTimeout + parseFloat(this._impTestFile.values.timeout);
 
     this._sessionTestMessagesWatchdog.on('timeout', () => {
       this._onError(new Errors.SesstionTestMessagesTimeoutError());
@@ -371,7 +371,7 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     this._sessionStartWatchdog = new Watchdog();
     this._sessionStartWatchdog.debug = this.debug;
     this._sessionStartWatchdog.name = 'session-start';
-    this._sessionStartWatchdog.timeout = STARTUP_TIMEOUT;
+    this._sessionStartWatchdog.timeout = this.sessionStartTimeout;
 
     this._sessionStartWatchdog.on('timeout', () => {
       this._onError(new Errors.SessionStartTimeoutError());
@@ -416,6 +416,10 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
       this._session.on('error', (error) => {
         this._onError(error);
         this._session.stop = this._stopSession;
+      });
+
+      this._session.on('warning', (error) => {
+        this._warning(c.yellow(error instanceof Error ? error.message : error));
       });
 
       this._session.on('start', () => {
@@ -472,22 +476,22 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
     } else if (error instanceof Session.Errors.DeviceDisconnectedError) {
 
-      this._testLine(c.red('Device disconnected'));
+      this._testLine(c.red(error.message));
       this._stopSession = true;
 
     } else if (error instanceof Session.Errors.DeviceRuntimeError) {
 
-      this._testLine(c.red('Device Runtime Error: ' + error.message));
+      this._testLine(c.red(error.message));
       this._stopSession = true;
 
     } else if (error instanceof Session.Errors.AgentRuntimeError) {
 
-      this._testLine(c.red('Agent Runtime Error: ' + error.message));
+      this._testLine(c.red(error.message));
       this._stopSession = true;
 
     } else if (error instanceof Session.Errors.DeviceError) {
 
-      this._testLine(c.red('Device Error: ' + error.message));
+      this._testLine(c.red(error.message));
       this._stopSession = true;
 
     } else if (error instanceof Errors.WrongModelError) {
@@ -504,12 +508,12 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
 
     } else if (error instanceof Errors.SessionStartTimeoutError) {
 
-      this._error('Session startup timeout');
+      this._error(error.message);
       this._stopSession = true;
 
     } else if (error instanceof Errors.SesstionTestMessagesTimeoutError) {
 
-      this._error('Testing timeout');
+      this._error(error.message);
 
       // tool-side timeouts are longer than test-side, so they
       // indicate for test session to become unresponsive,
@@ -588,6 +592,15 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
    */
   _info() {
     this._log('info', c.grey, arguments);
+  }
+
+  /**
+   * Log warning message
+   * @param {*} ...objects
+   * @protected
+   */
+  _warning() {
+    this._log('warning', c.yellow, arguments);
   }
 
   /**
@@ -720,7 +733,31 @@ imp.wakeup(${STARTUP_DELAY /* prevent log sessions mixing, allow service message
     this._testCaseFile = value;
   }
 
-  // </editor-fold>
+  get startupDelay() {
+    return this._startupDelay === undefined ? DEFAULT_STARTUP_DELAY : this._startupDelay;
+  }
+
+  set startupDelay(value) {
+    this._startupDelay = value;
+  }
+
+  get sessionStartTimeout() {
+    return this._sessionStartTimeout === undefined ? DEFAULT_STARTUP_TIMEOUT : this._sessionStartTimeout;
+  }
+
+  set sessionStartTimeout(value) {
+    this._sessionStartTimeout = value;
+  }
+
+  get extraTestTimeout() {
+    return this._extraTestTimeout === undefined ? DEFAULT_EXTRA_TEST_MESSAGE_TIMEOUT : this._extraTestTimeout;
+  }
+
+  set extraTestTimeout(value) {
+    this._extraTestTimeout = value;
+  }
+
+// </editor-fold>
 }
 
 module.exports = TestCommand;
