@@ -38,7 +38,7 @@ function run(options) {
     // create command
     const command = new TestCommand();
     command.version = packageJson.version;
-    command.debug = false;
+    command.debug = config.cli.debug;
     command.testFrameworkFile = __dirname + '/../../../src/impUnit/index.nut';
     // todo: update device/model from tests config or use single config
     command.configPath = createTmpImpTestFile(__dirname + options.configPath);
