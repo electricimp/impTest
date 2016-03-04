@@ -13,7 +13,7 @@ module.exports.WrongModelError = class WrongModelError extends Error {
 
 module.exports.DevicePowerstateError = class DevicePowerstateError extends Error {
   constructor(message, id) {
-    super('Device is in the wrong powerstate', id);
+    super(message || 'Device is in the wrong powerstate', id);
   }
 };
 
