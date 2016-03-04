@@ -275,5 +275,3 @@ function oom() {
     + "abcdefghijklmnopqrstuvwxyz";
   while (1) s += s;
 }
-
-oom();
