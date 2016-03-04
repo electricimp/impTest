@@ -4,6 +4,7 @@
  * Events:
  *  - message({type, message})
  *  - error(error)
+ *  - warning(error)
  *  - start
  *  - testMessage
  *  - result
@@ -150,33 +151,37 @@ class Session extends EventEmitter {
 
       case 'DEVICE_OUT_OF_MEMORY':
 
-        if (this.state === 'started') {
-          this.emit('error', new Errors.DeviceError('Out of memory'));
-        }
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.DeviceError('Out of memory')
+        );
 
         break;
 
       case 'LASTEXITCODE':
 
-        if (this.state === 'started') {
-          this.emit('error', new Errors.DeviceError(log.value));
-        }
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.DeviceError(log.value)
+        );
 
         break;
 
       case 'DEVICE_ERROR':
 
-        if (this.state === 'started') {
-          this.emit('error', new Errors.DeviceRuntimeError(log.value));
-        }
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.DeviceRuntimeError(log.value)
+        );
 
         break;
 
       case 'AGENT_ERROR':
 
-        if (this.state === 'started') {
-          this.emit('error', new Errors.AgentRuntimeError(log.value));
-        }
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.AgentRuntimeError(log.value)
+        );
 
         break;
 
@@ -185,9 +190,10 @@ class Session extends EventEmitter {
 
       case 'DEVICE_DISCONNECTED':
 
-        if (this.state === 'started') {
-          this.emit('error', new Errors.DeviceDisconnectedError());
-        }
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.DeviceDisconnectedError()
+        );
 
         break;
 
