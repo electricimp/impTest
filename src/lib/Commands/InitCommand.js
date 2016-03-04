@@ -28,7 +28,7 @@ class InitCommand extends AbstractCommand {
   _run() {
     return super._run()
       .then(() => {
-        if (!this.force && this._impTestFile.exists()) {
+        if (!this.force && this._impTestFile.exists) {
           throw new Error('Config file already exists, use -f option to overwrite');
         }
       })
@@ -225,19 +225,41 @@ class InitCommand extends AbstractCommand {
   _promptFiles() {
     return new Promise((resolve, reject) => {
 
-      const deviceFiles = glob.sync('**/*device*.nut', {cwd: this._impTestFile.dir});
-      const agentFiles = glob.sync('**/*agent*.nut', {cwd: this._impTestFile.dir});
+      // find source files suggestions
+
+      let deviceFiles = [];
+      let agentFiles = [];
+
+      // local files
+      deviceFiles = glob.sync('**/*device*.nut', {cwd: this._impTestFile.dir});
+      agentFiles = glob.sync('**/*agent*.nut', {cwd: this._impTestFile.dir});
+
+      // files from .imptest
+      if (this._impTestFile.exists) {
+        deviceFiles.unshift(this._impTestFile.values.deviceFile || '<no file>');
+        agentFiles.unshift(this._impTestFile.values.agentFile || '<no file>');
+      }
 
       prompt.multi([
           {
             key: 'deviceFile',
-            label: c.yellow('> Device file' + (deviceFiles[0] ? ' (type "-" for no device file)' : '')),
+            label: c.yellow(
+              '> Device file' + (
+                deviceFiles[0] && deviceFiles[0] !== '<no file>'
+                  ? ' (type "-" for no device file)'
+                  : ''
+              )),
             type: 'string',
             'default': () => deviceFiles[0] || '<no file>'
           },
           {
             key: 'agentFile',
-            label: c.yellow('> Agent file' + (agentFiles[0] ? ' (type "-" for no agent file)' : '')),
+            label: c.yellow(
+              '> Agent file' + (
+                agentFiles[0] && agentFiles[0] !== '<no file>'
+                  ? ' (type "-" for no agent file)'
+                  : ''
+              )),
             type: 'string',
             'default': () => agentFiles[0] || '<no file>'
           }
@@ -279,7 +301,7 @@ class InitCommand extends AbstractCommand {
         ],
         (input) => {
           this._impTestFile.values.stopOnFailure = input.stopOnFailure;
-          this._impTestFile.values.timeout = input.timeout;
+          this._impTestFile.values.timeout = parseFloat(input.timeout);
           resolve();
         });
     });

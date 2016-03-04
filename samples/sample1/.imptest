@@ -1,9 +1,20 @@
 {
   "modelId": "YwbTcV81Ah5G",
   "devices": [
+    "23349c7838a609ee",
+    "23349c7838a609ee",
+    "23349c7838a609ee",
+    "23349c7838a609ee",
+    "23349c7838a609ee",
+    "23349c7838a609ee",
+    "23349c7838a609ee",
+    "23349c7838a609ee",
+    "23349c7838a609ee",
+    "23349c7838a609ee",
     "23349c7838a609ee"
   ],
   "deviceFile": "device.nut",
   "agentFile": "agent.nut",
-  "stopOnFailure": false
+  "stopOnFailure": false,
+  "timeout": 5
 }

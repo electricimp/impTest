@@ -28,13 +28,6 @@ class ImpTestFile {
   }
 
   /**
-   * @return {bool}
-   */
-  exists() {
-    return fs.existsSync(this._path);
-  }
-
-  /**
    * Write config
    */
   write() {
@@ -64,7 +57,7 @@ class ImpTestFile {
 
     let values = {};
 
-    if (this.exists()) {
+    if (this.exists) {
       values = fs.readFileSync(this.path).toString();
       values = stripJsonComments(values);
       values = JSON.parse(values);
@@ -94,8 +87,15 @@ class ImpTestFile {
   }
 
   /**
+   * @return {bool}
+   */
+  get exists() {
+    return fs.existsSync(this._path);
+  }
+
+  /**
    * Get config as json
-   * @return {*}
+   * @return {string}
    */
   get json() {
     const v = this.values;

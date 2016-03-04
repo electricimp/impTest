@@ -10,7 +10,7 @@
   - [Development](#development)
     - [Installation](#installation-1)
     - [Running](#running)
-    - [Testing](#testing)
+    - [Testing impTest](#testing-imptest)
   - [[Quick Start](docs/quick-start.md)](#quick-startdocsquick-startmd)
   - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
     - [[Assertions](./docs/assertions.md)](#assertionsdocsassertionsmd)
@@ -18,6 +18,9 @@
   - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+<br />
+[![Build Status](https://travis-ci.org/electricimp/impTest.svg?branch=master)](https://travis-ci.org/electricimp/impTest)
 
 # impTest
 
@@ -78,12 +81,22 @@ eg:
 src/cli/imptest.js test -c samples/sample1/.imptest
 ```
 
-### Testing
+### Testing impTest
 
-Copy __spec/config.js.dist__ to __config.js__ and fill-in the neccesary settings, then:
+Jasmine test suite is included with the project.
+
+The following environment variables need to be set before spec run: 
+
+- SPEC_DEBUG {true|false} – Enables/disables debug output
+- SPEC_MODEL_ID – Model Id to use for tests
+- SPEC_DEVICE_ID/SPEC_DEVICE_IDS – Device Id/Ids (comma-separated) to use for tests
+
+Then `npm test`.
+
+For example:
 
 ```bash
-SPEC_DEBUG=<true|false> npm test
+SPEC_DEBUG=false SPEC_MODEL_ID=Lu55555OJHZT SPEC_DEVICE_IDS=237d555558a609ee npm test
 ```
 
 ## [Quick Start](docs/quick-start.md)

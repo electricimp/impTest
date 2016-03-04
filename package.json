@@ -1,6 +1,6 @@
 {
   "name": "imptest",
-  "version": "0.2.0-rc2",
+  "version": "0.2.0",
   "description": "Electric Imp Test Runner",
   "main": "src/cli/imptest.js",
   "scripts": {
@@ -30,6 +30,7 @@
     "strip-json-comments": "^2.0.0"
   },
   "devDependencies": {
+    "intercept-stdout": "^0.1.2",
     "jasmine": "^2.4.1",
     "jasmine-expect": "^2.0.2"
   },

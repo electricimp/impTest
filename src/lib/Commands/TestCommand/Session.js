@@ -4,6 +4,7 @@
  * Events:
  *  - message({type, message})
  *  - error(error)
+ *  - warning(error)
  *  - start
  *  - testMessage
  *  - result
@@ -132,7 +133,7 @@ class Session extends EventEmitter {
 
       case 'DEVICE_CODE_SPACE_USAGE':
 
-        if (!this._deviceCodespaceUsage !== log.value) {
+        if (this._deviceCodespaceUsage !== log.value) {
 
           this.emit('message', {
             type: 'info',
@@ -145,38 +146,55 @@ class Session extends EventEmitter {
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        this.emit('error', new Errors.DeviceError('Out of code space'));
+        this.emit('error', new Errors.DeviceError('Device is out of code space'));
         break;
 
       case 'DEVICE_OUT_OF_MEMORY':
 
-        if (this.state !== 'initialized') {
-          this.emit('error', new Errors.DeviceError('Out of memory'));
-        }
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.DeviceError('Device is out of memory')
+        );
 
         break;
 
       case 'LASTEXITCODE':
 
-        if (this.state !== 'initialized') {
-          this.emit('error', new Errors.DeviceError(log.value));
-        }
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.DeviceError('Device Error: ' + log.value)
+        );
 
         break;
 
       case 'DEVICE_ERROR':
-        this.emit('error', new Errors.DeviceRuntimeError(log.value));
+
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.DeviceRuntimeError('Device Runtime Error: ' + log.value)
+        );
+
         break;
 
       case 'AGENT_ERROR':
-        this.emit('error', new Errors.AgentRuntimeError(log.value));
+
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.AgentRuntimeError('Agent Runtime Error: ' + log.value)
+        );
+
         break;
 
       case 'DEVICE_CONNECTED':
         break;
 
       case 'DEVICE_DISCONNECTED':
-        this.emit('error', new Errors.DeviceDisconnectedError());
+
+        this.emit(
+          this.state === 'started' ? 'error' : 'warning',
+          new Errors.DeviceDisconnectedError()
+        );
+
         break;
 
       case 'POWERSTATE':
@@ -216,7 +234,7 @@ class Session extends EventEmitter {
             this.emit('start');
 
             if (this.state !== 'ready') {
-              throw new Errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError();
             }
 
             this.state = 'started';
@@ -225,7 +243,7 @@ class Session extends EventEmitter {
           case 'TEST_START':
 
             if (this.state !== 'started') {
-              throw new Errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError();
             }
 
             // status message
@@ -239,7 +257,7 @@ class Session extends EventEmitter {
           case 'TEST_FAIL':
 
             if (this.state !== 'started') {
-              throw new Errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError();
             }
 
             this.emit('error', new Errors.TestMethodError(log.value.message));
@@ -250,7 +268,7 @@ class Session extends EventEmitter {
             this.emit('result');
 
             if (this.state !== 'started') {
-              throw new Errors.TestStateError('Invalid test session state');
+              throw new Errors.TestStateError();
             }
 
             this.tests = log.value.message.tests;

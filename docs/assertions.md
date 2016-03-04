@@ -130,7 +130,7 @@ example:
 // ok
 this.assertBetween(10, 9, 11);
 
-// Failure: Expected value the range of 11..12, got 10
+// Failure: Expected value in the range of 11..12, got 10
 this.assertBetween(10, 11, 12);
 ```
 
