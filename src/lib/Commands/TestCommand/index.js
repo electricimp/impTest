@@ -524,15 +524,11 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 
       this._error(error.message);
       this._stopSession = true;
-      this._stopDevice = true;
-      this._stopCommand = true;
 
     } else {
 
       this._error(error);
       this._stopSession = true;
-      this._stopDevice = true;
-      this._stopCommand = true;
 
     }
 
