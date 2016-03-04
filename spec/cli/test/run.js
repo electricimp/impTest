@@ -49,7 +49,7 @@ function run(options) {
     options.extraTestTimeout !== undefined && (command.extraTestTimeout = options.extraTestTimeout);
     options.sessionStartTimeout !== undefined && (command.sessionStartTimeout = options.sessionStartTimeout);
 
-    console.log(c.inverse('<command>'));
+    console.log(c.inverse('\n<command config="' + options.configPath + '">'));
 
     let out = '';
 
