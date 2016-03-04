@@ -133,7 +133,7 @@ class Session extends EventEmitter {
 
       case 'DEVICE_CODE_SPACE_USAGE':
 
-        if (!this._deviceCodespaceUsage !== log.value) {
+        if (this._deviceCodespaceUsage !== log.value) {
 
           this.emit('message', {
             type: 'info',
