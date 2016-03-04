@@ -150,7 +150,7 @@ class Session extends EventEmitter {
 
       case 'DEVICE_OUT_OF_MEMORY':
 
-        if (this.state !== 'initialized') {
+        if (this.state === 'started') {
           this.emit('error', new Errors.DeviceError('Out of memory'));
         }
 
@@ -158,25 +158,37 @@ class Session extends EventEmitter {
 
       case 'LASTEXITCODE':
 
-        if (this.state !== 'initialized') {
+        if (this.state === 'started') {
           this.emit('error', new Errors.DeviceError(log.value));
         }
 
         break;
 
       case 'DEVICE_ERROR':
-        this.emit('error', new Errors.DeviceRuntimeError(log.value));
+
+        if (this.state === 'started') {
+          this.emit('error', new Errors.DeviceRuntimeError(log.value));
+        }
+
         break;
 
       case 'AGENT_ERROR':
-        this.emit('error', new Errors.AgentRuntimeError(log.value));
+
+        if (this.state === 'started') {
+          this.emit('error', new Errors.AgentRuntimeError(log.value));
+        }
+
         break;
 
       case 'DEVICE_CONNECTED':
         break;
 
       case 'DEVICE_DISCONNECTED':
-        this.emit('error', new Errors.DeviceDisconnectedError());
+
+        if (this.state === 'started') {
+          this.emit('error', new Errors.DeviceDisconnectedError());
+        }
+
         break;
 
       case 'POWERSTATE':
