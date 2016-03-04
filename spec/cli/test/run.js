@@ -28,7 +28,7 @@ function run(options) {
     options.extraTestTimeout !== undefined && (command.extraTestTimeout = options.extraTestTimeout);
     options.sessionStartTimeout !== undefined && (command.sessionStartTimeout = options.sessionStartTimeout);
 
-    console.log(c.inverse('======== command start ========'));
+    console.log(c.inverse('<command>'));
 
     let out = '';
 
@@ -39,7 +39,7 @@ function run(options) {
 
     const onDone = (success) => {
       unHook();
-      console.log(c.inverse('========= command end ========='));
+      console.log(c.inverse('</command>'));
       out = utils.clearAnsiColors(out);
       resolve({success, out});
     };
