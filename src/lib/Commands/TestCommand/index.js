@@ -257,13 +257,13 @@ class TestCommand extends AbstractCommand {
         // run test session
         .then(() => this._runSession(deviceId, code.device, code.agent, testFile.type))
 
-        // next session
-        .then(resolve)
-
         // error
         .catch((error) => {
           this._onError(error);
-        });
+        })
+
+        // next file
+        .then(resolve);
     });
   }
 
