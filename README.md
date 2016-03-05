@@ -110,4 +110,4 @@ SPEC_DEBUG=false SPEC_MODEL_ID=Lu55555OJHZT SPEC_DEVICE_IDS=237d555558a609ee npm
 
 ## License
 
-The code in this repository is licensed under [MIT License](https://github.com/electricimp/serializer/tree/master/LICENSE).
+The code in this repository is licensed under [MIT License](./LICENSE).
