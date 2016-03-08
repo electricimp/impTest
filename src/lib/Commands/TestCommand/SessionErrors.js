@@ -48,3 +48,15 @@ module.exports.TestStateError = class TestStateError extends Error {
   }
 };
 
+module.exports.ExternalCommandExitCodeError = class ExternalCommandExitCodeError extends Error {
+  constructor(message, id) {
+    super(message || 'External command failed', id);
+  }
+};
+
+module.exports.ExternalCommandTimeoutError = class ExternalCommandTimeoutError extends Error {
+  constructor(message, id) {
+    super(message || 'External command timed out', id);
+  }
+};
+
