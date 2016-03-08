@@ -408,10 +408,12 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
       this._session.logParser.debug = this.debug;
 
       this._session.on('message', (e) => {
-        if ('info' === e.type) {
-          this._info(e.message);
-        } else if ('test' === e.type) {
+        if ('test' === e.type) {
           this._testLine(e.message);
+        } else if ('externalCommandOutput' === e.type) {
+          console.log(e.message);
+        } else {
+          this._info(e.message);
         }
       });
 
