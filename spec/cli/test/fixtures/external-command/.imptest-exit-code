@@ -4,9 +4,8 @@
     "agentFile": false,
     "deviceFile": false,
     "stopOnFailure": false,
-    "timeout": "1",
+    "timeout": "30",
     "tests": [
-        "*.test.nut",
-        "tests/**/*.test.nut"
+        "tests/exit-code.*.test.nut"
     ]
 }
