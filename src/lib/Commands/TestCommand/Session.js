@@ -147,14 +147,14 @@ class Session extends EventEmitter {
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        this.emit('error', new Errors.DeviceError('Device is res of code space'));
+        this.emit('error', new Errors.DeviceError('Device is out of code space'));
         break;
 
       case 'DEVICE_OUT_OF_MEMORY':
 
         this.emit(
           this.state === 'started' ? 'error' : 'warning',
-          new Errors.DeviceError('Device is res of memory')
+          new Errors.DeviceError('Device is out of memory')
         );
 
         break;
