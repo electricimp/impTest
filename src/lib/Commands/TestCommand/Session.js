@@ -327,7 +327,7 @@ class Session extends EventEmitter {
 
             this.emit('message', {
               type: 'info',
-              message: c.blue('Running external command: ') + log.value.message.command
+              message: c.blue('Running external command ') + log.value.message.command
             });
 
             let res;
