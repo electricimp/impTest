@@ -399,13 +399,18 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
       this._stopSession = false;
       this._initSessionWatchdogs();
 
+      // configure session
+
       this._session.debug = this.debug;
       this._session.buildAPIClient = this._buildAPIClient;
       this._session.externalCommandsTimeout = parseFloat(this._impTestFile.values.timeout);
+      this._session.externalCommandsCwd = this._impTestFile.dir;
 
       this._session.logParser = new LogParser();
       this._session.logParser.buildAPIClient = this._buildAPIClient;
       this._session.logParser.debug = this.debug;
+
+      // set event handlers
 
       this._session.on('message', (e) => {
         if ('test' === e.type) {

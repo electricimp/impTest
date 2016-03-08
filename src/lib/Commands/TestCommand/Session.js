@@ -333,7 +333,10 @@ class Session extends EventEmitter {
             let res;
 
             try {
-              res = syncExec(log.value.message.command, this.externalCommandsTimeout * 1000);
+              res = syncExec(log.value.message.command, this.externalCommandsTimeout * 1000, {
+                cwd: this.externalCommandsCwd,
+                env: process.env
+              });
 
               // debug command result
               this._debug(c.blue('External command STDOUT'), res.stdout);
@@ -475,6 +478,14 @@ class Session extends EventEmitter {
 
   set externalCommandsTimeout(value) {
     this._externalCommandsTimeout = value;
+  }
+
+  get externalCommandsCwd() {
+    return this._externalCommandsCwd;
+  }
+
+  set externalCommandsCwd(value) {
+    this._externalCommandsCwd = value;
   }
 }
 
