@@ -401,6 +401,7 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 
       this._session.debug = this.debug;
       this._session.buildAPIClient = this._buildAPIClient;
+      this._session.externalCommandsTimeout = this.extraTestTimeout + parseFloat(this._impTestFile.values.timeout);
 
       this._session.logParser = new LogParser();
       this._session.logParser.buildAPIClient = this._buildAPIClient;
