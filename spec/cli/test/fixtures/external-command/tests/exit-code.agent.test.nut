@@ -1,5 +1,5 @@
 class TestCase extends ImpTestCase {
   function testExtCommand() {
-    this.externalCommand("echo \"external command output\"; exit 125");
+    this.runCommand("echo \"external command output\"; exit 125");
   }
 }
