@@ -16,6 +16,7 @@
 'use strict';
 
 const c = require('colors');
+const syncExec = require('sync-exec');
 const EventEmitter = require('events');
 const Errors = require('./SessionErrors');
 const randomWords = require('random-words');
@@ -146,14 +147,14 @@ class Session extends EventEmitter {
         break;
 
       case 'DEVICE_OUT_OF_CODE_SPACE':
-        this.emit('error', new Errors.DeviceError('Device is out of code space'));
+        this.emit('error', new Errors.DeviceError('Device is res of code space'));
         break;
 
       case 'DEVICE_OUT_OF_MEMORY':
 
         this.emit(
           this.state === 'started' ? 'error' : 'warning',
-          new Errors.DeviceError('Device is out of memory')
+          new Errors.DeviceError('Device is res of memory')
         );
 
         break;
@@ -320,6 +321,39 @@ class Session extends EventEmitter {
 
             break;
 
+          case 'EXTERNAL_COMMAND':
+
+            // run command
+
+            this.emit('message', {
+              type: 'info',
+              message: c.blue('Running external command: ') + log.value.message.command
+            });
+
+            let res;
+
+            try {
+              res = syncExec(log.value.message.command, this.externalCommandsTimeout * 1000);
+
+              // debug command result
+              this._debug(c.blue('External command STDOUT'), res.stdout);
+              this._debug(c.blue('External command STDERR'), res.stderr);
+              this._debug(c.blue('External command exit code'), res.satus);
+
+              // check exit code
+              if (res.status !== 0) {
+                throw new Errors.ExternalCommandExitCodeError(`External command failed with exit code ${res.status}`);
+              }
+            } catch (e) {
+              if (e.message === 'Timeout') {
+                throw new Errors.ExternalCommandTimeoutError();
+              } else {
+                throw e;
+              }
+            }
+
+            break;
+
           default:
             break;
         }
@@ -421,6 +455,14 @@ class Session extends EventEmitter {
       }
     }
 
+  }
+
+  get externalCommandsTimeout() {
+    return this._externalCommandsTimeout;
+  }
+
+  set externalCommandsTimeout(value) {
+    this._externalCommandsTimeout = value;
   }
 }
 
