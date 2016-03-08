@@ -1,6 +1,6 @@
 {
   "name": "imptest",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Electric Imp Test Runner",
   "main": "src/cli/imptest.js",
   "scripts": {
@@ -27,7 +27,8 @@
     "random-words": "0.0.1",
     "randomstring": "^1.1.3",
     "sprintf-js": "^1.0.3",
-    "strip-json-comments": "^2.0.0"
+    "strip-json-comments": "^2.0.0",
+    "sync-exec": "^0.6.2"
   },
   "devDependencies": {
     "intercept-stdout": "^0.1.2",

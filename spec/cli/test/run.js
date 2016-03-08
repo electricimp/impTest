@@ -19,7 +19,7 @@ const TestCommand = require('../../../src/lib/Commands/TestCommand');
  */
 function createTmpImpTestFile(path) {
   let s = fs.readFileSync(path, 'utf-8');
-  s = s.replace('<modelId>', config.cli.modelId);
+  s = s.replace(/\"?\<modelId\>\"?/, JSON.stringify(config.cli.modelId));
   s = s.replace('<deviceIds>', JSON.stringify(config.cli.deviceIds));
   path += '.tmp';
   fs.writeFileSync(path, s, 'utf-8');

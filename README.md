@@ -7,14 +7,14 @@
   - [Commands](#commands)
     - [init](#init)
     - [test](#test)
+  - [[Quick Start](docs/quick-start.md)](#quick-startdocsquick-startmd)
+  - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
+    - [[Assertions](./docs/assertions.md)](#assertionsdocsassertionsmd)
+  - [[.imptest Specification](docs/imptest-spec.md)](#imptest-specificationdocsimptest-specmd)
   - [Development](#development)
     - [Installation](#installation-1)
     - [Running](#running)
     - [Testing impTest](#testing-imptest)
-  - [[Quick Start](docs/quick-start.md)](#quick-startdocsquick-startmd)
-  - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
-    - [[Assertions](./docs/assertions.md)](#assertionsdocsassertionsmd)
-  - [[.imptest File Specification](docs/imptest-spec.md)](#imptest-file-specificationdocsimptest-specmd)
   - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -59,6 +59,15 @@ Options:
   -c, --config [path]  config file path [default: .imptest]
 ```
 
+## [Quick Start](docs/quick-start.md)
+
+## [Writing Tests](docs/writing-tests.md)
+
+### [Assertions](./docs/assertions.md)
+
+## [.imptest Specification](docs/imptest-spec.md)
+
+
 ## Development
 
 ### Installation
@@ -99,14 +108,6 @@ For example:
 SPEC_DEBUG=false SPEC_MODEL_ID=Lu55555OJHZT SPEC_DEVICE_IDS=237d555558a609ee npm test
 ```
 
-## [Quick Start](docs/quick-start.md)
-
-## [Writing Tests](docs/writing-tests.md)
-
-### [Assertions](./docs/assertions.md)
-
-## [.imptest File Specification](docs/imptest-spec.md)
-
 ## License
 
-The code in this repository is licensed under [MIT License](https://github.com/electricimp/serializer/tree/master/LICENSE).
+The code in this repository is licensed under [MIT License](./LICENSE).
