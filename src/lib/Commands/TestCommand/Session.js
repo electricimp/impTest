@@ -340,6 +340,18 @@ class Session extends EventEmitter {
               this._debug(c.blue('External command STDERR'), res.stderr);
               this._debug(c.blue('External command exit code'), res.satus);
 
+              // output command STDOUT
+
+              let out = res.stdout;
+              out = res.stdout;
+
+              out = out.toString().trim().split(/\n|\r\n/).map(v => '> ' + v).join('\n');
+
+              this.emit('message', {
+                type: 'externalCommandOutput',
+                message: c.cyan(out)
+              });
+
               // check exit code
               if (res.status !== 0) {
                 throw new Errors.ExternalCommandExitCodeError(`External command failed with exit code ${res.status}`);
