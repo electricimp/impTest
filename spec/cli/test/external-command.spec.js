@@ -27,8 +27,10 @@ describe('TestCommand test suite for external-command scenario', () => {
   });
 
   it('should verify the output', (done) => {
-    expect(commandSuccess).toBe(true);
+    expect(commandSuccess).toBe(false);
     expect(commandOut).not.toBeEmptyString();
+    expect(commandOut).toMatch(/\> external command output/);
+    expect(commandOut).toMatch(/External command failed with exit code 125/);
     done();
   });
 });
