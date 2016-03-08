@@ -9,7 +9,8 @@
   - [[Assertions](./assertions.md)](#assertionsassertionsmd)
   - [Environment Variables](#environment-variables)
   - [\_\_FILE\_\_ & \_\_LINE\_\_](#%5C_%5C_file%5C_%5C_-&-%5C_%5C_line%5C_%5C_)
-  - [Diagniostic Messages](#diagniostic-messages)
+  - [Diagnostic Messages](#diagnostic-messages)
+  - [External Commands](#external-commands)
   - [Running Tests Manually](#running-tests-manually)
   - [Test Case Example](#test-case-example)
 
@@ -77,11 +78,24 @@ this.assertEqual(
 );
 ```
 
-### Diagniostic Messages
+### Diagnostic Messages
 
-Return values (other than *null*) are displayed in the console when test succeds and can be used to output diagnostic messages, like:
+Return values (other than *null*) are displayed in the console when test succeeds and can be used to output diagnostic messages, like:
 
 <img src="diagnostic-messages.png" width=497>
+
+### External Commands
+
+External commands can be triggered by test case like so:
+
+```squirrel
+// within the test case/method
+this.runCommand("echo 123");
+```
+
+The command `echo 123` then will be executed by impTest.
+
+If external command times out (the time it's given is controlled by the _timeout_ parameter in [.imptest](./imptest-spec.md)) or exits with status code other than 0, the test session fails.
 
 ### Running Tests Manually
 
@@ -94,6 +108,8 @@ testRunner.readableOutput = true;
 testRunner.stopOnFailure = true;
 testRunner.run();
 ```
+
+Please note that external command execution is not available when tests are executed manually.
 
 ### Test Case Example
 

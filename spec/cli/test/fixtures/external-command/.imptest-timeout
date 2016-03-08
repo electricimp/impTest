@@ -1,0 +1,11 @@
+{
+    "modelId": "<modelId>",
+    "devices": <deviceIds>,
+    "agentFile": false,
+    "deviceFile": false,
+    "stopOnFailure": false,
+    "timeout": "1",
+    "tests": [
+        "tests/timeout.*.test.nut"
+    ]
+}

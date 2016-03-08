@@ -401,16 +401,19 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 
       this._session.debug = this.debug;
       this._session.buildAPIClient = this._buildAPIClient;
+      this._session.externalCommandsTimeout = parseFloat(this._impTestFile.values.timeout);
 
       this._session.logParser = new LogParser();
       this._session.logParser.buildAPIClient = this._buildAPIClient;
       this._session.logParser.debug = this.debug;
 
       this._session.on('message', (e) => {
-        if ('info' === e.type) {
-          this._info(e.message);
-        } else if ('test' === e.type) {
+        if ('test' === e.type) {
           this._testLine(e.message);
+        } else if ('externalCommandOutput' === e.type) {
+          console.log(e.message);
+        } else {
+          this._info(e.message);
         }
       });
 
@@ -522,6 +525,16 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
       this._stopSession = true;
 
     } else if (error instanceof BuildAPIClient.Errors.BuildAPIError) {
+
+      this._error(error.message);
+      this._stopSession = true;
+
+    } else if (error instanceof Session.Errors.ExternalCommandTimeoutError) {
+
+      this._error(error.message);
+      this._stopSession = true;
+
+    } else if (error instanceof Session.Errors.ExternalCommandExitCodeError) {
 
       this._error(error.message);
       this._stopSession = true;
