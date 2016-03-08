@@ -529,6 +529,16 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
       this._error(error.message);
       this._stopSession = true;
 
+    } else if (error instanceof Session.Errors.ExternalCommandTimeoutError) {
+
+      this._error(error.message);
+      this._stopSession = true;
+
+    } else if (error instanceof Session.Errors.ExternalCommandExitCodeError) {
+
+      this._error(error.message);
+      this._stopSession = true;
+
     } else if (error instanceof Error) {
 
       this._error(error.message);
