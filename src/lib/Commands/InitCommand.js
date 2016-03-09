@@ -231,8 +231,10 @@ class InitCommand extends AbstractCommand {
       let agentFiles = [];
 
       // local files
-      deviceFiles = glob.sync('**/*device*.nut', {cwd: this._impTestFile.dir});
-      agentFiles = glob.sync('**/*agent*.nut', {cwd: this._impTestFile.dir});
+      deviceFiles = glob.sync('**/*device*.nut', {cwd: this._impTestFile.dir})
+        .concat(glob.sync('**/*.nut', {cwd: this._impTestFile.dir}));
+      agentFiles = glob.sync('**/*agent*.nut', {cwd: this._impTestFile.dir})
+        .concat(glob.sync('**/*.nut', {cwd: this._impTestFile.dir}));
 
       // files from .imptest
       if (this._impTestFile.exists) {
