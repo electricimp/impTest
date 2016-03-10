@@ -737,6 +737,14 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
 
+  get logTiming() {
+    return this._logTiming;
+  }
+
+  set logTiming(value) {
+    this._logTiming = value;
+  }
+
   get testFrameworkFile() {
     return this._testFrameworkFile;
   }

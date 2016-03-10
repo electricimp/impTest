@@ -114,14 +114,6 @@ class AbstractCommand {
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
 
-  get logTiming() {
-    return this._logTiming;
-  }
-
-  set logTiming(value) {
-    this._logTiming = value;
-  }
-
   get version() {
     return this._version;
   }
