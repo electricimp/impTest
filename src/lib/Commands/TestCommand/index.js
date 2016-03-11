@@ -405,6 +405,7 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
       this._session.buildAPIClient = this._buildAPIClient;
       this._session.externalCommandsTimeout = parseFloat(this._impTestFile.values.timeout);
       this._session.externalCommandsCwd = this._impTestFile.dir;
+      this._session.externalCommandsBlockedEnvVars = [BUILD_API_KEY_ENV_VAR];
 
       this._session.logParser = new LogParser();
       this._session.logParser.buildAPIClient = this._buildAPIClient;
