@@ -13,11 +13,11 @@ __.imptest__ file is used to configure tests execution.
 
 ```js
 {
-    "apiKey":         {string},           // Build API key
+    "apiKey":         {string},           // Build API key, optional
     "modelId":        {string},           // Model id
     "devices":        {string[]},         // Device IDs
-    "deviceFile":     {string},           // Device code file. Default: "device.nut"
-    "agentFile":      {string},           // Agent code file. Default: "agent.nut"
+    "deviceFile":     {string|false},     // Device code file. Default: "device.nut"
+    "agentFile":      {string|false},     // Agent code file. Default: "agent.nut"
     "tests":          {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
     "stopOnFailure":  {boolean},          // Stop tests execution on failure? Default: false
     "timeout":        {number}            // Async test methods timeout, seconds. Default: 10

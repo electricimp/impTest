@@ -333,9 +333,19 @@ class Session extends EventEmitter {
             let res;
 
             try {
+
+              const env = JSON.parse(JSON.stringify(process.env));
+
+              // remove blocked env vars
+              if (this.externalCommandsBlockedEnvVars) {
+                for (const blokedVarName of this.externalCommandsBlockedEnvVars) {
+                  delete env[blokedVarName];
+                }
+              }
+
               res = syncExec(log.value.message.command, this.externalCommandsTimeout * 1000, {
                 cwd: this.externalCommandsCwd,
-                env: process.env
+                env
               });
 
               // debug command result
@@ -486,6 +496,14 @@ class Session extends EventEmitter {
 
   set externalCommandsCwd(value) {
     this._externalCommandsCwd = value;
+  }
+
+  get externalCommandsBlockedEnvVars() {
+    return this._externalCommandsBlockedEnvVars;
+  }
+
+  set externalCommandsBlockedEnvVars(value) {
+    this._externalCommandsBlockedEnvVars = value;
   }
 }
 
