@@ -305,12 +305,12 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     // agent source file name for line control
     const agentLineControlFile = this._impTestFile.values.agentFile ?
                                  path.basename(this._impTestFile.values.agentFile) :
-                                 '_agent_';
+                                 '__agent__';
 
     // device source file name for line control
     const deviceLineControlFile = this._impTestFile.values.deviceFile ?
                                   path.basename(this._impTestFile.values.deviceFile) :
-                                  '_device_';
+                                  '__device__';
 
     // quote file name for line control statement
     const quoteFilename = f => f.replace('"', '\\"');
