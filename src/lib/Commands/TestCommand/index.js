@@ -305,39 +305,74 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     // agent source file name for line control
     const agentLineControlFile = this._impTestFile.values.agentFile ?
                                  path.basename(this._impTestFile.values.agentFile) :
-                                 '_agent_';
+                                 '__agent__';
 
     // device source file name for line control
     const deviceLineControlFile = this._impTestFile.values.deviceFile ?
                                   path.basename(this._impTestFile.values.deviceFile) :
-                                  '_device_';
+                                  '__device__';
+
+    // quote file name for line control statement
+    const quoteFilename = f => f.replace('"', '\\"');
 
     if ('agent' === testFile.type) {
+      // <editor-fold defaultstate="collapsed">
+      agentCode =
+`#line 1 "impUnit"
+${this._frameworkCode}
 
-      agentCode = '#line 1 "_impUnit_"\n' +
-                  this._frameworkCode + '\n\n' +
-                  `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
-                  (this._sourceCode.agent || '/* no agent source */') + '\n\n' +
-                  `#line 1 "${path.basename(testFile.name).replace('"', '\\"')}"\n` +
-                  testCode + '\n\n' +
-                  '#line 1 "_bootstrap_"\n' +
-                  bootstrapCode;
-      deviceCode = `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
-                   (this._sourceCode.device || '/* no device source */') + '\n\n' +
-                   '#line 1 "_bootstrap_"\n' +
-                   reloadTrigger;
+// tests module
+function __module_tests(Promise) {
+#line 1 "${quoteFilename(path.basename(testFile.name))}
+${testCode}
+}
+
+// resolve "tests" module
+__module_tests(__module_ImpUnit_Promise_exports);
+
+#line 1 "${quoteFilename(agentLineControlFile)}"
+${(this._sourceCode.agent || '/* no agent source */')}
+
+#line 1 "__bootstrap__"
+${bootstrapCode}
+`;
+
+      deviceCode =
+`#line 1 "${quoteFilename(deviceLineControlFile)}"
+${(this._sourceCode.device || '/* no device source */')}
+
+${reloadTrigger}
+`;
+      // </editor-fold>
     } else {
-      deviceCode = '#line 1 "_impUnit_"\n' +
-                   this._frameworkCode + '\n\n' +
-                   `#line 1 "${deviceLineControlFile.replace('"', '\\"')}"\n` +
-                   this._sourceCode.device + '\n\n' +
-                   `#line 1 "${path.basename(testFile.name).replace('"', '\\"')}"\n` +
-                   testCode + '\n\n' +
-                   '#line 1 "_bootstrap_"\n' +
-                   bootstrapCode + '\n\n' +
-                   reloadTrigger;
-      agentCode = `#line 1 "${agentLineControlFile.replace('"', '\\"')}"\n` +
-                  (this._sourceCode.agent || '/* no agent source */');
+      // <editor-fold defaultstate="collapsed">
+      deviceCode =
+        `#line 1 "impUnit"
+${this._frameworkCode}
+
+// tests module
+function __module_tests(Promise) {
+#line 1 "${quoteFilename(path.basename(testFile.name))}
+${testCode}
+}
+
+// resolve "tests" module
+__module_tests(__module_ImpUnit_Promise_exports);
+
+#line 1 "${quoteFilename(deviceLineControlFile)}"
+${(this._sourceCode.device || '/* no device source */')}
+
+#line 1 "__bootstrap__"
+${bootstrapCode}
+
+${reloadTrigger}
+`;
+
+      agentCode =
+        `#line 1 "${quoteFilename(agentLineControlFile)}"
+${(this._sourceCode.agent || '/* no agent source */')}
+`;
+      // </editor-fold>
     }
 
     this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
