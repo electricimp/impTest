@@ -323,7 +323,7 @@ ${this._frameworkCode}
 
 // tests module
 function __module_tests(Promise) {
-#line 1 "${quoteFilename(path.basename(testFile.name))}
+#line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
 
@@ -352,7 +352,7 @@ ${this._frameworkCode}
 
 // tests module
 function __module_tests(Promise) {
-#line 1 "${quoteFilename(path.basename(testFile.name))}
+#line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
 
