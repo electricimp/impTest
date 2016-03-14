@@ -321,14 +321,14 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 `#line 1 "impUnit"
 ${this._frameworkCode}
 
+#line 1 "${quoteFilename(agentLineControlFile)}"
+${(this._sourceCode.agent || '/* no agent source */')}
+
 // tests module
 function __module_tests(Promise, ImpTestCase) {
 #line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
-
-#line 1 "${quoteFilename(agentLineControlFile)}"
-${(this._sourceCode.agent || '/* no agent source */')}
 
 // tests bootstrap module
 function __module_tests_bootstrap(ImpUnitRunner) {
@@ -354,14 +354,14 @@ ${reloadTrigger}
         `#line 1 "impUnit"
 ${this._frameworkCode}
 
+#line 1 "${quoteFilename(deviceLineControlFile)}"
+${(this._sourceCode.device || '/* no device source */')}
+
 // tests module
 function __module_tests(Promise, ImpTestCase) {
 #line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
-
-#line 1 "${quoteFilename(deviceLineControlFile)}"
-${(this._sourceCode.device || '/* no device source */')}
 
 // tests bootstrap module
 function __module_tests_bootstrap(ImpUnitRunner) {
