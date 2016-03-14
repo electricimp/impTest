@@ -321,20 +321,24 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 `#line 1 "impUnit"
 ${this._frameworkCode}
 
+#line 1 "${quoteFilename(agentLineControlFile)}"
+${(this._sourceCode.agent || '/* no agent source */')}
+
 // tests module
-function __module_tests(Promise) {
+function __module_tests(Promise, ImpTestCase) {
 #line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
 
-// resolve "tests" module
-__module_tests(__module_ImpUnit_Promise_exports);
-
-#line 1 "${quoteFilename(agentLineControlFile)}"
-${(this._sourceCode.agent || '/* no agent source */')}
-
-#line 1 "__bootstrap__"
+// tests bootstrap module
+function __module_tests_bootstrap(ImpUnitRunner) {
+#line 1 "__tests_bootstrap__"
 ${bootstrapCode}
+}
+
+// resolve modules
+__module_tests(__module_ImpUnit_Promise_exports, __module_impUnit_exports.ImpTestCase);
+__module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 `;
 
       deviceCode =
@@ -350,20 +354,24 @@ ${reloadTrigger}
         `#line 1 "impUnit"
 ${this._frameworkCode}
 
+#line 1 "${quoteFilename(deviceLineControlFile)}"
+${(this._sourceCode.device || '/* no device source */')}
+
 // tests module
-function __module_tests(Promise) {
+function __module_tests(Promise, ImpTestCase) {
 #line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
 
-// resolve "tests" module
-__module_tests(__module_ImpUnit_Promise_exports);
-
-#line 1 "${quoteFilename(deviceLineControlFile)}"
-${(this._sourceCode.device || '/* no device source */')}
-
-#line 1 "__bootstrap__"
+// tests bootstrap module
+function __module_tests_bootstrap(ImpUnitRunner) {
+#line 1 "__tests_bootstrap__"
 ${bootstrapCode}
+}
+
+// resolve modules
+__module_tests(__module_ImpUnit_Promise_exports, __module_impUnit_exports.ImpTestCase);
+__module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 
 ${reloadTrigger}
 `;
