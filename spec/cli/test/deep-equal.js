@@ -30,7 +30,7 @@ describe('TestCommand test suite for deep-equal scenario', () => {
     expect(out).not.toBeEmptyString();
     expect(out).toMatch(/Missing slot \[a\.b\.c\] in actual value\n/);
     expect(out).toMatch(/Extra slot \[a\.b\.d\] in actual value\n/);
-    expect(out).toMatch(/At \[a\.b\.c\]: expected \"100\", got \"3\"\n/);
+    expect(out).toMatch(/At \[a\.b\.c\]: expected \"3\", got \"100\"\n/);
     done();
   });
 });
