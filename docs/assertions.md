@@ -114,6 +114,9 @@ this.assertDeepEqual({"a" : { "b" : 1 }}, {"a" : { "b" : 0 }});
 // Failure: Missing slot [a.b] in actual value
 this.assertDeepEqual({"a" : { "b" : 1 }}, {"a" : { "_b" : 0 }});
 
+// Failure: Extra slot [a.c] in actual value
+this.assertDeepEqual({"a" : { "b" : 1 }}, {"a" : { "b" : 1, "c": 2 }});
+
 // Failure: At [a.b]: expected "1", got "0"
 this.assertDeepEqual({"a" : { "b" : 1 }}, {"a" : { "b" : 0 }});
 ```
