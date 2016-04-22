@@ -461,6 +461,8 @@ ${(this._sourceCode.agent || '/* no agent source */')}
           this._testLine(e.message);
         } else if ('externalCommandOutput' === e.type) {
           console.log(e.message);
+        } else if ('testInfo' === e.type) /* this.info() in test cases */ {
+          this._testLine(e.message);
         } else {
           this._info(e.message);
         }
