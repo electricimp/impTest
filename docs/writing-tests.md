@@ -84,6 +84,12 @@ Return values (other than *null*) are displayed in the console when test succeed
 
 <img src="diagnostic-messages.png" width=497>
 
+Test cases can also outout informational messages with:
+
+```squirrel
+this.info(<message>)
+```
+
 ### External Commands
 
 External commands can be triggered by test case like so:
