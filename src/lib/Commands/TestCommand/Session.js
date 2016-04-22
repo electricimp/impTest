@@ -379,6 +379,16 @@ class Session extends EventEmitter {
 
             break;
 
+          // this.info() from test case
+          case 'INFO':
+
+            this.emit('message', {
+              type: 'testInfo',
+              message: c.cyan(JSON.stringify(log.value.message.message))
+            });
+
+            break;
+
           default:
             break;
         }
