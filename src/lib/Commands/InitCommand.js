@@ -119,10 +119,10 @@ class InitCommand extends AbstractCommand {
     for (const modelId in this._models) {
       for (const deviceId of  this._models[modelId].devices) {
         table.push([
-          deviceId,
-          this._devices[deviceId].name,
-          this._models[modelId].id,
-          this._models[modelId].name,
+          deviceId || "",
+          this._devices[deviceId].name || "",
+          this._models[modelId].id || "",
+          this._models[modelId].name || "",
           this._devices[deviceId].powerstate === 'online'
             ? c.green(this._devices[deviceId].powerstate)
             : c.red(this._devices[deviceId].powerstate)
