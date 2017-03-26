@@ -10,6 +10,7 @@ const fs = require('fs');
 const c = require('colors');
 const path = require('path');
 const glob = require('glob');
+const Builder = require('Builder');
 const Errors = require('./Errors');
 const Session = require('./Session');
 const Bundler = require('../../Bundler');
@@ -19,7 +20,6 @@ const Watchdog = require('../../Watchdog');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
 const BuildAPIClient = require('imp-build-api-v4');
-const CodeProcessor = require('../../CodeProcessor');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
 //</editor-fold>
@@ -47,6 +47,11 @@ const DEFAULT_EXTRA_TEST_MESSAGE_TIMEOUT = 5;
  * Name for BuildAPI key env var
  */
 const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
+
+/**
+ * Unsupported in Builder symbols
+ */
+const UNSUPPORTED_SYMBOLS_REGEXP = /[^_A-Za-z0-9]/g;
 
 /**
  * Test command
@@ -282,8 +287,27 @@ class TestCommand extends AbstractCommand {
 
     // read/process test code
     let testCode = fs.readFileSync(testFile.path, 'utf-8').trim();
-    this._codeProcessor.variables.__FILE__ = path.basename(testFile.path);
-    testCode = this._codeProcessor.process(testCode);
+    let usupportedValues = {}; // map of syntetic_value : original_value
+    var environmentVars = "";
+    for (var prop in process.env) {
+      if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
+        var propValue = process.env[prop];
+        var propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g'); // default regexp
+        if (prop.match(UNSUPPORTED_SYMBOLS_REGEXP)) { // replace unsupported symbols in name
+          propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, '.') + '\\s*\\}', 'g');
+          prop = prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, 'X');
+        }
+        if (testCode.match(propertyRegExp)) {
+           testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
+           if (propValue.match(UNSUPPORTED_SYMBOLS_REGEXP)) {  // replace unsupported symbols in value
+             let newPropValue = propValue.replace(UNSUPPORTED_SYMBOLS_REGEXP, 'X');
+             usupportedValues[newPropValue] = propValue; // store originalvalue
+             propValue = newPropValue;
+           }
+           environmentVars = environmentVars +"@set "+ prop + " \"" + propValue + "\"\n";
+        }
+      }
+    }
 
     // triggers device code space usage message, which also serves as revision launch indicator for device
     const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
@@ -318,7 +342,8 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
-`#line 1 "impUnit"
+`${environmentVars}
+#line 1 "impUnit"
 ${this._frameworkCode}
 
 #line 1 "${quoteFilename(agentLineControlFile)}"
@@ -341,6 +366,14 @@ __module_tests(__module_ImpUnit_Promise_exports, __module_impUnit_exports.ImpTes
 __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 `;
 
+    agentCode = this._Builder.machine.execute(agentCode, {
+      __FILE__: path.basename(testFile.path),
+      __PATH__: testFile.path
+    });
+    for (var nextValue in usupportedValues) { // restore originalvalue
+      agentCode = agentCode.replace(new RegExp(nextValue, 'g'), usupportedValues[nextValue]);
+    }
+
       deviceCode =
 `#line 1 "${quoteFilename(deviceLineControlFile)}"
 ${(this._sourceCode.device || '/* no device source */')}
@@ -351,7 +384,8 @@ ${reloadTrigger}
     } else {
       // <editor-fold defaultstate="collapsed">
       deviceCode =
-        `#line 1 "impUnit"
+`${environmentVars}
+#line 1 "impUnit"
 ${this._frameworkCode}
 
 #line 1 "${quoteFilename(deviceLineControlFile)}"
@@ -375,6 +409,14 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 
 ${reloadTrigger}
 `;
+
+    deviceCode = this._Builder.machine.execute(deviceCode, {
+      __FILE__: path.basename(testFile.path),
+      __PATH__: testFile.path
+    });
+    for (var nextValue in usupportedValues) { // restore originalvalue
+      deviceCode = deviceCode.replace(new RegExp(nextValue, 'g'), usupportedValues[nextValue]);
+    }
 
       agentCode =
         `#line 1 "${quoteFilename(agentLineControlFile)}"
@@ -717,8 +759,6 @@ ${(this._sourceCode.agent || '/* no agent source */')}
         }
 
         this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
-        this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
-        this._agentSource = this._codeProcessor.process(this._agentSource);
 
       } else {
         this._info(c.blue('Have no ') + 'agent' + c.blue(' source file, using blank'));
@@ -738,8 +778,6 @@ ${(this._sourceCode.agent || '/* no agent source */')}
         }
 
         this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
-        this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
-        this._deviceSource = this._codeProcessor.process(this._deviceSource);
 
       } else {
         this._info(c.blue('Have no ') + 'device' + c.blue(' source file, using blank'));
@@ -768,17 +806,15 @@ ${(this._sourceCode.agent || '/* no agent source */')}
   }
 
   /**
-   * Configure and return an instance of CodeProcessor
-   * @return {CodeProcessor}
+   * Configure and return an instance of Builder
+   * @return {Builder}
    * @private
    */
-  get _codeProcessor() {
-    if (!this.__codeProcessor) {
-      this.__codeProcessor = new CodeProcessor();
-      this.__codeProcessor.blockedEnvVars = [BUILD_API_KEY_ENV_VAR]; // block access to Build API key
+  get _Builder() {
+    if (!this.__Builder) {
+      this.__Builder = new Builder();
     }
-
-    return this.__codeProcessor;
+    return this.__Builder;
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
