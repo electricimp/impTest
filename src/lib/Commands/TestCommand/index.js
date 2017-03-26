@@ -54,6 +54,11 @@ const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
 const UNSUPPORTED_SYMBOLS_REGEXP = /[^_A-Za-z0-9]/g;
 
 /**
+ * Unsupported in Builder symbols
+ */
+const LINE_AND_FILE_REGEXP = new RegExp('\\#\\{__', 'g');
+
+/**
  * Test command
  */
 class TestCommand extends AbstractCommand {
@@ -286,12 +291,12 @@ class TestCommand extends AbstractCommand {
     this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
 
     // read/process test code
-    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim();
+    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim().replace(LINE_AND_FILE_REGEXP, "@{__");
     let usupportedValues = {}; // map of syntetic_value : original_value
     var environmentVars = "";
     for (var prop in process.env) {
       if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
-        var propValue = process.env[prop];
+        var propValue = process.env[prop].replace(new RegExp('\\\\', 'g'), "\\\\");
         var propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g'); // default regexp
         if (prop.match(UNSUPPORTED_SYMBOLS_REGEXP)) { // replace unsupported symbols in name
           propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, '.') + '\\s*\\}', 'g');
