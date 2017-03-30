@@ -1,3 +1,27 @@
+// MIT License
+//
+// Copyright 2016-2017 Electric Imp
+//
+// SPDX-License-Identifier: MIT
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+// EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
 /**
  * Test command
  * @author Mikhail Yurasov <mikhail@electricimp.com>
@@ -13,7 +37,6 @@ const glob = require('glob');
 const Builder = require('Builder');
 const Errors = require('./Errors');
 const Session = require('./Session');
-const Bundler = require('../../Bundler');
 const dateformat = require('dateformat');
 const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
@@ -127,10 +150,6 @@ class TestCommand extends AbstractCommand {
     if (!this._impTestFile.exists) {
       throw new Error('Config file not found');
     }
-
-    // bundler
-    this._bundler = new Bundler();
-    this._bundler.debug = this.debug;
   }
 
   /**
@@ -344,18 +363,20 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     // quote file name for line control statement
     const quoteFilename = f => f.replace('"', '\\"');
 
+    let tmpFrameworkFile = this.testFrameworkFile.replace(new RegExp('\\\\', 'g'),"/");
+
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
 `${environmentVars}
 #line 1 "impUnit"
-${this._frameworkCode}
+@include "${tmpFrameworkFile}"
 
 #line 1 "${quoteFilename(agentLineControlFile)}"
 ${(this._sourceCode.agent || '/* no agent source */')}
 
 // tests module
-function __module_tests(Promise, ImpTestCase) {
+function __module_tests(ImpTestCase) {
 #line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
@@ -367,12 +388,12 @@ ${bootstrapCode}
 }
 
 // resolve modules
-__module_tests(__module_ImpUnit_Promise_exports, __module_impUnit_exports.ImpTestCase);
+__module_tests(__module_impUnit_exports.ImpTestCase);
 __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 `;
 
     agentCode = this._Builder.machine.execute(agentCode, {
-      __FILE__: path.basename(testFile.path),
+      __FILE__: testFile.name,
       __PATH__: testFile.path
     });
     for (var nextValue in usupportedValues) { // restore originalvalue
@@ -391,13 +412,13 @@ ${reloadTrigger}
       deviceCode =
 `${environmentVars}
 #line 1 "impUnit"
-${this._frameworkCode}
+@include "${tmpFrameworkFile}"
 
 #line 1 "${quoteFilename(deviceLineControlFile)}"
 ${(this._sourceCode.device || '/* no device source */')}
 
 // tests module
-function __module_tests(Promise, ImpTestCase) {
+function __module_tests(ImpTestCase) {
 #line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
@@ -409,14 +430,14 @@ ${bootstrapCode}
 }
 
 // resolve modules
-__module_tests(__module_ImpUnit_Promise_exports, __module_impUnit_exports.ImpTestCase);
+__module_tests(__module_impUnit_exports.ImpTestCase);
 __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 
 ${reloadTrigger}
 `;
 
     deviceCode = this._Builder.machine.execute(deviceCode, {
-      __FILE__: path.basename(testFile.path),
+      __FILE__: testFile.name,
       __PATH__: testFile.path
     });
     for (var nextValue in usupportedValues) { // restore originalvalue
@@ -795,19 +816,6 @@ ${(this._sourceCode.agent || '/* no agent source */')}
       agent: this._agentSource,
       device: this._deviceSource
     };
-  }
-
-  /**
-   * Read framework code
-   * @return {string}
-   * @private
-   */
-  get _frameworkCode() {
-    if (!this.__frameworkCode) {
-      this.__frameworkCode = this._bundler.process(this.testFrameworkFile).trim();
-    }
-
-    return this.__frameworkCode;
   }
 
   /**
