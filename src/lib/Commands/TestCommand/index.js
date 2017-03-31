@@ -311,7 +311,7 @@ class TestCommand extends AbstractCommand {
 
     // read/process test code
     let testCode = fs.readFileSync(testFile.path, 'utf-8').trim().replace(LINE_AND_FILE_REGEXP, "@{__");
-    let usupportedValues = {}; // map of syntetic_value : original_value
+    let unsupportedValues = {}; // map of syntetic_value : original_value
     var environmentVars = "";
     for (var prop in process.env) {
       if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
@@ -325,7 +325,7 @@ class TestCommand extends AbstractCommand {
            testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
            if (propValue.match(UNSUPPORTED_SYMBOLS_REGEXP)) {  // replace unsupported symbols in value
              let newPropValue = propValue.replace(UNSUPPORTED_SYMBOLS_REGEXP, 'X');
-             usupportedValues[newPropValue] = propValue; // store originalvalue
+             unsupportedValues[newPropValue] = propValue; // store originalvalue
              propValue = newPropValue;
            }
            environmentVars = environmentVars +"@set "+ prop + " \"" + propValue + "\"\n";
@@ -396,8 +396,8 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
       __FILE__: testFile.name,
       __PATH__: testFile.path
     });
-    for (var nextValue in usupportedValues) { // restore originalvalue
-      agentCode = agentCode.replace(new RegExp(nextValue, 'g'), usupportedValues[nextValue]);
+    for (var nextValue in unsupportedValues) { // restore original value
+      agentCode = agentCode.replace(new RegExp(nextValue, 'g'), unsupportedValues[nextValue]);
     }
 
       deviceCode =
@@ -440,8 +440,8 @@ ${reloadTrigger}
       __FILE__: testFile.name,
       __PATH__: testFile.path
     });
-    for (var nextValue in usupportedValues) { // restore originalvalue
-      deviceCode = deviceCode.replace(new RegExp(nextValue, 'g'), usupportedValues[nextValue]);
+    for (var nextValue in unsupportedValues) { // restore original value
+      deviceCode = deviceCode.replace(new RegExp(nextValue, 'g'), unsupportedValues[nextValue]);
     }
 
       agentCode =
