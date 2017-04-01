@@ -350,7 +350,7 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     // quote file name for line control statement
     const quoteFilename = f => f.replace('"', '\\"');
 
-    let tmpFrameworkFile = this.testFrameworkFile.replace(new RegExp('\\\\', 'g'),"/");
+    let tmpFrameworkFile = this.testFrameworkFile.replace(/\\/g, "/");
 
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
