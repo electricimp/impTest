@@ -22,10 +22,9 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-/**
- * Test command
- * @author Mikhail Yurasov <mikhail@electricimp.com>
- */
+
+// Test command
+// @author Mikhail Yurasov <mikhail@electricimp.com>
 
 'use strict';
 
@@ -47,50 +46,43 @@ const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
 //</editor-fold>
 
-/**
- * Delay before testing start.
- * Prevents log sessions mixing, allows
- * service messages to be before tests output.
- * [s]
- */
+
+// Delay before testing start.
+// Prevents log sessions mixing, allows
+// service messages to be before tests output.
+// [s]
+
 const DEFAULT_STARTUP_DELAY = 2;
 
-/**
- * Timeout before session startup
- */
+// Timeout before session startup
+
 const DEFAULT_STARTUP_TIMEOUT = 60;
 
-/**
- * Allow extra time on top of .imptest.timeout before
- * treating test as timed out on a tool siode.
- */
+// Allow extra time on top of .imptest.timeout before
+// treating test as timed out on a tool siode.
+
 const DEFAULT_EXTRA_TEST_MESSAGE_TIMEOUT = 5;
 
-/**
- * Name for BuildAPI key env var
- */
+// Name for BuildAPI key env var
+
 const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
 
-/**
- * Unsupported in Builder symbols
- */
+// Unsupported in Builder symbols
+
 const UNSUPPORTED_SYMBOLS_REGEXP = /[^_A-Za-z0-9]/g;
 
-/**
- * Unsupported in Builder symbols
- */
+// Unsupported in Builder symbols
+
 const LINE_AND_FILE_REGEXP = new RegExp('\\#\\{__', 'g');
 
-/**
- * Test command
- */
+// Test command
+
 class TestCommand extends AbstractCommand {
 
-  /**
-   * Run command
-   * @return {Promise}
-   * @protected
-   */
+  // Run command
+  // @return {Promise}
+  // @protected
+
   _run() {
     return super._run()
       .then(() => {
@@ -120,10 +112,9 @@ class TestCommand extends AbstractCommand {
       });
   }
 
-  /**
-   * We're done with testing
-   * @private
-   */
+  // We're done with testing
+  // @private
+
   finish() {
     if (this._stopCommand) {
       this._debug(c.red('Command was forced to stop'));
@@ -140,10 +131,9 @@ class TestCommand extends AbstractCommand {
     super.finish();
   }
 
-  /**
-   * Initialize before run()
-   * @protected
-   */
+  // Initialize before run()
+  // @protected
+
   _init() {
     super._init();
 
@@ -152,14 +142,14 @@ class TestCommand extends AbstractCommand {
     }
   }
 
-  /**
-   * Run test files on single device
-   *
-   * @param {number} deviceIndex
-   * @param {[]} testFiles
-   * @return {Priomise}
-   * @private
-   */
+
+  // Run test files on single device
+  //
+  // @param {number} deviceIndex
+  // @param {[]} testFiles
+  // @return {Priomise}
+  // @private
+
   _runDevice(deviceIndex, testFiles) {
     let t = 0;
 
@@ -171,11 +161,10 @@ class TestCommand extends AbstractCommand {
     );
   }
 
-  /**
-   * Find test files
-   * @returns {[{name, path, type}]}
-   * @private
-   */
+  // Find test files
+  // @returns {[{name, path, type}]}
+  // @private
+
   _findTestFiles() {
     const files = [];
     let configCwd;
@@ -227,13 +216,12 @@ class TestCommand extends AbstractCommand {
     return files;
   }
 
-  /**
-   * Run test file
-   * @param {name, path, type} testFile
-   * @param {name, path, type} deviceIndex
-   * @returns {Promise}
-   * @private
-   */
+  // Run test file
+  // @param {name, path, type} testFile
+  // @param {name, path, type} deviceIndex
+  // @returns {Promise}
+  // @private
+
   _runTestFile(testFile, deviceIndex) {
     return new Promise((resolve, reject) => {
 
@@ -297,16 +285,15 @@ class TestCommand extends AbstractCommand {
     });
   }
 
-  /**
-   * Prepare source code
-   * @param testFile
-   * @return {{agent: string, device: string}}
-   * @private
-   */
+  // Prepare source code
+  // @param testFile
+  // @return {{agent: string, device: string}}
+  // @private
+
   _getSessionCode(testFile) {
     let agentCode, deviceCode;
 
-    /* [info] */
+    // [info]
     this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
 
     // read/process test code
@@ -460,10 +447,9 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     };
   }
 
-  /**
-   * Initialize session watchdog timers
-   * @private
-   */
+  // Initialize session watchdog timers
+  // @private
+
   _initSessionWatchdogs() {
     // test messages
 
@@ -493,16 +479,15 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     this._sessionStartWatchdog.start();
   }
 
-  /**
-   * Execute test via BuildAPI from prepared code
-   *
-   * @param {string} deviceId
-   * @param {string} deviceCode
-   * @param {string} agentCode
-   * @param {"agent"|"device"} testType
-   * @return {Promise}
-   * @private
-   */
+  // Execute test via BuildAPI from prepared code
+  //
+  // @param {string} deviceId
+  // @param {string} deviceCode
+  // @param {string} agentCode
+  // @param {"agent"|"device"} testType
+  // @return {Promise}
+  // @private
+
   _runSession(deviceId, deviceCode, agentCode, testType) {
 
     return new Promise((resolve, reject) => {
@@ -574,12 +559,11 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     });
   }
 
-  /**
-   * Handle test error
-   * @param {Error|string} error
-   * @return {boolean} stop test session?
-   * @protected
-   */
+  // Handle test error
+  // @param {Error|string} error
+  // @return {boolean} stop test session?
+  // @protected
+
   _onError(error) {
     this._debug('Error type: ' + error.constructor.name);
 
@@ -687,12 +671,11 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     this._success = false;
   }
 
-  /**
-   * Log message
-   * @param {string} type
-   * @param {[*]} params
-   * @protected
-   */
+  // Log message
+  // @param {string} type
+  // @param {[*]} params
+  // @protected
+
   _log(type, colorFn, params) {
     let dateMessage = '';
 
@@ -719,29 +702,26 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     console.log.apply(this, params);
   }
 
-  /**
-   * Log info message
-   * @param {*} ...objects
-   * @protected
-   */
+  // Log info message
+  // @param {*} ...objects
+  // @protected
+
   _info() {
     this._log('info', c.grey, arguments);
   }
 
-  /**
-   * Log warning message
-   * @param {*} ...objects
-   * @protected
-   */
+  // Log warning message
+  // @param {*} ...objects
+  // @protected
+
   _warning() {
     this._log('warning', c.yellow, arguments);
   }
 
-  /**
-   * Error message
-   * @param {*|Error} error
-   * @protected
-   */
+  // Error message
+  // @param {*|Error} error
+  // @protected
+
   _error(error) {
     if (error instanceof Error) {
       error = error.message;
@@ -750,20 +730,18 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     this._log('error', c.red, [c.red(error)]);
   }
 
-  /**
-   * Print [test] message
-   * @param {*} ...objects
-   * @protected
-   */
+  // Print [test] message
+  // @param {*} ...objects
+  // @protected
+
   _testLine() {
     this._log('test', c.grey, arguments);
   }
 
-  /**
-   * Read source code
-   * @return {{agent, device}}
-   * @private
-   */
+  // Read source code
+  // @return {{agent, device}}
+  // @private
+
   get _sourceCode() {
 
     if (undefined === this._agentSource || undefined === this._deviceSource) {
@@ -818,11 +796,10 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     };
   }
 
-  /**
-   * Configure and return an instance of Builder
-   * @return {Builder}
-   * @private
-   */
+  // Configure and return an instance of Builder
+  // @return {Builder}
+  // @private
+
   get _Builder() {
     if (!this.__Builder) {
       this.__Builder = new Builder();
