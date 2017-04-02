@@ -298,24 +298,16 @@ class TestCommand extends AbstractCommand {
 
     // read/process test code
     let testCode = fs.readFileSync(testFile.path, 'utf-8').trim().replace(LINE_AND_FILE_REGEXP, "@{__");
-    let unsupportedValues = {}; // map of syntetic_value : original_value
     var environmentVars = "";
     for (var prop in process.env) {
       if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
-        var propValue = process.env[prop].replace(new RegExp('\\\\', 'g'), "\\\\");
-        var propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g'); // default regexp
-        if (prop.match(UNSUPPORTED_SYMBOLS_REGEXP)) { // replace unsupported symbols in name
-          propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, '.') + '\\s*\\}', 'g');
-          prop = prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, 'X');
-        }
+        let propValue = process.env[prop];
+        prop = prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, 'X');
+        // Replace #{env:...} with @{...} if it is needed
+        let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, '.') + '\\s*\\}', 'g');
         if (testCode.match(propertyRegExp)) {
-           testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
-           if (propValue.match(UNSUPPORTED_SYMBOLS_REGEXP)) {  // replace unsupported symbols in value
-             let newPropValue = propValue.replace(UNSUPPORTED_SYMBOLS_REGEXP, 'X');
-             unsupportedValues[newPropValue] = propValue; // store originalvalue
-             propValue = newPropValue;
-           }
-           environmentVars = environmentVars +"@set "+ prop + " \"" + propValue + "\"\n";
+          testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
+          environmentVars = environmentVars + "@set "+ prop + " \"" + propValue + "\"\n";
         }
       }
     }
@@ -383,9 +375,6 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
       __FILE__: testFile.name,
       __PATH__: testFile.path
     });
-    for (var nextValue in unsupportedValues) { // restore original value
-      agentCode = agentCode.replace(new RegExp(nextValue, 'g'), unsupportedValues[nextValue]);
-    }
 
       deviceCode =
 `#line 1 "${quoteFilename(deviceLineControlFile)}"
@@ -427,9 +416,6 @@ ${reloadTrigger}
       __FILE__: testFile.name,
       __PATH__: testFile.path
     });
-    for (var nextValue in unsupportedValues) { // restore original value
-      deviceCode = deviceCode.replace(new RegExp(nextValue, 'g'), unsupportedValues[nextValue]);
-    }
 
       agentCode =
         `#line 1 "${quoteFilename(agentLineControlFile)}"
