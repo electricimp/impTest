@@ -67,11 +67,11 @@ const DEFAULT_EXTRA_TEST_MESSAGE_TIMEOUT = 5;
 
 const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
 
-// Unsupported in Builder symbols
+// Symbols that may be needed to be escaped in a regexp
 
 const UNSUPPORTED_SYMBOLS_REGEXP = /[^_A-Za-z0-9]/g;
 
-// Unsupported in Builder symbols
+// For #{__LINE__} and #{__FILE__} correction
 
 const LINE_AND_FILE_REGEXP = new RegExp('\\#\\{__', 'g');
 
@@ -302,7 +302,6 @@ class TestCommand extends AbstractCommand {
     for (var prop in process.env) {
       if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
         let propValue = process.env[prop];
-        prop = prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, 'X');
         // Replace #{env:...} with @{...} if it is needed
         let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop.replace(UNSUPPORTED_SYMBOLS_REGEXP, '.') + '\\s*\\}', 'g');
         if (testCode.match(propertyRegExp)) {
