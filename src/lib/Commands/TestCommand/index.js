@@ -73,7 +73,7 @@ const UNSUPPORTED_SYMBOLS_REGEXP = /[^_A-Za-z0-9]/g;
 
 // For #{__LINE__} and #{__FILE__} correction
 
-const LINE_AND_FILE_REGEXP = new RegExp('\\#\\{__', 'g');
+const LINE_AND_FILE_REGEXP = /#{__/g;
 
 // Test command
 
