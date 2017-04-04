@@ -69,7 +69,8 @@ const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
 
 // For #{__LINE__} and #{__FILE__} correction
 
-const LINE_AND_FILE_REGEXP = /#{__/g;
+const FILE_REGEXP = /#{__FILE__}/g;
+const LINE_REGEXP = /#{__LINE__}/g;
 
 // Test command
 
@@ -293,7 +294,8 @@ class TestCommand extends AbstractCommand {
     this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
 
     // read/process test code
-    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim().replace(LINE_AND_FILE_REGEXP, "@{__");
+    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
+        .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
     var environmentVars = "";
     for (var prop in process.env) {
       if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
@@ -304,6 +306,10 @@ class TestCommand extends AbstractCommand {
           environmentVars = environmentVars + "@set "+ prop + " \"" + process.env[prop] + "\"\n";
         }
       }
+    }
+    let notReplacedProp = testCode.match(/#{env:.*}/g);
+    if (notReplacedProp) {
+      this._warning("Can't replace: " + notReplacedProp);
     }
 
     // triggers device code space usage message, which also serves as revision launch indicator for device
