@@ -424,6 +424,20 @@ ${(this._sourceCode.agent || '/* no agent source */')}
       // </editor-fold>
     }
 
+    if (this.debug) {
+      // create folder to dump preprocessed code
+      if (!fs.existsSync('./build')) {
+        fs.mkdirSync('./build');
+      }
+      // write dump preprocessed codes
+      fs.writeFile('./build/preprocessed.agent.nut', agentCode, (err) => {
+        if (err) this._error(err);
+      });
+      fs.writeFile('./build/preprocessed.device.nut', deviceCode, (err) => {
+        if (err) this._error(err);
+      });
+    }
+
     this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
     this._debug(c.blue('Device code size: ') + deviceCode.length + ' bytes');
 
