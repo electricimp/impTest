@@ -343,6 +343,8 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     const quoteFilename = f => f.replace('"', '\\"');
 
     let tmpFrameworkFile = this.testFrameworkFile.replace(/\\/g, "/");
+    let agentIncludeOrComment = this._sourceCode.agent ? '@include "' + this._sourceCode.agent + '"' : '/* no agent source */';
+    let deviceIncludeOrComment = this._sourceCode.device ? '@include "' + this._sourceCode.device + '"' : '/* no device source */';
 
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
@@ -352,7 +354,7 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 @include "${tmpFrameworkFile}"
 
 #line 1 "${quoteFilename(agentLineControlFile)}"
-${(this._sourceCode.agent || '/* no agent source */')}
+${agentIncludeOrComment}
 
 // tests module
 function __module_tests(ImpTestCase) {
@@ -371,14 +373,9 @@ __module_tests(__module_impUnit_exports.ImpTestCase);
 __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 `;
 
-    agentCode = this._Builder.machine.execute(agentCode, {
-      __FILE__: testFile.name,
-      __PATH__: testFile.path
-    });
-
       deviceCode =
 `#line 1 "${quoteFilename(deviceLineControlFile)}"
-${(this._sourceCode.device || '/* no device source */')}
+${deviceIncludeOrComment}
 
 ${reloadTrigger}
 `;
@@ -391,7 +388,7 @@ ${reloadTrigger}
 @include "${tmpFrameworkFile}"
 
 #line 1 "${quoteFilename(deviceLineControlFile)}"
-${(this._sourceCode.device || '/* no device source */')}
+${deviceIncludeOrComment}
 
 // tests module
 function __module_tests(ImpTestCase) {
@@ -412,17 +409,21 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 ${reloadTrigger}
 `;
 
-    deviceCode = this._Builder.machine.execute(deviceCode, {
-      __FILE__: testFile.name,
-      __PATH__: testFile.path
-    });
-
       agentCode =
         `#line 1 "${quoteFilename(agentLineControlFile)}"
-${(this._sourceCode.agent || '/* no agent source */')}
+${agentIncludeOrComment}
 `;
       // </editor-fold>
     }
+
+    agentCode = this._Builder.machine.execute(agentCode, {
+      __FILE__: testFile.name,
+      __PATH__: path.dirname(testFile.path)
+    });
+    deviceCode = this._Builder.machine.execute(deviceCode, {
+      __FILE__: testFile.name,
+      __PATH__: path.dirname(testFile.path)
+    });
 
     if (this.debug) {
       // create folder to dump preprocessed code
@@ -762,7 +763,8 @@ ${(this._sourceCode.agent || '/* no agent source */')}
           throw new Error(`Agent source file "${sourceFilePath}" not found`);
         }
 
-        this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
+        //this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
+        this._agentSource = sourceFilePath.replace(/\\/g, "/");
 
       } else {
         this._info(c.blue('Have no ') + 'agent' + c.blue(' source file, using blank'));
@@ -781,7 +783,8 @@ ${(this._sourceCode.agent || '/* no agent source */')}
           throw new Error(`Device source file "${sourceFilePath}" not found`);
         }
 
-        this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
+        //this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
+        this._deviceSource = sourceFilePath.replace(/\\/g, "/");
 
       } else {
         this._info(c.blue('Have no ') + 'device' + c.blue(' source file, using blank'));
