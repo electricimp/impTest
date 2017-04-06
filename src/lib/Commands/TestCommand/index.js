@@ -425,16 +425,27 @@ ${agentIncludeOrComment}
       __PATH__: path.dirname(testFile.path)
     });
 
+    // FUNCTION: create a new directory and any necessary subdirectories
+    let mkdirs = (dirName) => {
+        let subDirNAme = path.dirname(dirName);
+        if (!fs.existsSync(subDirNAme)) {
+            mkdirs(subDirNAme);
+        }
+        if (!fs.existsSync(dirName)) {
+            fs.mkdirSync(dirName);
+        }
+    };
     if (this.debug) {
+      let tmpFileName = path.resolve('./build', testFile.name);
+      let preprocessedFolder = path.dirname(tmpFileName);
+      let fileName = path.basename(tmpFileName);
       // create folder to dump preprocessed code
-      if (!fs.existsSync('./build')) {
-        fs.mkdirSync('./build');
-      }
+      mkdirs(preprocessedFolder);
       // write dump preprocessed codes
-      fs.writeFile('./build/preprocessed.agent.nut', agentCode, (err) => {
+      fs.writeFile(preprocessedFolder + '/preprocessed.agent.' + fileName, agentCode, (err) => {
         if (err) this._error(err);
       });
-      fs.writeFile('./build/preprocessed.device.nut', deviceCode, (err) => {
+      fs.writeFile(preprocessedFolder + '/preprocessed.device.' + fileName, deviceCode, (err) => {
         if (err) this._error(err);
       });
     }
@@ -763,7 +774,6 @@ ${agentIncludeOrComment}
           throw new Error(`Agent source file "${sourceFilePath}" not found`);
         }
 
-        //this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
         this._agentSource = sourceFilePath.replace(/\\/g, "/");
 
       } else {
@@ -783,7 +793,6 @@ ${agentIncludeOrComment}
           throw new Error(`Device source file "${sourceFilePath}" not found`);
         }
 
-        //this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
         this._deviceSource = sourceFilePath.replace(/\\/g, "/");
 
       } else {
