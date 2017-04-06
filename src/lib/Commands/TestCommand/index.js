@@ -296,14 +296,13 @@ class TestCommand extends AbstractCommand {
     // read/process test code
     let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
         .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
-    var environmentVars = "";
     for (var prop in process.env) {
       if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
         // Replace #{env:...} with @{...} if it is needed
         let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g');
         if (testCode.match(propertyRegExp)) {
           testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
-          environmentVars = environmentVars + "@set "+ prop + " \"" + process.env[prop] + "\"\n";
+          testCode = "@set "+ prop + " \"" + process.env[prop] + "\"\n" + testCode;
         }
       }
     }
@@ -349,8 +348,7 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
-`${environmentVars}
-#line 1 "impUnit"
+`#line 1 "impUnit"
 @include "${tmpFrameworkFile}"
 
 #line 1 "${quoteFilename(agentLineControlFile)}"
@@ -383,8 +381,7 @@ ${reloadTrigger}
     } else {
       // <editor-fold defaultstate="collapsed">
       deviceCode =
-`${environmentVars}
-#line 1 "impUnit"
+`#line 1 "impUnit"
 @include "${tmpFrameworkFile}"
 
 #line 1 "${quoteFilename(deviceLineControlFile)}"
