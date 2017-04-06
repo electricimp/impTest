@@ -422,8 +422,9 @@ ${agentIncludeOrComment}
       __PATH__: path.dirname(testFile.path)
     });
 
-    // FUNCTION: create a new directory and any necessary subdirectories
-    let mkdirs = (dirName) => {
+    if (this.debug) {
+      // FUNCTION: create a new directory and any necessary subdirectories
+      let mkdirs = (dirName) => {
         let subDirNAme = path.dirname(dirName);
         if (!fs.existsSync(subDirNAme)) {
             mkdirs(subDirNAme);
@@ -431,8 +432,8 @@ ${agentIncludeOrComment}
         if (!fs.existsSync(dirName)) {
             fs.mkdirSync(dirName);
         }
-    };
-    if (this.debug) {
+      };
+
       let tmpFileName = path.resolve('./build', testFile.name);
       let preprocessedFolder = path.dirname(tmpFileName);
       let fileName = path.basename(tmpFileName);
