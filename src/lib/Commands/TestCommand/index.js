@@ -296,7 +296,7 @@ class TestCommand extends AbstractCommand {
     // read/process test code
     let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
         .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
-    for (var prop in process.env) {
+    for (let prop in process.env) {
       if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
         // Replace #{env:...} with @{...} if it is needed
         let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g');
