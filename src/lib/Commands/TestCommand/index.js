@@ -813,6 +813,12 @@ ${agentIncludeOrComment}
   get _Builder() {
     if (!this.__Builder) {
       this.__Builder = new Builder();
+      this.__Builder.logger = {
+        debug: function () {},
+        info: function () {},
+        warning: this._warning,
+        error: this._error
+      };
     }
     return this.__Builder;
   }
