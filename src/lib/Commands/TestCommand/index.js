@@ -296,6 +296,7 @@ class TestCommand extends AbstractCommand {
     // read/process test code
     let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
         .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
+    // TODO: Don't iterate over all the possible env variables, check only those that are used in the tests. If anything's used but is missing in the environment, raise a warning.
     for (let prop in process.env) {
       if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
         // Replace #{env:...} with @{...} if it is needed
