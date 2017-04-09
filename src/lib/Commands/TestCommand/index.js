@@ -1,7 +1,30 @@
-/**
- * Test command
- * @author Mikhail Yurasov <mikhail@electricimp.com>
- */
+// MIT License
+//
+// Copyright 2016-2017 Electric Imp
+//
+// SPDX-License-Identifier: MIT
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+// EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
+
+// Test command
+// @author Mikhail Yurasov <mikhail@electricimp.com>
 
 'use strict';
 
@@ -10,54 +33,53 @@ const fs = require('fs');
 const c = require('colors');
 const path = require('path');
 const glob = require('glob');
+const Builder = require('Builder');
 const Errors = require('./Errors');
 const Session = require('./Session');
-const Bundler = require('../../Bundler');
 const dateformat = require('dateformat');
 const LogParser = require('./LogParser');
 const Watchdog = require('../../Watchdog');
 const randomstring = require('randomstring');
 const sprintf = require('sprintf-js').sprintf;
 const BuildAPIClient = require('imp-build-api-v4');
-const CodeProcessor = require('../../CodeProcessor');
 const AbstractCommand = require('../AbstractCommand');
 const promiseWhile = require('../../utils/promiseWhile');
 //</editor-fold>
 
-/**
- * Delay before testing start.
- * Prevents log sessions mixing, allows
- * service messages to be before tests output.
- * [s]
- */
+
+// Delay before testing start.
+// Prevents log sessions mixing, allows
+// service messages to be before tests output.
+// [s]
+
 const DEFAULT_STARTUP_DELAY = 2;
 
-/**
- * Timeout before session startup
- */
+// Timeout before session startup
+
 const DEFAULT_STARTUP_TIMEOUT = 60;
 
-/**
- * Allow extra time on top of .imptest.timeout before
- * treating test as timed out on a tool siode.
- */
+// Allow extra time on top of .imptest.timeout before
+// treating test as timed out on a tool siode.
+
 const DEFAULT_EXTRA_TEST_MESSAGE_TIMEOUT = 5;
 
-/**
- * Name for BuildAPI key env var
- */
+// Name for BuildAPI key env var
+
 const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
 
-/**
- * Test command
- */
+// For #{__LINE__} and #{__FILE__} correction
+
+const FILE_REGEXP = /#{__FILE__}/g;
+const LINE_REGEXP = /#{__LINE__}/g;
+
+// Test command
+
 class TestCommand extends AbstractCommand {
 
-  /**
-   * Run command
-   * @return {Promise}
-   * @protected
-   */
+  // Run command
+  // @return {Promise}
+  // @protected
+
   _run() {
     return super._run()
       .then(() => {
@@ -87,10 +109,9 @@ class TestCommand extends AbstractCommand {
       });
   }
 
-  /**
-   * We're done with testing
-   * @private
-   */
+  // We're done with testing
+  // @private
+
   finish() {
     if (this._stopCommand) {
       this._debug(c.red('Command was forced to stop'));
@@ -107,30 +128,25 @@ class TestCommand extends AbstractCommand {
     super.finish();
   }
 
-  /**
-   * Initialize before run()
-   * @protected
-   */
+  // Initialize before run()
+  // @protected
+
   _init() {
     super._init();
 
     if (!this._impTestFile.exists) {
       throw new Error('Config file not found');
     }
-
-    // bundler
-    this._bundler = new Bundler();
-    this._bundler.debug = this.debug;
   }
 
-  /**
-   * Run test files on single device
-   *
-   * @param {number} deviceIndex
-   * @param {[]} testFiles
-   * @return {Priomise}
-   * @private
-   */
+
+  // Run test files on single device
+  //
+  // @param {number} deviceIndex
+  // @param {[]} testFiles
+  // @return {Priomise}
+  // @private
+
   _runDevice(deviceIndex, testFiles) {
     let t = 0;
 
@@ -142,11 +158,10 @@ class TestCommand extends AbstractCommand {
     );
   }
 
-  /**
-   * Find test files
-   * @returns {[{name, path, type}]}
-   * @private
-   */
+  // Find test files
+  // @returns {[{name, path, type}]}
+  // @private
+
   _findTestFiles() {
     const files = [];
     let configCwd;
@@ -198,13 +213,12 @@ class TestCommand extends AbstractCommand {
     return files;
   }
 
-  /**
-   * Run test file
-   * @param {name, path, type} testFile
-   * @param {name, path, type} deviceIndex
-   * @returns {Promise}
-   * @private
-   */
+  // Run test file
+  // @param {name, path, type} testFile
+  // @param {name, path, type} deviceIndex
+  // @returns {Promise}
+  // @private
+
   _runTestFile(testFile, deviceIndex) {
     return new Promise((resolve, reject) => {
 
@@ -268,22 +282,35 @@ class TestCommand extends AbstractCommand {
     });
   }
 
-  /**
-   * Prepare source code
-   * @param testFile
-   * @return {{agent: string, device: string}}
-   * @private
-   */
+  // Prepare source code
+  // @param testFile
+  // @return {{agent: string, device: string}}
+  // @private
+
   _getSessionCode(testFile) {
     let agentCode, deviceCode;
 
-    /* [info] */
+    // [info]
     this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
 
     // read/process test code
-    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim();
-    this._codeProcessor.variables.__FILE__ = path.basename(testFile.path);
-    testCode = this._codeProcessor.process(testCode);
+    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
+        .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
+    // TODO: Don't iterate over all the possible env variables, check only those that are used in the tests. If anything's used but is missing in the environment, raise a warning.
+    for (let prop in process.env) {
+      if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
+        // Replace #{env:...} with @{...} if it is needed
+        let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g');
+        if (testCode.match(propertyRegExp)) {
+          testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
+          testCode = "@set "+ prop + " \"" + process.env[prop] + "\"\n" + testCode;
+        }
+      }
+    }
+    let notReplacedProp = testCode.match(/#{env:.*}/g);
+    if (notReplacedProp) {
+      this._warning("Can't replace: " + notReplacedProp);
+    }
 
     // triggers device code space usage message, which also serves as revision launch indicator for device
     const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
@@ -315,17 +342,21 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     // quote file name for line control statement
     const quoteFilename = f => f.replace('"', '\\"');
 
+    let tmpFrameworkFile = this.testFrameworkFile.replace(/\\/g, "/");
+    let agentIncludeOrComment = this._sourceCode.agent ? '@include "' + this._sourceCode.agent + '"' : '/* no agent source */';
+    let deviceIncludeOrComment = this._sourceCode.device ? '@include "' + this._sourceCode.device + '"' : '/* no device source */';
+
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
 `#line 1 "impUnit"
-${this._frameworkCode}
+@include "${tmpFrameworkFile}"
 
 #line 1 "${quoteFilename(agentLineControlFile)}"
-${(this._sourceCode.agent || '/* no agent source */')}
+${agentIncludeOrComment}
 
 // tests module
-function __module_tests(Promise, ImpTestCase) {
+function __module_tests(ImpTestCase) {
 #line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
@@ -337,13 +368,13 @@ ${bootstrapCode}
 }
 
 // resolve modules
-__module_tests(__module_ImpUnit_Promise_exports, __module_impUnit_exports.ImpTestCase);
+__module_tests(__module_impUnit_exports.ImpTestCase);
 __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 `;
 
       deviceCode =
 `#line 1 "${quoteFilename(deviceLineControlFile)}"
-${(this._sourceCode.device || '/* no device source */')}
+${deviceIncludeOrComment}
 
 ${reloadTrigger}
 `;
@@ -351,14 +382,14 @@ ${reloadTrigger}
     } else {
       // <editor-fold defaultstate="collapsed">
       deviceCode =
-        `#line 1 "impUnit"
-${this._frameworkCode}
+`#line 1 "impUnit"
+@include "${tmpFrameworkFile}"
 
 #line 1 "${quoteFilename(deviceLineControlFile)}"
-${(this._sourceCode.device || '/* no device source */')}
+${deviceIncludeOrComment}
 
 // tests module
-function __module_tests(Promise, ImpTestCase) {
+function __module_tests(ImpTestCase) {
 #line 1 "${quoteFilename(path.basename(testFile.name))}"
 ${testCode}
 }
@@ -370,7 +401,7 @@ ${bootstrapCode}
 }
 
 // resolve modules
-__module_tests(__module_ImpUnit_Promise_exports, __module_impUnit_exports.ImpTestCase);
+__module_tests(__module_impUnit_exports.ImpTestCase);
 __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 
 ${reloadTrigger}
@@ -378,9 +409,44 @@ ${reloadTrigger}
 
       agentCode =
         `#line 1 "${quoteFilename(agentLineControlFile)}"
-${(this._sourceCode.agent || '/* no agent source */')}
+${agentIncludeOrComment}
 `;
       // </editor-fold>
+    }
+
+    agentCode = this._Builder.machine.execute(agentCode, {
+      __FILE__: testFile.name,
+      __PATH__: path.dirname(testFile.path)
+    });
+    deviceCode = this._Builder.machine.execute(deviceCode, {
+      __FILE__: testFile.name,
+      __PATH__: path.dirname(testFile.path)
+    });
+
+    if (this.debug) {
+      // FUNCTION: create a new directory and any necessary subdirectories
+      let mkdirs = (dirName) => {
+        let subDirNAme = path.dirname(dirName);
+        if (!fs.existsSync(subDirNAme)) {
+            mkdirs(subDirNAme);
+        }
+        if (!fs.existsSync(dirName)) {
+            fs.mkdirSync(dirName);
+        }
+      };
+
+      let tmpFileName = path.resolve('./build', testFile.name);
+      let preprocessedFolder = path.dirname(tmpFileName);
+      let fileName = path.basename(tmpFileName);
+      // create folder to dump preprocessed code
+      mkdirs(preprocessedFolder);
+      // write dump preprocessed codes
+      fs.writeFile(preprocessedFolder + '/preprocessed.agent.' + fileName, agentCode, (err) => {
+        if (err) this._error(err);
+      });
+      fs.writeFile(preprocessedFolder + '/preprocessed.device.' + fileName, deviceCode, (err) => {
+        if (err) this._error(err);
+      });
     }
 
     this._debug(c.blue('Agent code size: ') + agentCode.length + ' bytes');
@@ -392,10 +458,9 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     };
   }
 
-  /**
-   * Initialize session watchdog timers
-   * @private
-   */
+  // Initialize session watchdog timers
+  // @private
+
   _initSessionWatchdogs() {
     // test messages
 
@@ -425,16 +490,15 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     this._sessionStartWatchdog.start();
   }
 
-  /**
-   * Execute test via BuildAPI from prepared code
-   *
-   * @param {string} deviceId
-   * @param {string} deviceCode
-   * @param {string} agentCode
-   * @param {"agent"|"device"} testType
-   * @return {Promise}
-   * @private
-   */
+  // Execute test via BuildAPI from prepared code
+  //
+  // @param {string} deviceId
+  // @param {string} deviceCode
+  // @param {string} agentCode
+  // @param {"agent"|"device"} testType
+  // @return {Promise}
+  // @private
+
   _runSession(deviceId, deviceCode, agentCode, testType) {
 
     return new Promise((resolve, reject) => {
@@ -506,12 +570,11 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     });
   }
 
-  /**
-   * Handle test error
-   * @param {Error|string} error
-   * @return {boolean} stop test session?
-   * @protected
-   */
+  // Handle test error
+  // @param {Error|string} error
+  // @return {boolean} stop test session?
+  // @protected
+
   _onError(error) {
     this._debug('Error type: ' + error.constructor.name);
 
@@ -619,12 +682,11 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     this._success = false;
   }
 
-  /**
-   * Log message
-   * @param {string} type
-   * @param {[*]} params
-   * @protected
-   */
+  // Log message
+  // @param {string} type
+  // @param {[*]} params
+  // @protected
+
   _log(type, colorFn, params) {
     let dateMessage = '';
 
@@ -651,29 +713,26 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     console.log.apply(this, params);
   }
 
-  /**
-   * Log info message
-   * @param {*} ...objects
-   * @protected
-   */
+  // Log info message
+  // @param {*} ...objects
+  // @protected
+
   _info() {
     this._log('info', c.grey, arguments);
   }
 
-  /**
-   * Log warning message
-   * @param {*} ...objects
-   * @protected
-   */
+  // Log warning message
+  // @param {*} ...objects
+  // @protected
+
   _warning() {
     this._log('warning', c.yellow, arguments);
   }
 
-  /**
-   * Error message
-   * @param {*|Error} error
-   * @protected
-   */
+  // Error message
+  // @param {*|Error} error
+  // @protected
+
   _error(error) {
     if (error instanceof Error) {
       error = error.message;
@@ -682,20 +741,18 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     this._log('error', c.red, [c.red(error)]);
   }
 
-  /**
-   * Print [test] message
-   * @param {*} ...objects
-   * @protected
-   */
+  // Print [test] message
+  // @param {*} ...objects
+  // @protected
+
   _testLine() {
     this._log('test', c.grey, arguments);
   }
 
-  /**
-   * Read source code
-   * @return {{agent, device}}
-   * @private
-   */
+  // Read source code
+  // @return {{agent, device}}
+  // @private
+
   get _sourceCode() {
 
     if (undefined === this._agentSource || undefined === this._deviceSource) {
@@ -716,9 +773,7 @@ ${(this._sourceCode.agent || '/* no agent source */')}
           throw new Error(`Agent source file "${sourceFilePath}" not found`);
         }
 
-        this._agentSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
-        this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
-        this._agentSource = this._codeProcessor.process(this._agentSource);
+        this._agentSource = sourceFilePath.replace(/\\/g, "/");
 
       } else {
         this._info(c.blue('Have no ') + 'agent' + c.blue(' source file, using blank'));
@@ -737,9 +792,7 @@ ${(this._sourceCode.agent || '/* no agent source */')}
           throw new Error(`Device source file "${sourceFilePath}" not found`);
         }
 
-        this._deviceSource = fs.readFileSync(sourceFilePath, 'utf-8').trim();
-        this._codeProcessor.variables.__FILE__ = path.basename(sourceFilePath);
-        this._deviceSource = this._codeProcessor.process(this._deviceSource);
+        this._deviceSource = sourceFilePath.replace(/\\/g, "/");
 
       } else {
         this._info(c.blue('Have no ') + 'device' + c.blue(' source file, using blank'));
@@ -754,31 +807,21 @@ ${(this._sourceCode.agent || '/* no agent source */')}
     };
   }
 
-  /**
-   * Read framework code
-   * @return {string}
-   * @private
-   */
-  get _frameworkCode() {
-    if (!this.__frameworkCode) {
-      this.__frameworkCode = this._bundler.process(this.testFrameworkFile).trim();
+  // Configure and return an instance of Builder
+  // @return {Builder}
+  // @private
+
+  get _Builder() {
+    if (!this.__Builder) {
+      this.__Builder = new Builder();
+      this.__Builder.logger = {
+        debug: function () {},
+        info: function () {},
+        warning: this._warning,
+        error: this._error
+      };
     }
-
-    return this.__frameworkCode;
-  }
-
-  /**
-   * Configure and return an instance of CodeProcessor
-   * @return {CodeProcessor}
-   * @private
-   */
-  get _codeProcessor() {
-    if (!this.__codeProcessor) {
-      this.__codeProcessor = new CodeProcessor();
-      this.__codeProcessor.blockedEnvVars = [BUILD_API_KEY_ENV_VAR]; // block access to Build API key
-    }
-
-    return this.__codeProcessor;
+    return this.__Builder;
   }
 
   // <editor-fold desc="Accessors" defaultstate="collapsed">
