@@ -1,0 +1,13 @@
+{
+    "modelId": "S9Cuo_vPqScM" /* Test */,
+    "devices": [
+        "23424c6938a609ee" /* 23424c6938a609ee */
+    ],
+    "agentFile": "promise.class.nut",
+    "deviceFile": "my.class.nut",
+    "stopOnFailure": false,
+    "timeout": 30,
+    "tests": [
+        "tests/tmp.*.nut"
+    ]
+}
