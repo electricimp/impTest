@@ -167,11 +167,24 @@ class TestCommand extends AbstractCommand {
     let configCwd;
 
     const pushFile = file => {
-      files.push({
+      let lastAdded = files[files.push({
         name: file,
         path: path.resolve(configCwd, file),
         type: /\bagent\b/i.test(file) ? 'agent' : 'device'
-      });
+      }) - 1];
+      if (/.*\.(agent|device)\.test\.nut$/ig.test(file)) {
+        let tmp = file.replace(/\.(agent|device)\.test\.nut$/ig, '');
+        if (fs.existsSync(path.resolve(configCwd, tmp+'.agent.test.nut')) && 
+            fs.existsSync(path.resolve(configCwd, tmp+'.device.test.nut'))) {
+          Object.defineProperty(lastAdded, 'partnername', {
+            value: file.endsWith('.device.test.nut') ?
+                        tmp + '.agent.test.nut' : tmp + '.device.test.nut'
+          });
+          Object.defineProperty(lastAdded, 'partnerpath', {
+            value: path.resolve(configCwd, lastAdded.partnername)
+          });
+        }
+      }
     };
 
     let searchPatterns = '';
@@ -294,26 +307,31 @@ class TestCommand extends AbstractCommand {
     this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
 
     // read/process test code
-    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
+    let loadCode = filePath => {
+      let testCode = fs.readFileSync(filePath, 'utf-8').trim()
         .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
-    // TODO: Don't iterate over all the possible env variables, check only those that are used in the tests. If anything's used but is missing in the environment, raise a warning.
-    for (let prop in process.env) {
-      if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
-        // Replace #{env:...} with @{...} if it is needed
-        let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g');
-        if (testCode.match(propertyRegExp)) {
-          testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
-          testCode = "@set "+ prop + " \"" + process.env[prop] + "\"\n" + testCode;
+      // TODO: Don't iterate over all the possible env variables, check only those that are used in the tests. If anything's used but is missing in the environment, raise a warning.
+      for (let prop in process.env) {
+        if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
+          // Replace #{env:...} with @{...} if it is needed
+          let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g');
+          if (testCode.match(propertyRegExp)) {
+            testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
+            testCode = "@set "+ prop + " \"" + process.env[prop] + "\"\n" + testCode;
+          }
         }
       }
+      let notReplacedProp = testCode.match(/#{env:.*}/g);
+      if (notReplacedProp) {
+        this._warning("Can't replace: " + notReplacedProp);
+      }
+      return testCode;
     }
-    let notReplacedProp = testCode.match(/#{env:.*}/g);
-    if (notReplacedProp) {
-      this._warning("Can't replace: " + notReplacedProp);
-    }
+    let testCode = loadCode(testFile.path);
 
     // triggers device code space usage message, which also serves as revision launch indicator for device
-    const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
+    const reloadTrigger = 'partnerpath' in testFile ? loadCode(testFile.partnerpath) :
+                        '// force code update\n"' + randomstring.generate(32) + '"';
 
     // bootstrap code
     const bootstrapCode = `
@@ -404,22 +422,31 @@ ${bootstrapCode}
 __module_tests(__module_impUnit_exports.ImpTestCase);
 __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 
-${reloadTrigger}
 `;
-
       agentCode =
         `#line 1 "${quoteFilename(agentLineControlFile)}"
 ${agentIncludeOrComment}
+
+${reloadTrigger}
 `;
       // </editor-fold>
     }
 
+    let agentName = testFile.name, deviceName = testFile.name;
+    if ('partnername' in testFile) {
+      if ('agent' === testFile.type) {
+        deviceName = testFile.partnername;
+      } else {
+        agentName = testFile.partnername;
+      }
+    }
+
     agentCode = this._Builder.machine.execute(agentCode, {
-      __FILE__: testFile.name,
+      __FILE__: agentName,
       __PATH__: path.dirname(testFile.path)
     });
     deviceCode = this._Builder.machine.execute(deviceCode, {
-      __FILE__: testFile.name,
+      __FILE__: deviceName,
       __PATH__: path.dirname(testFile.path)
     });
 
