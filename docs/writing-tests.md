@@ -41,7 +41,7 @@ It is possible to use agent and device specific test code together. The rules fo
 - Agent and device names should conform the pattern ```[TestName].[agent | device].test.nut```
 - The "partner code" (device or agent without any test) **should not** be found by "Test file search pattern" (in the imptest [configuration file](./imptest-spec.md)), otherwise a compilation will fail. impTest doesn't add `ImpUnitTestCase` to the partner code.
 
-for more details see ![sample8](./samples/sample8)
+for more details see ![sample8](../samples/sample8)
 
 
 ### Test Case Lifecycle: setUp() and tearDown()
