@@ -38,7 +38,8 @@ class MyTestCase extends ImpUnitTestCase {
 
 It is possible to use agent and device specific test code together. The rules for the using are:
 - The tests should be either in device code nor agent, not in both
-- Agent and device names should conform the pattern ```[TestName].[agent | device].test.nut```
+- Agent and device file names should conform the pattern ```[TestName].[agent | device].test.nut```
+- Agent and device files should be in the same folder(directory)
 - The "partner code" (device or agent without any test) **should not** be found by "Test file search pattern" (in the imptest [configuration file](./imptest-spec.md)), otherwise a compilation will fail. impTest doesn't add `ImpUnitTestCase` to the partner code.
 
 for more details see ![sample8](../samples/sample8)
