@@ -3,12 +3,14 @@
 
 
 - [Writing Tests](#writing-tests)
+  - [Agent and device together](#agent-and-device-together)
   - [Test Case Lifecycle: setUp() and tearDown()](#test-case-lifecycle-setup-and-teardown)
   - [Asynchronous Testing](#asynchronous-testing)
   - [Timeouts](#timeouts)
   - [[Assertions](./assertions.md)](#assertionsassertionsmd)
   - [Environment Variables](#environment-variables)
   - [\_\_FILE\_\_ & \_\_LINE\_\_](#%5C_%5C_file%5C_%5C_-&-%5C_%5C_line%5C_%5C_)
+  - [Builder language](#builder-language)
   - [Diagnostic Messages](#diagnostic-messages)
   - [External Commands](#external-commands)
   - [Running Tests Manually](#running-tests-manually)
@@ -31,6 +33,16 @@ class MyTestCase extends ImpUnitTestCase {
   }
 }
 ```
+
+### Agent and device together
+
+It is possible to use agent and device specific test code together. The rules for the using are:
+- The tests should be either in device code nor agent, not in both
+- Agent and device names should conform the pattern ```[TestName].[agent | device].test.nut```
+- The "partner code" (device or agent without any test) **should not** be found by test pattern (in the imptest configuration file), otherwise a compilation will fail. impTest doesn't add `ImpUnitTestCase` to the partner code.
+
+for more details see ![sample8](./samples/sample8)
+
 
 ### Test Case Lifecycle: setUp() and tearDown()
 
@@ -66,6 +78,8 @@ Environment variables can be used in Squirrel source code and test cases like `#
 
 ### \_\_FILE\_\_ & \_\_LINE\_\_
 
+**DEPRECATED** see [Builder language](#builder-language)
+
 *\_\_FILE\_\_* and *\_\_LINE\_\_* variables are defined in Squirrel source code and test cases, which may be useful for debugging information. Here is the usage example:
 
 ```squirrel
@@ -77,12 +91,26 @@ this.assertEqual(
     + " at line #{__LINE__}"
 );
 ```
+### Builder language
+
+A Builder language is supported in impTest. The Builder language combines a preprocessor with an expression language and advanced imports.
+Builder language sytax is [here](https://github.com/electricimp/Builder). 
+
+```squirrel
+this.assertEqual(
+  expected,
+  actual,
+  "Failed to assert that values are"
+    + " equal in '@{__FILE__}'"
+    + " at line @{__LINE__}"
+);
+```
 
 ### Diagnostic Messages
 
 Return values (other than *null*) are displayed in the console when test succeeds and can be used to output diagnostic messages, like:
 
-<img src="diagnostic-messages.png" width=497>
+![diagnostic messages](./diagnostic-messages.png)
 
 Test cases can also outout informational messages with:
 
@@ -119,9 +147,8 @@ Please note that external command execution is not available when tests are exec
 
 ### Test Case Example
 
+lib or util file myFile.nut:
 ```squirrel
-class TestCase1 extends ImpUnitTestCase {
-
   /**
    * (optional) Async version, can also be synchronous
    */
@@ -130,6 +157,13 @@ class TestCase1 extends ImpUnitTestCase {
       resolve("we're ready");
     }.bindenv(this));
   }
+```
+
+test file:
+```squirrel
+class TestCase1 extends ImpUnitTestCase {
+
+@inclide __PATH__+"/myFile.nut"
 
   /**
    * Sync test method

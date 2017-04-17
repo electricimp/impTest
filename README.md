@@ -4,9 +4,7 @@
 
 - [impTest](#imptest)
   - [Installation](#installation)
-  - [Commands](#commands)
-    - [init](#init)
-    - [test](#test)
+  - [Command Line Interface](#command-line-interface)
   - [[Quick Start](docs/quick-start.md)](#quick-startdocsquick-startmd)
   - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
     - [[Assertions](./docs/assertions.md)](#assertionsdocsassertionsmd)
@@ -18,9 +16,6 @@
   - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-<br />
-[![Build Status](https://travis-ci.org/electricimp/impTest.svg?branch=master)](https://travis-ci.org/electricimp/impTest)
 
 # impTest
 
@@ -34,9 +29,9 @@ Node.js 4.0+ is required.
 
 [Usage at development time](#running)
 
-## Commands
+## Command Line Interface
 
-### init
+- *init* &mdash; Generation or updating the test confiduration file
 
 ```
 imptest init [options]
@@ -48,7 +43,7 @@ Options:
   -f, --force          overwrite existing configuration
 ```
 
-### test
+- *test* &mdash; Start the test execution process
 
 ```
 imptest test [options] [test_files_pattern]
@@ -59,6 +54,8 @@ Options:
   -c, --config [path]  config file path [default: .imptest]
 ```
 
+```[test_files_pattern]``` can be used for specifying the single test.
+
 ## [Quick Start](docs/quick-start.md)
 
 ## [Writing Tests](docs/writing-tests.md)
@@ -66,7 +63,6 @@ Options:
 ### [Assertions](./docs/assertions.md)
 
 ## [.imptest Specification](docs/imptest-spec.md)
-
 
 ## Development
 
