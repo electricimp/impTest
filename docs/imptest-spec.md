@@ -24,6 +24,8 @@ __.imptest__ file is used to configure tests execution.
 }
 ```
 
+**WARNING** The "Test file search pattern" has a restriction see [agent and device together](./writing-tests.md#agent-and-device-together)
+
 ### Environment Variables
 
 Environment variables used in place of missing keys:
