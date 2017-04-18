@@ -40,8 +40,8 @@ It is possible to use agent and device specific test code together. The rules fo
 - The test's implementation should be either in device code nor agent, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
 - *TestFile* and *PartnerFile* names should conform the pattern ```[TestName].[agent | device].test.nut```.
 - *TestFile* and *PartnerFile* should be in the same folder(directory).
-- *TestFile* (device or agent without any test) **should** be found by "Test file search pattern" (in the imptest [configuration file](./imptest-spec.md)).
-- *PartnerFile* (device or agent without any test) **should not** be found by "Test file search pattern" (in the imptest [configuration file](./imptest-spec.md)). Otherwise the *TestFile* becomes to be in *PartnerFile* role. impTest doesn't add `ImpUnitTestCase` to the partner code. As a result a compilation will fail.
+- *TestFile* **should** be found by "Test file search pattern" (in the imptest [configuration file](./imptest-spec.md)).
+- *PartnerFile* **should not** be found by "Test file search pattern" (in the imptest [configuration file](./imptest-spec.md)). Otherwise the *TestFile* becomes to be in *PartnerFile* role. impTest doesn't add `ImpUnitTestCase` to the partner code. As a result a execution will fail.
 
 for more details see ![sample8](../samples/sample8)
 
