@@ -324,6 +324,9 @@ class TestCommand extends AbstractCommand {
         });
       }
 
+    // triggers device code space usage message, which also serves as revision launch indicator for device
+    const reloadTrigger = '\n// force code update\n"' + randomstring.generate(32) + '"';
+
     // bootstrap code
     const bootstrapCode = `
 // bootstrap tests
@@ -352,9 +355,6 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     const quoteFilename = f => f.replace('"', '\\"');
     // backslash to slash
     const backslashToSlash = f => f.replace(/\\/g, "/");
-
-    // triggers device code space usage message, which also serves as revision launch indicator for device
-    const reloadTrigger = ('partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpath) + '"' : '') + '\n// force code update\n"' + randomstring.generate(32) + '"';
 
     let tmpFrameworkFile = backslashToSlash(this.testFrameworkFile);
     let agentIncludeOrComment = this._sourceCode.agent ? '@include "' + this._sourceCode.agent + '"' : '/* no agent source */';
@@ -399,6 +399,8 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 `#line 1 "${quoteFilename(deviceLineControlFile)}"
 ${deviceIncludeOrComment}
 
+${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpath) + '"' : ''}
+
 ${reloadTrigger}
 `;
       // </editor-fold>
@@ -427,12 +429,13 @@ ${bootstrapCode}
 __module_tests(__module_impUnit_exports.ImpTestCase);
 __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 
+${reloadTrigger}
 `;
       agentCode =
 `#line 1 "${quoteFilename(agentLineControlFile)}"
 ${agentIncludeOrComment}
 
-${reloadTrigger}
+${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpath) + '"' : ''}
 `;
       // </editor-fold>
     }
