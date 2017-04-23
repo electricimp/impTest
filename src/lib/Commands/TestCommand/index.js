@@ -166,7 +166,7 @@ class TestCommand extends AbstractCommand {
     const files = [];
     let configCwd;
 
-    const pushFile = file => {
+    const pushFile = (file) => {
       let lastAdded = files[files.push({
         name: file,
         path: path.resolve(configCwd, file),
@@ -307,31 +307,22 @@ class TestCommand extends AbstractCommand {
     this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
 
     // read/process test code
-    let loadCode = filePath => {
-      let testCode = fs.readFileSync(filePath, 'utf-8').trim()
+    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
         .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
-      // TODO: Don't iterate over all the possible env variables, check only those that are used in the tests. If anything's used but is missing in the environment, raise a warning.
-      for (let prop in process.env) {
-        if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
-          // Replace #{env:...} with @{...} if it is needed
-          let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g');
-          if (testCode.match(propertyRegExp)) {
-            testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
-            testCode = "@set "+ prop + " \"" + process.env[prop] + "\"\n" + testCode;
-          }
-        }
-      }
-      let notReplacedProp = testCode.match(/#{env:.*}/g);
-      if (notReplacedProp) {
-        this._warning("Can't replace: " + notReplacedProp);
-      }
-      return testCode;
-    }
-    let testCode = loadCode(testFile.path);
 
-    // triggers device code space usage message, which also serves as revision launch indicator for device
-    const reloadTrigger = 'partnerpath' in testFile ? loadCode(testFile.partnerpath) :
-                        '// force code update\n"' + randomstring.generate(32) + '"';
+      let tmp = testCode.match(/#{env:.*}/g);
+      if (tmp) {
+        tmp.forEach((nextEnv) => {
+          let nextPropertyName = nextEnv.slice(6,-1);
+          if (nextPropertyName !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
+            if (nextPropertyName in process.env) {
+              testCode = testCode.replace(nextEnv, process.env[nextPropertyName]);
+            } else {
+              this._warning("Can't replace: " + nextEnv);
+            }
+          }
+        });
+      }
 
     // bootstrap code
     const bootstrapCode = `
@@ -359,25 +350,39 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 
     // quote file name for line control statement
     const quoteFilename = f => f.replace('"', '\\"');
+    // backslash to slash
+    const backslashToSlash = f => f.replace(/\\/g, "/");
 
-    let tmpFrameworkFile = this.testFrameworkFile.replace(/\\/g, "/");
+    // triggers device code space usage message, which also serves as revision launch indicator for device
+    const reloadTrigger = ('partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpath) + '"' : '') + '\n// force code update\n"' + randomstring.generate(32) + '"';
+
+    let tmpFrameworkFile = backslashToSlash(this.testFrameworkFile);
     let agentIncludeOrComment = this._sourceCode.agent ? '@include "' + this._sourceCode.agent + '"' : '/* no agent source */';
     let deviceIncludeOrComment = this._sourceCode.device ? '@include "' + this._sourceCode.device + '"' : '/* no device source */';
+
+    let agentName = path.basename(testFile.name), deviceName = agentName, testPath = backslashToSlash(path.dirname(testFile.path));
+    if ('partnername' in testFile) {
+      if ('agent' === testFile.type) {
+        deviceName = testFile.partnername;
+      } else {
+        agentName = testFile.partnername;
+      }
+    }
 
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
-`#line 1 "impUnit"
-@include "${tmpFrameworkFile}"
+`// tests module
+function __module_tests(ImpTestCase) {
+#line 1 "${testPath}/${agentName}"
+${testCode}
+}
+
+#line 1 "impUnit"
+@include "${quoteFilename(tmpFrameworkFile)}"
 
 #line 1 "${quoteFilename(agentLineControlFile)}"
 ${agentIncludeOrComment}
-
-// tests module
-function __module_tests(ImpTestCase) {
-#line 1 "${quoteFilename(path.basename(testFile.name))}"
-${testCode}
-}
 
 // tests bootstrap module
 function __module_tests_bootstrap(ImpUnitRunner) {
@@ -400,17 +405,17 @@ ${reloadTrigger}
     } else {
       // <editor-fold defaultstate="collapsed">
       deviceCode =
-`#line 1 "impUnit"
-@include "${tmpFrameworkFile}"
+`// tests module
+function __module_tests(ImpTestCase) {
+#line 1 "${testPath}/${deviceName}"
+${testCode}
+}
+
+#line 1 "impUnit"
+@include "${quoteFilename(tmpFrameworkFile)}"
 
 #line 1 "${quoteFilename(deviceLineControlFile)}"
 ${deviceIncludeOrComment}
-
-// tests module
-function __module_tests(ImpTestCase) {
-#line 1 "${quoteFilename(path.basename(testFile.name))}"
-${testCode}
-}
 
 // tests bootstrap module
 function __module_tests_bootstrap(ImpUnitRunner) {
@@ -424,7 +429,7 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 
 `;
       agentCode =
-        `#line 1 "${quoteFilename(agentLineControlFile)}"
+`#line 1 "${quoteFilename(agentLineControlFile)}"
 ${agentIncludeOrComment}
 
 ${reloadTrigger}
@@ -432,23 +437,35 @@ ${reloadTrigger}
       // </editor-fold>
     }
 
-    let agentName = testFile.name, deviceName = testFile.name;
-    if ('partnername' in testFile) {
-      if ('agent' === testFile.type) {
-        deviceName = testFile.partnername;
-      } else {
-        agentName = testFile.partnername;
-      }
-    }
-
     agentCode = this._Builder.machine.execute(agentCode, {
       __FILE__: agentName,
-      __PATH__: path.dirname(testFile.path)
+      __PATH__: testPath
     });
     deviceCode = this._Builder.machine.execute(deviceCode, {
       __FILE__: deviceName,
-      __PATH__: path.dirname(testFile.path)
+      __PATH__: testPath
     });
+ 
+    // FUNCTION: correct line control statements 
+    let correctLine = (testCode, fileName) => {
+      let linePattern = RegExp('#line \\d+ \"' + testPath + '/' + fileName + '\"', 'g');
+      let tmp = testCode.match(linePattern);
+      if (tmp) {
+        tmp.forEach(function (nextLine){
+          let lineNumber = Number.parseInt(nextLine.slice(6, -1 * (testPath.length + agentName.length + 4)));
+          if (lineNumber > 2) {
+            testCode  =testCode.replace(nextLine, '#line ' + (lineNumber-3) + ' \"' + testPath + '/' + agentName + '\"');
+          }
+        });
+      }
+      return testCode;
+    }
+    // correct line control statements 
+    if ('agent' === testFile.type) {
+      agentCode = correctLine(agentCode, agentName);
+    } else {
+      deviceCode = correctLine(deviceCode, deviceName);
+    }
 
     if (this.debug) {
       // FUNCTION: create a new directory and any necessary subdirectories
@@ -847,6 +864,7 @@ ${reloadTrigger}
         warning: this._warning,
         error: this._error
       };
+      this.__Builder.machine.generateLineControlStatements = true;
     }
     return this.__Builder;
   }
