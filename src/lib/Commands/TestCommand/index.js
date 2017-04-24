@@ -67,11 +67,6 @@ const DEFAULT_EXTRA_TEST_MESSAGE_TIMEOUT = 5;
 
 const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
 
-// For #{__LINE__} and #{__FILE__} correction
-
-const FILE_REGEXP = /#{__FILE__}/g;
-const LINE_REGEXP = /#{__LINE__}/g;
-
 // Test command
 
 class TestCommand extends AbstractCommand {
@@ -306,24 +301,6 @@ class TestCommand extends AbstractCommand {
     // [info]
     this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
 
-    // read/process test code
-    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
-        .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
-
-      let tmp = testCode.match(/#{env:.*}/g);
-      if (tmp) {
-        tmp.forEach((nextEnv) => {
-          let nextPropertyName = nextEnv.slice(6,-1);
-          if (nextPropertyName !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
-            if (nextPropertyName in process.env) {
-              testCode = testCode.replace(nextEnv, process.env[nextPropertyName]);
-            } else {
-              this._warning("Can't replace: " + nextEnv);
-            }
-          }
-        });
-      }
-
     // triggers device code space usage message, which also serves as revision launch indicator for device
     const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
@@ -360,15 +337,6 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     let agentIncludeOrComment = this._sourceCode.agent ? '@include "' + this._sourceCode.agent + '"' : '/* no agent source */';
     let deviceIncludeOrComment = this._sourceCode.device ? '@include "' + this._sourceCode.device + '"' : '/* no device source */';
 
-    let agentName = path.basename(testFile.name), deviceName = agentName, testPath = backslashToSlash(path.dirname(testFile.path));
-    if ('partnername' in testFile) {
-      if ('agent' === testFile.type) {
-        deviceName = testFile.partnername;
-      } else {
-        agentName = testFile.partnername;
-      }
-    }
-
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
@@ -380,8 +348,7 @@ ${agentIncludeOrComment}
 
 // tests module
 function __module_tests(ImpTestCase) {
-#line 1 "${quoteFilename(testPath+'/'+agentName)}"
-${testCode}
+@include "${quoteFilename(backslashToSlash(testFile.path))}"
 }
 
 // tests bootstrap module
@@ -415,8 +382,7 @@ ${deviceIncludeOrComment}
 
 // tests module
 function __module_tests(ImpTestCase) {
-#line 1 "${quoteFilename(testPath+'/'+deviceName)}"
-${testCode}
+@include "${quoteFilename(backslashToSlash(testFile.path))}"
 }
 
 // tests bootstrap module
@@ -440,6 +406,15 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
       // </editor-fold>
     }
 
+    let agentName = path.basename(testFile.name), deviceName = agentName, testPath = backslashToSlash(path.dirname(testFile.path));
+    if ('partnername' in testFile) {
+      if ('agent' === testFile.type) {
+        deviceName = testFile.partnername;
+      } else {
+        agentName = testFile.partnername;
+      }
+    }
+
     agentCode = this._Builder.machine.execute(agentCode, {
       __FILE__: agentName,
       __PATH__: testPath
@@ -449,27 +424,6 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
       __PATH__: testPath
     });
  
-    // FUNCTION: correct line control statements 
-    let correctLine = (testCode, fileName) => {
-      let linePattern = RegExp('#line \\d+ \"' + testPath + '/' + fileName + '\"', 'g');
-      let tmp = testCode.match(linePattern);
-      if (tmp) {
-        tmp.forEach(function (nextLine){
-          let lineNumber = Number.parseInt(nextLine.slice(6, -1 * (testPath.length + agentName.length + 4)));
-          if (lineNumber > 9) {
-            testCode  =testCode.replace(nextLine, '#line ' + (lineNumber-9) + ' \"' + testPath + '/' + agentName + '\"');
-          }
-        });
-      }
-      return testCode;
-    }
-    // correct line control statements 
-    if ('agent' === testFile.type) {
-      agentCode = correctLine(agentCode, agentName);
-    } else {
-      deviceCode = correctLine(deviceCode, deviceName);
-    }
-
     if (this.debug) {
       // FUNCTION: create a new directory and any necessary subdirectories
       let mkdirs = (dirName) => {
