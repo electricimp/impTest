@@ -325,7 +325,7 @@ class TestCommand extends AbstractCommand {
       }
 
     // triggers device code space usage message, which also serves as revision launch indicator for device
-    const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
+    const reloadTrigger = '\n// force code update\n"' + randomstring.generate(32) + '"';
 
     // bootstrap code
     const bootstrapCode = `
@@ -372,17 +372,17 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
-`// tests module
-function __module_tests(ImpTestCase) {
-#line 1 "${testPath}/${agentName}"
-${testCode}
-}
-
-#line 1 "impUnit"
+`#line 1 "impUnit"
 @include "${quoteFilename(tmpFrameworkFile)}"
 
 #line 1 "${quoteFilename(agentLineControlFile)}"
 ${agentIncludeOrComment}
+
+// tests module
+function __module_tests(ImpTestCase) {
+#line 1 "${quoteFilename(testPath+'/'+agentName)}"
+${testCode}
+}
 
 // tests bootstrap module
 function __module_tests_bootstrap(ImpUnitRunner) {
@@ -407,17 +407,17 @@ ${reloadTrigger}
     } else {
       // <editor-fold defaultstate="collapsed">
       deviceCode =
-`// tests module
-function __module_tests(ImpTestCase) {
-#line 1 "${testPath}/${deviceName}"
-${testCode}
-}
-
-#line 1 "impUnit"
+`#line 1 "impUnit"
 @include "${quoteFilename(tmpFrameworkFile)}"
 
 #line 1 "${quoteFilename(deviceLineControlFile)}"
 ${deviceIncludeOrComment}
+
+// tests module
+function __module_tests(ImpTestCase) {
+#line 1 "${quoteFilename(testPath+'/'+deviceName)}"
+${testCode}
+}
 
 // tests bootstrap module
 function __module_tests_bootstrap(ImpUnitRunner) {
@@ -456,8 +456,8 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
       if (tmp) {
         tmp.forEach(function (nextLine){
           let lineNumber = Number.parseInt(nextLine.slice(6, -1 * (testPath.length + agentName.length + 4)));
-          if (lineNumber > 2) {
-            testCode  =testCode.replace(nextLine, '#line ' + (lineNumber-3) + ' \"' + testPath + '/' + agentName + '\"');
+          if (lineNumber > 9) {
+            testCode  =testCode.replace(nextLine, '#line ' + (lineNumber-9) + ' \"' + testPath + '/' + agentName + '\"');
           }
         });
       }
