@@ -325,7 +325,7 @@ class TestCommand extends AbstractCommand {
       }
 
     // triggers device code space usage message, which also serves as revision launch indicator for device
-    const reloadTrigger = '\n// force code update\n"' + randomstring.generate(32) + '"';
+    const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
     // bootstrap code
     const bootstrapCode = `
