@@ -318,16 +318,6 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
 });`
       .trim();
 
-    // agent source file name for line control
-    const agentLineControlFile = this._impTestFile.values.agentFile ?
-                                 path.basename(this._impTestFile.values.agentFile) :
-                                 '__agent__';
-
-    // device source file name for line control
-    const deviceLineControlFile = this._impTestFile.values.deviceFile ?
-                                  path.basename(this._impTestFile.values.deviceFile) :
-                                  '__device__';
-
     // quote file name for line control statement
     const quoteFilename = f => f.replace('"', '\\"');
     // backslash to slash
@@ -340,10 +330,8 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
-`#line 1 "impUnit"
-@include "${quoteFilename(tmpFrameworkFile)}"
+`@include "${quoteFilename(tmpFrameworkFile)}"
 
-#line 1 "${quoteFilename(agentLineControlFile)}"
 ${agentIncludeOrComment}
 
 // tests module
@@ -363,8 +351,7 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 `;
 
       deviceCode =
-`#line 1 "${quoteFilename(deviceLineControlFile)}"
-${deviceIncludeOrComment}
+`${deviceIncludeOrComment}
 
 ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpath) + '"' : ''}
 
@@ -374,10 +361,8 @@ ${reloadTrigger}
     } else {
       // <editor-fold defaultstate="collapsed">
       deviceCode =
-`#line 1 "impUnit"
-@include "${quoteFilename(tmpFrameworkFile)}"
+`@include "${quoteFilename(tmpFrameworkFile)}"
 
-#line 1 "${quoteFilename(deviceLineControlFile)}"
 ${deviceIncludeOrComment}
 
 // tests module
@@ -398,31 +383,15 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 ${reloadTrigger}
 `;
       agentCode =
-`#line 1 "${quoteFilename(agentLineControlFile)}"
-${agentIncludeOrComment}
+`${agentIncludeOrComment}
 
 ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpath) + '"' : ''}
 `;
       // </editor-fold>
     }
 
-    let agentName = path.basename(testFile.name), deviceName = agentName, testPath = backslashToSlash(path.dirname(testFile.path));
-    if ('partnername' in testFile) {
-      if ('agent' === testFile.type) {
-        deviceName = testFile.partnername;
-      } else {
-        agentName = testFile.partnername;
-      }
-    }
-
-    agentCode = this._Builder.machine.execute(agentCode, {
-      __FILE__: agentName,
-      __PATH__: testPath
-    });
-    deviceCode = this._Builder.machine.execute(deviceCode, {
-      __FILE__: deviceName,
-      __PATH__: testPath
-    });
+    agentCode = this._Builder.machine.execute(agentCode);
+    deviceCode = this._Builder.machine.execute(deviceCode);
  
     if (this.debug) {
       // FUNCTION: create a new directory and any necessary subdirectories

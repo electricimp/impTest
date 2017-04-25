@@ -75,11 +75,9 @@ __timeout__ parameter on ImpUnitRunner instance sets the timeout after which the
 
 ### Environment Variables
 
-Environment variables can be used in Squirrel source code and test cases like `#{env:VARNAME}`. Access to _IMP_BUILD_API_KEY_ (used in place of missing _apiKey_ parameter in _.imptest_ file) is not allowed.
+New impTest version doesn't support `#{env:VARNAME}` syntax. Please use the [Builder language](#builder-language) instead of.
 
 ### \_\_FILE\_\_ & \_\_LINE\_\_
-
-**DEPRECATED** see [Builder language](#builder-language)
 
 *\_\_FILE\_\_* and *\_\_LINE\_\_* variables are defined in Squirrel source code and test cases, which may be useful for debugging information. Here is the usage example:
 
@@ -88,8 +86,8 @@ this.assertEqual(
   expected,
   actual,
   "Failed to assert that values are"
-    + " equal in '#{__FILE__}'"
-    + " at line #{__LINE__}"
+    + " equal in '@{__FILE__}'"
+    + " at line @{__LINE__}"
 );
 ```
 ### Builder language
@@ -98,10 +96,12 @@ A Builder language is supported in impTest. The Builder language combines a prep
 Builder language sytax is [here](https://github.com/electricimp/Builder). 
 
 ```squirrel
+@set assertText = "Failed to assert that values are"
+
 this.assertEqual(
   expected,
   actual,
-  "Failed to assert that values are"
+    "@{assertText}"
     + " equal in '@{__FILE__}'"
     + " at line @{__LINE__}"
 );
