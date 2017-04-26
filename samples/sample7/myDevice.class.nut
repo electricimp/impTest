@@ -1,6 +1,6 @@
 class MyDevice {
   _myTmp ="MyDevice";
-  function muFunc() {
+  function myFunc() {
 @include "myfile.nut";
   }
 }

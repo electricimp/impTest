@@ -161,22 +161,20 @@ class TestCommand extends AbstractCommand {
     const files = [];
     let configCwd;
 
-    const pushFile = (file) => {
+    const pushFile = (file, testscase) => {
       let lastAdded = files[files.push({
         name: file,
         path: path.resolve(configCwd, file),
-        type: /\bagent\b/i.test(file) ? 'agent' : 'device'
+        type: /\bagent\b/i.test(file) ? 'agent' : 'device',
+        testCase: testscase
       }) - 1];
       if (/.*\.(agent|device)\.test\.nut$/ig.test(file)) {
         let tmp = file.replace(/\.(agent|device)\.test\.nut$/ig, '');
         if (fs.existsSync(path.resolve(configCwd, tmp+'.agent.test.nut')) && 
             fs.existsSync(path.resolve(configCwd, tmp+'.device.test.nut'))) {
-          Object.defineProperty(lastAdded, 'partnername', {
-            value: file.endsWith('.device.test.nut') ?
-                        tmp + '.agent.test.nut' : tmp + '.device.test.nut'
-          });
           Object.defineProperty(lastAdded, 'partnerpath', {
-            value: path.resolve(configCwd, lastAdded.partnername)
+            value: path.resolve(configCwd, file.endsWith('.device.test.nut') ?
+                        tmp + '.agent.test.nut' : tmp + '.device.test.nut')
           });
         }
       }
@@ -199,9 +197,16 @@ class TestCommand extends AbstractCommand {
       searchPatterns = [searchPatterns];
     }
 
-    for (const searchPattern of searchPatterns) {
+    for (let searchPattern of searchPatterns) {
+      let testCase = '';
+      // look in the current path the individual test to run
+      let tmp = searchPattern.indexOf(':');
+      if (tmp >= 0) {
+        testCase = searchPattern.slice(tmp+1);
+        searchPattern = searchPattern.slice(0, tmp);
+      }
       for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
-        pushFile(file);
+        pushFile(file, testCase);
       }
     }
 
@@ -304,6 +309,17 @@ class TestCommand extends AbstractCommand {
     // triggers device code space usage message, which also serves as revision launch indicator for device
     const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
 
+    // look in the current test the individual test to run
+    let testClass = '';
+    let testCase = '';
+    if (testFile.testCase.length > 0) {
+      let tmp = testFile.testCase.indexOf('.');
+      if (tmp >= 0) {
+        testCase = testFile.testCase.slice(tmp+1);
+        testClass = testFile.testCase.slice(0, tmp);
+      }
+    }
+
     // bootstrap code
     const bootstrapCode = `
 // bootstrap tests
@@ -313,6 +329,8 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
   t.session = "${this._session.id}";
   t.timeout = ${parseFloat(this._impTestFile.values.timeout)};
   t.stopOnFailure = ${!!this._impTestFile.values.stopOnFailure};
+  t.testClass = "${testClass}";
+  t.testCase = "${testCase}";
   // poehali!
   t.run();
 });`
