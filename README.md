@@ -54,7 +54,7 @@ Options:
   -c, --config [path]  config file path [default: .imptest]
 ```
 
-```[test_files_pattern]``` can be used for specifying the single test.
+```[test_files_pattern]``` can be used for specifying the single test(indivitual test). The syntax of the `test_files_pattern` see in [.imptest](docs/imptest-spec.md).
 
 ## [Quick Start](docs/quick-start.md)
 
