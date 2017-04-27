@@ -27,10 +27,15 @@ __.imptest__ file is used to configure tests execution.
 **WARNING** The "Test file search pattern" has a restriction see [agent and device together](./writing-tests.md#agent-and-device-together)
 
 The syntax of the `Test file search pattern` is: ```<test_files_pattern>[:[testClass].[testMethod]]```
+
 `test_files_pattern` is the pattern to search the files with test classes like `tests/**/*.test.nut`.
+
 `testClass` is the name of the test class.
+
 `testMethod` is the test method in the test class.
+
 **Example:**
+
 Let code of first test file _MyTestFile_1.agent.test.nut_ is:
 ```
 class MyTestClass extends ImpTestCase {
@@ -54,13 +59,21 @@ class MyTestClass_1 extends ImpTestCase {
 }
 ```
 - case `tests/MyTestFile_1.agent.test.nut:MyTestClass.testMe`
+
 The `testMe()` method in `MyTestClass` class in `MyTestFile_1.agent.test.nut` file will be executed.
+
 - case `tests/*.agent.test.nut:MyTestClass.testMe`
+
 Two `testMe()` methods in two `MyTestClass` classes in `MyTestFile_1.agent.test.nut` file and in `MyTestFile_2.agent.test.nut` file will be executed.
+
 - case `tests/*.agent.test.nut:MyTestClass_1.`
+
 All methods in `MyTestClass_1` classes in `MyTestFile_1.agent.test.nut` file and in `MyTestFile_2.agent.test.nut` file will be executed.
+
 - case `tests/MyTestFile_2.agent.test.nut:.testMe_1`
+
 Two `testMe_1` methods in `MyTestFile_2.agent.test.nut` file will be executed.
+
 - case `tests/*.agent.test.nut:.` is the same as `tests/*.agent.test.nut`
 
 ### Environment Variables
