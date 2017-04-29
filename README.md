@@ -1,25 +1,16 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Electric Imp Test Runner** provides ability to execute set of tests.
 
-
-- [impTest](#imptest)
-  - [Installation](#installation)
-  - [Command Line Interface](#command-line-interface)
-  - [[Quick Start](docs/quick-start.md)](#quick-startdocsquick-startmd)
-  - [[Writing Tests](docs/writing-tests.md)](#writing-testsdocswriting-testsmd)
-    - [[Assertions](./docs/assertions.md)](#assertionsdocsassertionsmd)
-  - [[.imptest Specification](docs/imptest-spec.md)](#imptest-specificationdocsimptest-specmd)
-  - [Development](#development)
-    - [Installation](#installation-1)
-    - [Running](#running)
-    - [Testing impTest](#testing-imptest)
-  - [License](#license)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# impTest
-
-**Electric Imp Test Runner**
+- [Installation](#installation)
+- [Command Line Interface](#command-line-interface)
+- [.imptest File Specification](#imptest-file-specification)
+  - [Agent code and device code together](#agent-code-and-device-code-together)
+  - [Environment Variables](#environment-variables)
+- [Writing Tests](./docs/writing-tests.md)
+- [Development](#development)
+  - [Installation](#installation-1)
+  - [Running](#running)
+  - [Testing impTest](#testing-imptest)
+- [License](#license)
 
 ## Installation
 
@@ -27,7 +18,6 @@
 
 Node.js 4.0+ is required.
 
-[Usage at development time](#running)
 
 ## Command Line Interface
 
@@ -46,7 +36,7 @@ Options:
 - *test* &mdash; Start the test execution process
 
 ```
-imptest test [options] [test_files_pattern]
+imptest test [options] [testcase_pattern]
 
 Options:
 
@@ -54,15 +44,76 @@ Options:
   -c, --config [path]  config file path [default: .imptest]
 ```
 
-`[test_files_pattern]` can be used for specifying the single test(indivitual test). The syntax of the `test_files_pattern` see in [.imptest](docs/imptest-spec.md).
+`[testcase_pattern]` specifyes testcase to execute. 
 
-## [Quick Start](docs/quick-start.md)
+The syntax of the `Test case pattern` is: ```[testClass].[testMethod]```
 
-## [Writing Tests](docs/writing-tests.md)
+`testClass` is the name of the test class.
 
-### [Assertions](./docs/assertions.md)
+`testMethod` is the test method in the test class.
 
-## [.imptest Specification](docs/imptest-spec.md)
+**Example:**
+
+Let code of test file is:
+```
+class MyTestClass extends ImpTestCase {
+    function testMe() {...}
+    function testMe_1() {...}
+}
+class MyTestClass_1 extends ImpTestCase {
+    function testMe() {...}
+    function testMe_1() {...}
+}
+```
+
+- case `imptest test MyTestClass.testMe`
+
+`testMe()` method in `MyTestClass` class will be executed.
+
+- case `imptest test MyTestClass_1.`
+
+All methods in `MyTestClass_1` class will be executed.
+
+- case `imptest test .testMe_1`
+
+Two `testMe_1` methods in both classes will be executed.
+
+- case `imptest test .` 
+
+`imptest test .` is the same as `imptest test ` - All test methods in all test classes will be executed.
+
+## .imptest File Specification
+
+__.imptest__ file is used to configure tests execution.
+
+```js
+{
+    "apiKey":         {string},           // Build API key, optional
+    "modelId":        {string},           // Model id
+    "devices":        {string[]},         // Device IDs
+    "deviceFile":     {string|false},     // Device code file. Default: "device.nut"
+    "agentFile":      {string|false},     // Agent code file. Default: "agent.nut"
+    "tests":          {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
+    "stopOnFailure":  {boolean},          // Stop tests execution on failure? Default: false
+    "timeout":        {number}            // Async test methods timeout, seconds. Default: 10
+}
+```
+
+### Agent code and device code together
+
+It is possible to use agent and device specific test code together. The rules for the using are:
+- The test's implementation should be either in device code nor agent, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
+- *TestFile* and *PartnerFile* names should conform the pattern ```[TestName].[agent | device].test.nut```.
+- *TestFile* and *PartnerFile* should be in the same folder(directory).
+- *TestFile* **should** be found by "Test file search pattern".
+- *PartnerFile* **should not** be found by "Test file search pattern". Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. impTest doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
+
+for more details see ![sample8](./samples/sample8)
+
+### Environment Variables
+
+Environment variables used in place of missing keys:
+- **apiKey** – `IMP_BUILD_API_KEY`
 
 ## Development
 
