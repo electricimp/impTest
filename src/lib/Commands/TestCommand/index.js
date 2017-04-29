@@ -180,33 +180,14 @@ class TestCommand extends AbstractCommand {
       }
     };
 
-    let searchPatterns = '';
+    // look in config file directory
+    configCwd = this._impTestFile.dir;
+    let searchPatterns = this._impTestFile.values.tests;
 
-    // test file pattern is passed via cli
-    if (this.testCaseFile) {
-      // look in the current path
-      configCwd = path.resolve('.');
-      searchPatterns = this.testCaseFile;
-    } else {
-      // look in config file directory
-      configCwd = this._impTestFile.dir;
-      searchPatterns = this._impTestFile.values.tests;
-    }
-
-    if (typeof searchPatterns === 'string') {
-      searchPatterns = [searchPatterns];
-    }
-
-    for (let searchPattern of searchPatterns) {
-      let testCase = '';
-      // look in the current path the individual test to run
-      let tmp = searchPattern.indexOf(':');
-      if (tmp >= 0) {
-        testCase = searchPattern.slice(tmp+1);
-        searchPattern = searchPattern.slice(0, tmp);
-      }
+    for (const searchPattern of searchPatterns) {
       for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
-        pushFile(file, testCase);
+        // TestClass.TestMethod is passed via cli
+        pushFile(file, this.testCaseFile ? this.testCaseFile : '');
       }
     }
 
