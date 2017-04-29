@@ -68,7 +68,7 @@ function run(options) {
     command.configPath = createTmpImpTestFile(__dirname + options.configPath);
 
     // optional options
-    options.testCaseFile !== undefined && (command.testCaseFile = __dirname + options.testCaseFile);
+    //options.testCaseFile !== undefined && (command.testCaseFile = __dirname + options.testCaseFile);
     options.startupDelay !== undefined && (command.startupDelay = options.startupDelay);
     options.extraTestTimeout !== undefined && (command.extraTestTimeout = options.extraTestTimeout);
     options.sessionStartTimeout !== undefined && (command.sessionStartTimeout = options.sessionStartTimeout);
