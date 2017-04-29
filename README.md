@@ -149,6 +149,8 @@ The following environment variables need to be set before spec run:
 
 Then `npm test`.
 
+On *WIN OS* you have to correct _package.json_ file, line `    "test": "node_modules/jasmine/bin/jasmine.js"` have to be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
+
 For example:
 
 ```bash
