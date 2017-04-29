@@ -1,26 +1,25 @@
-- [Writing Tests](#writing-tests)
-  - [Agent and device together](#agent-and-device-together)
-  - [Test Case Lifecycle: setUp() and tearDown()](#test-case-lifecycle-setup-and-teardown)
-  - [Asynchronous Testing](#asynchronous-testing)
-  - [Timeouts](#timeouts)
-  - [Assertions](#assertions)
-    - [assertTrue()](#asserttrue)
-    - [assertEqual()](#assertequal)
-    - [assertGreater()](#assertgreater)
-    - [assertLess()](#assertless)
-    - [assertClose()](#assertclose)
-    - [assertDeepEqual()](#assertdeepequal)
-    - [assertBetween()](#assertbetween)
-    - [assertThrowsError](#assertthrowserror)
-  - [Environment Variables](#environment-variables)
-  - [\_\_FILE\_\_ & \_\_LINE\_\_](#%5C_%5C_file%5C_%5C_-&-%5C_%5C_line%5C_%5C_)
-  - [Builder language](#builder-language)
-  - [Diagnostic Messages](#diagnostic-messages)
-  - [External Commands](#external-commands)
-  - [Running Tests Manually](#running-tests-manually)
-  - [Test Case Example](#test-case-example)
+- [Agent and device together](#agent-and-device-together)
+- [Test Case Lifecycle: setUp() and tearDown()](#test-case-lifecycle-setup-and-teardown)
+- [Asynchronous Testing](#asynchronous-testing)
+- [Timeouts](#timeouts)
+- [Assertions](#assertions)
+  - [assertTrue()](#asserttrue)
+  - [assertEqual()](#assertequal)
+  - [assertGreater()](#assertgreater)
+  - [assertLess()](#assertless)
+  - [assertClose()](#assertclose)
+  - [assertDeepEqual()](#assertdeepequal)
+  - [assertBetween()](#assertbetween)
+  - [assertThrowsError](#assertthrowserror)
+- [Environment Variables](#environment-variables)
+- [\_\_FILE\_\_ & \_\_LINE\_\_](#%5C_%5C_file%5C_%5C_-&-%5C_%5C_line%5C_%5C_)
+- [Builder language](#builder-language)
+- [Diagnostic Messages](#diagnostic-messages)
+- [External Commands](#external-commands)
+- [Running Tests Manually](#running-tests-manually)
+- [Test Case Example](#test-case-example)
+- [License](#license)
 
-## Writing Tests
 
 impTest looks for classes inherited from the `ImpUnitTestCase` and treats them as test cases.
 
@@ -36,7 +35,7 @@ class MyTestCase extends ImpUnitTestCase {
 }
 ```
 
-### Agent and device together
+## Agent and device together
 
 It is possible to use agent and device specific test code together. The rules for the using are:
 - The test's implementation should be either in device code nor agent, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
@@ -47,11 +46,11 @@ It is possible to use agent and device specific test code together. The rules fo
 
 for more details see ![sample8](../samples/sample8)
 
-### Test Case Lifecycle: setUp() and tearDown()
+## Test Case Lifecycle: setUp() and tearDown()
 
 Each test case can have __setUp()__ and __tearDown()__ methods for instantiating the environment and cleaning-up afterwards.
 
-### Asynchronous Testing
+## Asynchronous Testing
 
 Every test method (as well as __setUp()__ and __tearDown()__) can either be synchronous or asynchronous.
 
@@ -69,15 +68,15 @@ function testSomethingAsyncronously() {
 }
 ```
 
-### Timeouts
+## Timeouts
 
 __timeout__ parameter on ImpUnitRunner instance sets the timeout after which the tests will fail. Async tests will be interrupted
 
-### Assertions
+## Assertions
 
 The following assertions are available in test cases.
 
-#### assertTrue()
+### assertTrue()
 
 `this.assertTrue(condition, [message])`
 
@@ -93,7 +92,7 @@ this.assertTrue(1 == 1);
 this.assertTrue(1 == 2);
 ```
 
-#### assertEqual()
+### assertEqual()
 
 `this.assertEqual(expected, actual, [message])`
 
@@ -109,7 +108,7 @@ this.assertEqual(1000 * 0.01, 100 * 0.1);
 this.assertEqual(1, 2);
 ```
 
-#### assertGreater()
+### assertGreater()
 
 `this.assertGreater(actual, cmp, [message])`
 
@@ -125,7 +124,7 @@ this.assertGreater(1, 0);
 this.assertGreater(1, 2);
 ```
 
-#### assertLess()
+### assertLess()
 
 `this.assertLess(actual, cmp, [message])`
 
@@ -141,7 +140,7 @@ this.assertLess(0, 1);
 this.assertLess(2, 2);
 ```
 
-#### assertClose()
+### assertClose()
 
 `this.assertClose(expected, actual, maxDiff, [message])`
 
@@ -157,7 +156,7 @@ this.assertClose(10, 9, 2);
 this.assertClose(10, 9, 0.5);
 ```
 
-#### assertDeepEqual()
+### assertDeepEqual()
 
 `this.assertDeepEqual(expected, actual, [message])`
 
@@ -179,7 +178,7 @@ this.assertDeepEqual({"a" : { "b" : 1 }}, {"a" : { "b" : 1, "c": 2 }});
 this.assertDeepEqual({"a" : { "b" : 1 }}, {"a" : { "b" : 0 }});
 ```
 
-#### assertBetween()
+### assertBetween()
 
 `this.assertBetween(actual, from, to, [message])`
 
@@ -195,7 +194,7 @@ this.assertBetween(10, 9, 11);
 this.assertBetween(10, 11, 12);
 ```
 
-#### assertThrowsError
+### assertThrowsError
 
 `this.assertThrowsError(func, ctx, [args = []], [message])`
 
@@ -213,11 +212,11 @@ this.assertThrowsError(function () {
 }, this);
 ```
 
-### Environment Variables
+## Environment Variables
 
 New impTest version doesn't support `#{env:VARNAME}` syntax. Please use the [Builder language](#builder-language) instead of.
 
-### \_\_FILE\_\_ & \_\_LINE\_\_
+## \_\_FILE\_\_ & \_\_LINE\_\_
 
 *\_\_FILE\_\_* and *\_\_LINE\_\_* variables are defined in Squirrel source code and test cases, which may be useful for debugging information. Here is the usage example:
 
@@ -230,7 +229,7 @@ this.assertEqual(
     + " at line @{__LINE__}"
 );
 ```
-### Builder language
+## Builder language
 
 A Builder language is supported in impTest. The Builder language combines a preprocessor with an expression language and advanced imports.
 Builder language sytax is [here](https://github.com/electricimp/Builder). 
@@ -247,7 +246,7 @@ this.assertEqual(
 );
 ```
 
-### Diagnostic Messages
+## Diagnostic Messages
 
 Return values (other than *null*) are displayed in the console when test succeeds and can be used to output diagnostic messages, like:
 
@@ -259,7 +258,7 @@ Test cases can also outout informational messages with:
 this.info(<message>)
 ```
 
-### External Commands
+## External Commands
 
 External commands can be triggered by test case like so:
 
@@ -272,7 +271,7 @@ The command `echo 123` then will be executed by impTest.
 
 If external command times out (the time it's given is controlled by the _timeout_ parameter in [.imptest](./imptest-spec.md)) or exits with status code other than 0, the test session fails.
 
-### Running Tests Manually
+## Running Tests Manually
 
 Tests can be executed manually with human-readable output with the following bootstrapping procedure:
 
@@ -286,7 +285,7 @@ testRunner.run();
 
 Please note that external command execution is not available when tests are executed manually.
 
-### Test Case Example
+## Test Case Example
 
 lib or util file myFile.nut code:
 ```squirrel
@@ -334,3 +333,6 @@ class TestCase1 extends ImpUnitTestCase {
 
 }
 ```
+## License
+
+The code in this repository is licensed under [MIT License](../LICENSE).

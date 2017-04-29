@@ -44,15 +44,13 @@ Options:
   -c, --config [path]  config file path [default: .imptest]
 ```
 
-`[testcase_pattern]` specifyes testcase to execute. 
+*testcase_pattern* specifyes testcase to be executed. The syntax of the _Test case pattern_ is: ```[testClass].[testMethod]```
 
-The syntax of the `Test case pattern` is: ```[testClass].[testMethod]```
+*testClass* is the name of the test class.
 
-`testClass` is the name of the test class.
+*testMethod* is the test method in the test class.
 
-`testMethod` is the test method in the test class.
-
-**Example:**
+**Example** of *testcase_pattern*:
 
 Let code of test file is:
 ```
@@ -66,21 +64,21 @@ class MyTestClass_1 extends ImpTestCase {
 }
 ```
 
-- case `imptest test MyTestClass.testMe`
+- case *imptest test MyTestClass.testMe*
 
-`testMe()` method in `MyTestClass` class will be executed.
+*testMe()* method in *MyTestClass* class will be executed.
 
-- case `imptest test MyTestClass_1.`
+- case *imptest test MyTestClass_1.*
 
-All methods in `MyTestClass_1` class will be executed.
+All methods in *MyTestClass_1* class will be executed.
 
-- case `imptest test .testMe_1`
+- case *imptest test .testMe_1*
 
-Two `testMe_1` methods in both classes will be executed.
+Two *testMe_1()* methods in both classes will be executed.
 
-- case `imptest test .` 
+- case *imptest test .*
 
-`imptest test .` is the same as `imptest test ` - All test methods in all test classes will be executed.
+*imptest test .* is the same as *imptest test* - All test methods in all test classes will be executed.
 
 ## .imptest File Specification
 
