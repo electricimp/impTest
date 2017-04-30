@@ -161,12 +161,11 @@ class TestCommand extends AbstractCommand {
     const files = [];
     let configCwd;
 
-    const pushFile = (file, testscase) => {
+    const pushFile = (file) => {
       let lastAdded = files[files.push({
         name: file,
         path: path.resolve(configCwd, file),
         type: /\bagent\b/i.test(file) ? 'agent' : 'device',
-        testCase: testscase
       }) - 1];
       if (/.*\.(agent|device)\.test\.nut$/ig.test(file)) {
         let tmp = file.replace(/\.(agent|device)\.test\.nut$/ig, '');
@@ -186,8 +185,7 @@ class TestCommand extends AbstractCommand {
 
     for (const searchPattern of searchPatterns) {
       for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
-        // TestClass.TestMethod is passed via cli
-        pushFile(file, this.testCaseFile ? this.testCaseFile : '');
+        pushFile(file);
       }
     }
 
@@ -293,11 +291,11 @@ class TestCommand extends AbstractCommand {
     // look in the current test the individual test to run
     let testClass = '';
     let testCase = '';
-    if (testFile.testCase.length > 0) {
-      let tmp = testFile.testCase.indexOf('.');
+    if (this.testCaseFile && this.testCaseFile.length > 0) {
+      let tmp = this.testCaseFile.indexOf('.');
       if (tmp >= 0) {
-        testCase = testFile.testCase.slice(tmp+1);
-        testClass = testFile.testCase.slice(0, tmp);
+        testCase = this.testCaseFile.slice(tmp+1);
+        testClass = this.testCaseFile.slice(0, tmp);
       }
     }
 

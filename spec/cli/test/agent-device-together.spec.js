@@ -22,16 +22,14 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-/**
- * Agent-only tests
- */
+// Agent code and device code together
 
 'use strict';
 
 require('jasmine-expect');
 const run = require('./run');
 
-describe('TestCommand test suite for agent-only scenario', () => {
+describe('TestCommand test suite for Agent code and device code together scenario', () => {
   let commandOut = '',
     commandSuccess = true;
 
@@ -41,8 +39,8 @@ describe('TestCommand test suite for agent-only scenario', () => {
 
   it('should run a command', (done) => {
     run({
-      configPath:  '/fixtures/agent-only/.imptest',
-//      testCaseFile:  '/fixtures/agent-only/tests/agent.test.nut'
+      configPath:  '/fixtures/agent-device-together/.imptest',
+      testCaseFile: 'MyTestCase.testMe_1'
     }).then((res) => {
       commandSuccess = res.success;
       commandOut = res.out;
@@ -54,7 +52,8 @@ describe('TestCommand test suite for agent-only scenario', () => {
     // todo: insert more checks here
     expect(commandSuccess).toBe(true);
     expect(commandOut).not.toBeEmptyString();
-    expect(commandOut).toMatch(/Test session is agent-only\n/);
+    expect(commandOut).not.toMatch(/MyTestCase::testMe()\n/);
+    expect(commandOut).toMatch(/Testing succeeded\n/);
     done();
   });
 });
