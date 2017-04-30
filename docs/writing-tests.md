@@ -12,7 +12,7 @@
   - [assertBetween()](#assertbetween)
   - [assertThrowsError](#assertthrowserror)
 - [Environment Variables](#environment-variables)
-- [\_\_FILE\_\_ & \_\_LINE\_\_](#%5C_%5C_file%5C_%5C_-&-%5C_%5C_line%5C_%5C_)
+- [\_\_FILE\_\_ & \_\_LINE\_\_](#%5C_%5C_file%5C_%5C_--%5C_%5C_line%5C_%5C_)
 - [Builder language](#builder-language)
 - [Diagnostic Messages](#diagnostic-messages)
 - [External Commands](#external-commands)
