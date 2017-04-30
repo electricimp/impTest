@@ -1,4 +1,6 @@
-**Electric Imp Test Runner** provides ability to execute set of tests.
+# Imp Test
+
+**Imp Test** set of tools to run impUnit based tests. **Imp Test** used to find and to run a collection of tests. To run the tests, the **Imp Test** requires information for the The Electric Imp Build API. The information is provided by configuration file. **Imp Test** has an ability to generate or to update the test confiduration file.
 
 - [Installation](#installation)
 - [Command Line Interface](#command-line-interface)
