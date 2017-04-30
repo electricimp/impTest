@@ -250,7 +250,7 @@ this.assertEqual(
 
 Return values (other than *null*) are displayed in the console when test succeeds and can be used to output diagnostic messages, like:
 
-![diagnostic messages](./diagnostic-messages.png)
+<img src="diagnostic-messages.png" width=497>
 
 Test cases can also outout informational messages with:
 
