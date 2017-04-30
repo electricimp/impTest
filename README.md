@@ -106,7 +106,7 @@ It is possible to use agent and device specific test code together. The rules fo
 - *TestFile* **should** be found by "Test file search pattern".
 - *PartnerFile* **should not** be found by "Test file search pattern". Otherwise the *PartnerFile* will be in *TestFile* role and the *TestFile* becomes to be in *PartnerFile* role. impTest doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
 
-for more details see ![sample8](./samples/sample8)
+for more details see ![sample7](./samples/sample7)
 
 ### Environment Variables
 
