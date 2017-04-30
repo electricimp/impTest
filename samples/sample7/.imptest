@@ -1,13 +1,13 @@
 {
-    "modelId": "S9Cuo_vPqScM" /* Test */,
+    "modelId": "YwbTcV81Ah5G",
     "devices": [
-        "23424c6938a609ee" /* 23424c6938a609ee */
+        "23349c7838a609ee"
     ],
-    "agentFile": "myAgent.class.nut",
-    "deviceFile": "myDevice.class.nut",
+    "agentFile": false,
+    "deviceFile": false,
     "stopOnFailure": false,
     "timeout": 30,
     "tests": [
-        "tests/tmp.*.nut"
+        "tests/tmp.agent.*.nut"
     ]
 }
