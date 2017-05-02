@@ -1,6 +1,10 @@
-# Imp Test
+# impTest
 
-**Imp Test** set of tools to run impUnit based tests. **Imp Test** used to find and to run a collection of tests. To run the tests, the **Imp Test** requires information for the The Electric Imp Build API. The information is provided by configuration file. **Imp Test** has an ability to generate or to update the test confiduration file.
+**impTest** is a set of tools to run unit tests built with 
+[impUnit](https://github.com/electricimp/impUnit) test framework. *impTest* leverages
+[Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code
+on imp devices. All the the tools are written in [Node.js](https://nodejs.org/en/) and are fully 
+available in sources.
 
 - [Installation](#installation)
 - [Command Line Interface](#command-line-interface)
@@ -23,7 +27,9 @@ Node.js 4.0+ is required.
 
 ## Command Line Interface
 
-- *init* &mdash; Generation or updating the test confiduration file
+### Supported Commands
+
+- *init* &mdash; generate or update *impTest* configuration file
 
 ```
 imptest init [options]
@@ -35,7 +41,7 @@ Options:
   -f, --force          overwrite existing configuration
 ```
 
-- *test* &mdash; Start the test execution process
+- *test* &mdash; run the tests
 
 ```
 imptest test [options] [testcase_pattern]
@@ -46,15 +52,12 @@ Options:
   -c, --config [path]  config file path [default: .imptest]
 ```
 
-*testcase_pattern* specifyes testcase to be executed. The syntax of the _Test case pattern_ is: ```[testClass].[testMethod]```
-
-*testClass* is the name of the test class.
-
-*testMethod* is the test method in the test class.
+`testcase_pattern` specifies the testcase to be executed. The syntax is: `[testClass].[testMethod]`
+Where `testClass` is the name of the test class, `testMethod` is the test method in a test class.
 
 **Example** of *testcase_pattern*:
 
-Let code of test file is:
+Let code of test file be:
 ```
 class MyTestClass extends ImpTestCase {
     function testMe() {...}
@@ -66,21 +69,10 @@ class MyTestClass_1 extends ImpTestCase {
 }
 ```
 
-- case *imptest test MyTestClass.testMe*
-
-*testMe()* method in *MyTestClass* class will be executed.
-
-- case *imptest test MyTestClass_1.*
-
-All methods in *MyTestClass_1* class will be executed.
-
-- case *imptest test .testMe_1*
-
-Two *testMe_1()* methods in both classes will be executed.
-
-- case *imptest test .*
-
-*imptest test .* is the same as *imptest test* - All test methods in all test classes will be executed.
+- `imptest test MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class
+- `imptest test MyTestClass_1.` runs all test methods from `MyTestClass_1` class
+- `imptest test .testMe_1` runs *testMe_1()* methods in the both classes
+- `imptest test .` is the same as `imptest test`, which makes all test method in all the found test classes to be run
 
 ## .imptest File Specification
 
