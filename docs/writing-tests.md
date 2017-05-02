@@ -23,7 +23,7 @@
 - [License](#license)
 
 
-impTest looks for classes inherited from the `ImpUnitTestCase` and treats them as test cases.
+impTest looks for classes inherited from the `ImpTestCase` and treats them as test cases.
 
 Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
 
@@ -154,7 +154,7 @@ example:
 // ok
 this.assertClose(10, 9, 2);
 
-// Failure: Expected value: 10±0.5, got: 9
+// Failure: Expected value: 10ï¿½0.5, got: 9
 this.assertClose(10, 9, 0.5);
 ```
 

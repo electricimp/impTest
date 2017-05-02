@@ -6,6 +6,9 @@
 on imp devices. All the the tools are written in [Node.js](https://nodejs.org/en/) and are fully 
 available in sources.
 
+`impTest` looks for classes inherited from the `ImpTestCase` and treats them as test cases.
+Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
+
 - [Installation](#installation)
 - [Command Line Interface](#command-line-interface)
 - [.imptest File Specification](#imptest-file-specification)
