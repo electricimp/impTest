@@ -24,8 +24,6 @@
 
 /**
  * Command base
- *
- * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 
