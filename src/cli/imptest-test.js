@@ -61,7 +61,7 @@ const GITHUB_TOKEN = 'GITHUB_TOKEN';
 // github credentials in CLI
 command.githubUser = commander.githubUser;
 command.githubToken = commander.githubToken;
-if (!this.githubUser || !this.githubToken) {
+if (!command.githubUser || !command.githubToken) {
   // github credentials in .imptest-auth file in current folder
   let githubCredentialsPath = path.resolve('.imptest-auth');
   commander.config = path.resolve(commander.config);

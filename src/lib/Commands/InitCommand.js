@@ -31,6 +31,7 @@
 const fs = require('fs');
 const c = require('colors');
 const glob = require('glob');
+const path = require('path');
 const prompt = require('cli-prompt');
 const CliTable = require('cli-table');
 const AbstractCommand = require('./AbstractCommand');
@@ -63,7 +64,9 @@ class InitCommand extends AbstractCommand {
         if (written && (this._impTestFile.values.deviceFile || this._impTestFile.values.agentFile)) {
           return this._generateBasicTests();
         }
-      });
+      })
+      .then(() => this._promtpGithubCredentials())
+      .then(() => this._writeGithubCredentials());
   }
 
   /**
@@ -362,6 +365,79 @@ class InitCommand extends AbstractCommand {
     });
   }
 
+  /**
+   * Prompt github credentials
+   * @return {Promise}
+   * @private
+   */
+  _promtpGithubCredentials() {
+    return new Promise((resolve, reject) => {
+      prompt.multi([
+          {
+            key: 'githubUser',
+            label: c.yellow('> username for GitHub'),
+            type: 'string',
+            'default': ''
+          },
+          {
+            key: 'githubToken',
+            label: c.yellow('> Personal access token or password for GitHub'),
+            type: 'string',
+            'default': ''
+          },
+        ],
+        (input) => {
+          this.githubUser = input.githubUser
+            ? input.githubUser
+            : null;
+          this.githubToken = input.githubToken
+            ? input.githubToken
+            : null;
+          resolve();
+        });
+    });
+  }
+
+  /**
+   * Write github credentials
+   * @return {Promise}
+   * @private
+   */
+  _writeGithubCredentials() {
+    return new Promise((resolve, reject) => {
+      // github credentials in .imptest-auth file in current folder
+      let githubCredentialsPath = path.resolve('.imptest-auth');
+      this.configPath = path.resolve(this.configPath);
+      if (fs.existsSync(this.configPath)) {
+        // github credentials in .imptest-auth file in 'config file' folder
+        githubCredentialsPath = path.resolve(path.dirname(this.configPath),'.imptest-auth');
+      }
+
+      this._info(
+        'Your github credentials: \n'
+        + 'username = ' + this.githubUser + '\n'
+        + 'token = ' + this.githubToken
+      );
+
+      prompt.multi([
+          {
+            key: 'write',
+            label: c.yellow('> Write Github credentials to ' + githubCredentialsPath + '?'),
+            type: 'boolean',
+            'default': 'yes'
+          }
+        ],
+        (input) => {
+          if (input.write) {
+            let githubCredentials = JSON.stringify({"github-user": this.githubUser, "github-token": this.githubToken }, null, 4);
+            fs.writeFileSync(githubCredentialsPath, githubCredentials);
+            this._info('Github credentials file saved');
+          }
+          resolve(input.write);
+        });
+    });
+  }
+  
   /**
    * Generate sample tests
    * @return {Promise}

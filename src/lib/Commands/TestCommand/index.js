@@ -845,22 +845,6 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
     this._extraTestTimeout = value;
   }
 
-  get githubUser() {
-    return this._githubUser;
-  }
-
-  set githubUser(value) {
-    this._githubUser = value;
-  }
-
-  get githubToken() {
-    return this._githubToken;
-  }
-
-  set githubToken(value) {
-    this._githubToken = value;
-  }
-
 // </editor-fold>
 }
 
