@@ -26,7 +26,6 @@
  * .imptest file abstraction
  *
  * @see https://github.com/electricimp/impTest/blob/develop/docs/imptest-spec.md
- * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';

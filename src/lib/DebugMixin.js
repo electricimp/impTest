@@ -28,9 +28,6 @@
  * Adds:
  *  - "debug" property
  *  - "_debug()"
- *
- *  @author Mikhail Yurasov <mikhail@electricimp.com>
- *  @version 1.0.0
  */
 
 'use strict';

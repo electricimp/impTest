@@ -24,7 +24,6 @@
 
 /**
  * Test command errors
- * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';
