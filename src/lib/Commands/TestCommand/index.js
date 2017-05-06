@@ -787,6 +787,10 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
         error: this._error
       };
       this.__Builder.machine.generateLineControlStatements = true;
+      if (this.githubUser && this.githubToken) {
+        this.__Builder.machine.readers.github.username = this.githubUser;
+        this.__Builder.machine.readers.github.token = this.githubToken;
+      } 
     }
     return this.__Builder;
   }
@@ -839,6 +843,22 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
 
   set extraTestTimeout(value) {
     this._extraTestTimeout = value;
+  }
+
+  get githubUser() {
+    return this._githubUser;
+  }
+
+  set githubUser(value) {
+    this._githubUser = value;
+  }
+
+  get githubToken() {
+    return this._githubToken;
+  }
+
+  set githubToken(value) {
+    this._githubToken = value;
   }
 
 // </editor-fold>
