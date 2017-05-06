@@ -25,8 +25,6 @@
 
 /**
  * impTest cli app
- *
- * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';

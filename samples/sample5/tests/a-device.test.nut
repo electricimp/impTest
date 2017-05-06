@@ -6,8 +6,8 @@ class Case extends ImpTestCase {
       1,
       2,
       "This should fail to assert that values are"
-        + " equal in '#{__FILE__}'"
-        + " at line #{__LINE__}"
+        + " equal in '@{__FILE__}'"
+        + " at line @{__LINE__}"
     );
   }
 

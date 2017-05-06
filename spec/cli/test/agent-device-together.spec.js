@@ -22,31 +22,38 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-/**
- * Loop with promises
- */
+// Agent code and device code together
 
 'use strict';
 
-/**
- * While loop with promises
- * @param {function} condition
- * @param {function} action
- * @return {Priomise}
- */
-module.exports = function promiseWhile(condition, action) {
-  return new Promise((resolve, reject) => {
+require('jasmine-expect');
+const run = require('./run');
 
-    const loop = () => {
-      if (condition()) {
-        action().then(() => {
-          process.nextTick(loop);
-        }, reject);
-      } else {
-        resolve();
-      }
-    };
+describe('TestCommand test suite for Agent code and device code together scenario', () => {
+  let commandOut = '',
+    commandSuccess = true;
 
-    process.nextTick(loop);
+  beforeEach(() => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
   });
-};
+
+  it('should run a command', (done) => {
+    run({
+      configPath:  '/fixtures/agent-device-together/.imptest',
+      testCaseFile: 'MyTestCase.testMe_1'
+    }).then((res) => {
+      commandSuccess = res.success;
+      commandOut = res.out;
+      done();
+    });
+  });
+
+  it('should verify the output', (done) => {
+    // todo: insert more checks here
+    expect(commandSuccess).toBe(true);
+    expect(commandOut).not.toBeEmptyString();
+    expect(commandOut).not.toMatch(/MyTestCase::testMe()\n/);
+    expect(commandOut).toMatch(/Testing succeeded\n/);
+    done();
+  });
+});

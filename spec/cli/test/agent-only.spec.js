@@ -42,7 +42,7 @@ describe('TestCommand test suite for agent-only scenario', () => {
   it('should run a command', (done) => {
     run({
       configPath:  '/fixtures/agent-only/.imptest',
-      testCaseFile:  '/fixtures/agent-only/tests/agent.test.nut'
+//      testCaseFile:  '/fixtures/agent-only/tests/agent.test.nut'
     }).then((res) => {
       commandSuccess = res.success;
       commandOut = res.out;

@@ -22,31 +22,36 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-/**
- * Loop with promises
- */
+// Builder syntax tests
 
 'use strict';
 
-/**
- * While loop with promises
- * @param {function} condition
- * @param {function} action
- * @return {Priomise}
- */
-module.exports = function promiseWhile(condition, action) {
-  return new Promise((resolve, reject) => {
+require('jasmine-expect');
+const run = require('./run');
 
-    const loop = () => {
-      if (condition()) {
-        action().then(() => {
-          process.nextTick(loop);
-        }, reject);
-      } else {
-        resolve();
-      }
-    };
+describe('TestCommand test suite for Builder syntax scenario', () => {
+  let commandOut = '',
+    commandSuccess = true;
 
-    process.nextTick(loop);
+  beforeEach(() => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
   });
-};
+
+  it('should run a command', (done) => {
+    run({
+      configPath:  '/fixtures/builder/.imptest',
+    }).then((res) => {
+      commandSuccess = res.success;
+      commandOut = res.out;
+      done();
+    });
+  });
+
+  it('should verify the output', (done) => {
+    // todo: insert more checks here
+    expect(commandSuccess).toBe(true);
+    expect(commandOut).not.toBeEmptyString();
+    expect(commandOut).toMatch(/Testing succeeded\n/);
+    done();
+  });
+});

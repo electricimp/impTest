@@ -24,7 +24,6 @@
 
 
 // Test command
-// @author Mikhail Yurasov <mikhail@electricimp.com>
 
 'use strict';
 
@@ -66,11 +65,6 @@ const DEFAULT_EXTRA_TEST_MESSAGE_TIMEOUT = 5;
 // Name for BuildAPI key env var
 
 const BUILD_API_KEY_ENV_VAR = 'IMP_BUILD_API_KEY';
-
-// For #{__LINE__} and #{__FILE__} correction
-
-const FILE_REGEXP = /#{__FILE__}/g;
-const LINE_REGEXP = /#{__LINE__}/g;
 
 // Test command
 
@@ -166,30 +160,27 @@ class TestCommand extends AbstractCommand {
     const files = [];
     let configCwd;
 
-    const pushFile = file => {
-      files.push({
+    const pushFile = (file) => {
+      let lastAdded = files[files.push({
         name: file,
         path: path.resolve(configCwd, file),
-        type: /\bagent\b/i.test(file) ? 'agent' : 'device'
-      });
+        type: /\bagent\b/i.test(file) ? 'agent' : 'device',
+      }) - 1];
+      if (/.*\.(agent|device)\.test\.nut$/ig.test(file)) {
+        let tmp = file.replace(/\.(agent|device)\.test\.nut$/ig, '');
+        if (fs.existsSync(path.resolve(configCwd, tmp+'.agent.test.nut')) && 
+            fs.existsSync(path.resolve(configCwd, tmp+'.device.test.nut'))) {
+          Object.defineProperty(lastAdded, 'partnerpath', {
+            value: path.resolve(configCwd, file.endsWith('.device.test.nut') ?
+                        tmp + '.agent.test.nut' : tmp + '.device.test.nut')
+          });
+        }
+      }
     };
 
-    let searchPatterns = '';
-
-    // test file pattern is passed via cli
-    if (this.testCaseFile) {
-      // look in the current path
-      configCwd = path.resolve('.');
-      searchPatterns = this.testCaseFile;
-    } else {
-      // look in config file directory
-      configCwd = this._impTestFile.dir;
-      searchPatterns = this._impTestFile.values.tests;
-    }
-
-    if (typeof searchPatterns === 'string') {
-      searchPatterns = [searchPatterns];
-    }
+    // look in config file directory
+    configCwd = this._impTestFile.dir;
+    let searchPatterns = this._impTestFile.values.tests;
 
     for (const searchPattern of searchPatterns) {
       for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
@@ -293,27 +284,19 @@ class TestCommand extends AbstractCommand {
     // [info]
     this._info(c.blue('Using ') + testFile.type + c.blue(' test file ') + testFile.name);
 
-    // read/process test code
-    let testCode = fs.readFileSync(testFile.path, 'utf-8').trim()
-        .replace(LINE_REGEXP, "@{__LINE__}").replace(FILE_REGEXP, "@{__FILE__}");
-    // TODO: Don't iterate over all the possible env variables, check only those that are used in the tests. If anything's used but is missing in the environment, raise a warning.
-    for (let prop in process.env) {
-      if (prop !== BUILD_API_KEY_ENV_VAR) { //deny to access for BUILD_API_KEY_ENV_VAR
-        // Replace #{env:...} with @{...} if it is needed
-        let propertyRegExp = new RegExp('\\#\\{env:\\s*' + prop + '\\s*\\}', 'g');
-        if (testCode.match(propertyRegExp)) {
-          testCode = testCode.replace(propertyRegExp, '@{' + prop + '}');
-          testCode = "@set "+ prop + " \"" + process.env[prop] + "\"\n" + testCode;
-        }
-      }
-    }
-    let notReplacedProp = testCode.match(/#{env:.*}/g);
-    if (notReplacedProp) {
-      this._warning("Can't replace: " + notReplacedProp);
-    }
-
     // triggers device code space usage message, which also serves as revision launch indicator for device
     const reloadTrigger = '// force code update\n"' + randomstring.generate(32) + '"';
+
+    // look in the current test the individual test to run
+    let testClass = '';
+    let testCase = '';
+    if (this.testCaseFile && this.testCaseFile.length > 0) {
+      let tmp = this.testCaseFile.indexOf('.');
+      if (tmp >= 0) {
+        testCase = this.testCaseFile.slice(tmp+1);
+        testClass = this.testCaseFile.slice(0, tmp);
+      }
+    }
 
     // bootstrap code
     const bootstrapCode = `
@@ -324,41 +307,32 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
   t.session = "${this._session.id}";
   t.timeout = ${parseFloat(this._impTestFile.values.timeout)};
   t.stopOnFailure = ${!!this._impTestFile.values.stopOnFailure};
+  t.testClass = "${testClass}";
+  t.testCase = "${testCase}";
   // poehali!
   t.run();
 });`
       .trim();
 
-    // agent source file name for line control
-    const agentLineControlFile = this._impTestFile.values.agentFile ?
-                                 path.basename(this._impTestFile.values.agentFile) :
-                                 '__agent__';
-
-    // device source file name for line control
-    const deviceLineControlFile = this._impTestFile.values.deviceFile ?
-                                  path.basename(this._impTestFile.values.deviceFile) :
-                                  '__device__';
-
     // quote file name for line control statement
     const quoteFilename = f => f.replace('"', '\\"');
+    // backslash to slash
+    const backslashToSlash = f => f.replace(/\\/g, "/");
 
-    let tmpFrameworkFile = this.testFrameworkFile.replace(/\\/g, "/");
+    let tmpFrameworkFile = backslashToSlash(this.testFrameworkFile);
     let agentIncludeOrComment = this._sourceCode.agent ? '@include "' + this._sourceCode.agent + '"' : '/* no agent source */';
     let deviceIncludeOrComment = this._sourceCode.device ? '@include "' + this._sourceCode.device + '"' : '/* no device source */';
 
     if ('agent' === testFile.type) {
       // <editor-fold defaultstate="collapsed">
       agentCode =
-`#line 1 "impUnit"
-@include "${tmpFrameworkFile}"
+`@include "${quoteFilename(tmpFrameworkFile)}"
 
-#line 1 "${quoteFilename(agentLineControlFile)}"
 ${agentIncludeOrComment}
 
 // tests module
 function __module_tests(ImpTestCase) {
-#line 1 "${quoteFilename(path.basename(testFile.name))}"
-${testCode}
+@include "${quoteFilename(backslashToSlash(testFile.path))}"
 }
 
 // tests bootstrap module
@@ -373,8 +347,9 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 `;
 
       deviceCode =
-`#line 1 "${quoteFilename(deviceLineControlFile)}"
-${deviceIncludeOrComment}
+`${deviceIncludeOrComment}
+
+${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpath) + '"' : ''}
 
 ${reloadTrigger}
 `;
@@ -382,16 +357,13 @@ ${reloadTrigger}
     } else {
       // <editor-fold defaultstate="collapsed">
       deviceCode =
-`#line 1 "impUnit"
-@include "${tmpFrameworkFile}"
+`@include "${quoteFilename(tmpFrameworkFile)}"
 
-#line 1 "${quoteFilename(deviceLineControlFile)}"
 ${deviceIncludeOrComment}
 
 // tests module
 function __module_tests(ImpTestCase) {
-#line 1 "${quoteFilename(path.basename(testFile.name))}"
-${testCode}
+@include "${quoteFilename(backslashToSlash(testFile.path))}"
 }
 
 // tests bootstrap module
@@ -406,23 +378,17 @@ __module_tests_bootstrap(__module_impUnit_exports.ImpUnitRunner);
 
 ${reloadTrigger}
 `;
-
       agentCode =
-        `#line 1 "${quoteFilename(agentLineControlFile)}"
-${agentIncludeOrComment}
+`${agentIncludeOrComment}
+
+${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpath) + '"' : ''}
 `;
       // </editor-fold>
     }
 
-    agentCode = this._Builder.machine.execute(agentCode, {
-      __FILE__: testFile.name,
-      __PATH__: path.dirname(testFile.path)
-    });
-    deviceCode = this._Builder.machine.execute(deviceCode, {
-      __FILE__: testFile.name,
-      __PATH__: path.dirname(testFile.path)
-    });
-
+    agentCode = this._Builder.machine.execute(agentCode);
+    deviceCode = this._Builder.machine.execute(deviceCode);
+ 
     if (this.debug) {
       // FUNCTION: create a new directory and any necessary subdirectories
       let mkdirs = (dirName) => {
@@ -820,6 +786,7 @@ ${agentIncludeOrComment}
         warning: this._warning,
         error: this._error
       };
+      this.__Builder.machine.generateLineControlStatements = true;
     }
     return this.__Builder;
   }
