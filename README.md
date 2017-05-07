@@ -27,7 +27,7 @@ available in sources.
   - [Test Case Example](#test-case-example)
 - [Test configuration](#test-configuration)
   - [Sample test generation](#sample-test-generation)
-  - [Github credentials](#github-credentials)
+  - [GitHub credentials](#github-credentials)
   - [Environment Variables](#environment-variables)
 - [Running tests](#running-tests)
   - [Selective test runs](#selective-test-runs)
@@ -96,7 +96,7 @@ function testSomethingAsyncronously() {
 ### Builder language
 
 A Builder language is supported in impTest. The Builder language combines a preprocessor with an expression language and advanced imports.
-Builder language sytax is [here](https://github.com/electricimp/Builder). 
+Builder language syntax is [here](https://github.com/electricimp/Builder). 
 
 ```squirrel
 @set assertText = "Failed to assert that values are"
@@ -125,9 +125,9 @@ this.assertEqual(
 
 #### Include from GitHub
 
-An include external sources [from GitHub](https://github.com/electricimp/Builder#from-github) can be used in test files. So it may be needed to have a credentials to obtain an access to Github. Exists two ways to provide Github credentials:
+An include external sources [from GitHub](https://github.com/electricimp/Builder#from-github) can be used in test files. So it may be needed to have a credentials to obtain an access to GitHub. Exists two ways to provide GitHub credentials:
 The first way is to use an [Environment Variables](#environment-variables).
-The second way is to provide [Github credentials file](#github-credentials).
+The second way is to provide [GitHub credentials file](#github-credentials).
 
 ### External commands
 
@@ -312,7 +312,7 @@ test file code is:
 ```squirrel
 class TestCase1 extends ImpUnitTestCase {
 
-@inclide __PATH__+"/myFile.nut"
+@include __PATH__+"/myFile.nut"
 
   // Sync test method
 
@@ -390,9 +390,9 @@ Created file "tests/agent.test.nut"
 Created file "tests/device.test.nut"
 ```
 
-### Github credentials
+### GitHub credentials
 
-The command *imptest github* generates or updates github credentials config file. 
+The command *imptest github* generates or updates GitHub credentials config file. 
 The credentials will be used to include external sources [from GitHub](#include-from-github)
 
 
