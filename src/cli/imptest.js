@@ -34,7 +34,7 @@ const packageJson = require('../../package.json');
 
 commander
   .version(packageJson.version)
+  .command('github', 'Initialize .imptest-auth file')
   .command('init', 'Initialize .impconfig file')
   .command('test', 'Run tests')
   .parse(process.argv);
-

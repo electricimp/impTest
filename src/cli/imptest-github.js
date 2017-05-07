@@ -23,50 +23,30 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 /**
- * Test command
+ * Github command
  */
 
 'use strict';
 
 const commander = require('commander');
-const path = require('path');
-const fs = require('fs');
 const packageJson = require('../../package.json');
 const parseBool = require('../lib/utils/parseBool');
-const TestCommand = require('../lib/Commands/TestCommand');
+const GithubCommand = require('../lib/Commands/GithubCommand');
 
 commander
-  .usage('[options] <test case file>')
   .option('-d, --debug', 'debug output')
-  .option('-g, --github-config [path]', 'github credentials config file path [default: .imptest-auth]', '.imptest-auth')
-  .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
+  .option('-c, --config [path]', 'github credentials config file path [default: .imptest-auth]', '.imptest-auth')
+  .option('-f, --force', 'overwrite existing configuration')
   .parse(process.argv);
 
 // bootstrap command
 
-const command = new TestCommand();
+const command = new GithubCommand();
 
-command.version = packageJson.version;
 command.debug = parseBool(commander.debug);
-command.testFrameworkFile = __dirname + '/../impUnit/index.nut';
-command.testCaseFile = commander.args[0] || null;
+command.force = parseBool(commander.force);
+command.version = packageJson.version;
 command.configPath = commander.config;
-
-// github credentials in env vars
-command.githubUser = process.env['GITHUB_USER'];
-command.githubToken = process.env['GITHUB_TOKEN'];
-// env vars values have the bigger priority
-if (!command.githubUser || !command.githubToken) {
-  // github credentials in .imptest-auth file in current folder
-  const githubCredentialsPath = path.resolve(commander.githubConfig);
-  if (fs.existsSync(githubCredentialsPath)) {
-    // read github credentials
-    let githubCredentials = fs.readFileSync(githubCredentialsPath).toString();
-    githubCredentials = JSON.parse(githubCredentials);
-    command.githubUser = githubCredentials['github-user'];
-    command.githubToken = githubCredentials['github-token'];
-  }
-}
 
 // go
 command.run()
