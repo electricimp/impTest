@@ -296,7 +296,7 @@ this.info(<message>)
 
 ### Test Case Example
 
-utilitized file myFile.nut code is:
+utility file myFile.nut code is:
 ```squirrel
 
   // (optional) Async version, can also be synchronous
