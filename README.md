@@ -53,7 +53,7 @@ Methods named as _test..._ are considered to be the test methods, or, simply _te
 The simplest test case looks like:
 
 ```squirrel
-class MyTestCase extends ImpUnitTestCase {
+class MyTestCase extends ImpTestCase {
   function testSomething() {
     this.assertTrue(true);
   }
@@ -310,7 +310,7 @@ utility file myFile.nut code is:
 
 test file code is:
 ```squirrel
-class TestCase1 extends ImpUnitTestCase {
+class TestCase1 extends ImpTestCase {
 
 @include __PATH__+"/myFile.nut"
 
