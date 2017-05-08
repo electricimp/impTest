@@ -118,8 +118,8 @@ Environment variables are used in place of missing keys:
 
 ## Writing Tests
 
-`impTest` uses a [pattern](#test-configuration) to search files with Test classes.
-The [pattern](#test-configuration) can be defined in the `impTest` configuration file.
+`impTest` uses a [pattern](#new-project-configuration) to search files with Test classes.
+The [pattern](#new-project-configuration) can be defined in the `impTest` configuration file.
 After that `impTest` looks for classes inherited from the `ImpTestCase` and treats them as test cases.
 Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
 
