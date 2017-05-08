@@ -3,7 +3,7 @@
 **impTest** is a set of tools to run unit tests built with 
 [impUnit](https://github.com/electricimp/impUnit) test framework. *impTest* leverages
 [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code
-on imp devices. All the the tools are written in [Node.js](https://nodejs.org/en/) and are fully 
+on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and fully 
 available in sources.
 
 - [Installation](#installation)
@@ -49,7 +49,7 @@ available in sources.
 ### New Project Configuration
 
 A file is used to configure tests execution. Configuration file can be generated with command *imptest init*. 
-The command can also be used to update existing configuration.
+This command can also be used to update existing configuration.
 
 ```
 imptest init [options]
@@ -80,7 +80,7 @@ __timeout__ parameter sets the timeout after which the tests will fail. Async te
 
 ### Sample Test Generation
 
-The command *imptest init* can generate sample test cases. Device code file or/and Agent code file should be specified to activate the generation.
+The command *imptest init* can generate sample test cases. Device code file and/or Agent code file should be specified to perform generation.
 _tests/agent.test.nut_ file will be generated if 'agentFile' is defined.
 _tests/device.test.nut_ file will be generated if 'deviceFile' is defined.
 
@@ -95,7 +95,7 @@ Created file "tests/device.test.nut"
 
 ### GitHub Credentials Configuration
 
-The command *imptest github* generates or updates GitHub credentials config file. 
+The command *imptest github* generates or updates GitHub credentials in config file. 
 The credentials will be used to include external sources [from GitHub](#include-from-github)
 
 
@@ -161,14 +161,14 @@ For example:
 ```squirrel
 function testSomethingAsyncronously() {
   return Promise(function (resolve, reject){
-    resolve("'s all good, man!");
+    resolve("It's all good, man!");
   });
 }
 ```
 
 ### Builder Language
 
-A Builder language is supported in impTest. The Builder language combines a preprocessor with an expression language and advanced imports.
+A Builder language is supported by impTest. The Builder language combines a preprocessor with an expression language and advanced imports.
 Builder language syntax is [here](https://github.com/electricimp/Builder). 
 
 ```squirrel
@@ -198,7 +198,7 @@ this.assertEqual(
 
 #### Include From GitHub
 
-An include external sources [from GitHub](https://github.com/electricimp/Builder#from-github) can be used in test files. So it may be needed to have a credentials to obtain an access to GitHub. Exists two ways to provide GitHub credentials:
+An include external sources [from GitHub](https://github.com/electricimp/Builder#from-github) can be used in test files. It is required to have credentials to obtain an access to GitHub. There are two ways to provide GitHub credentials:
 The first way is to use an [Environment Variables](#environment-variables-settings).
 The second way is to provide [GitHub credentials file](#github-credentials-configuration).
 
@@ -211,9 +211,9 @@ External commands can be triggered by test case like so:
 this.runCommand("echo 123");
 ```
 
-The command `echo 123` then will be executed by impTest.
+The command `echo 123` will be executed by impTest.
 
-If external command times out (the time it's given is controlled by the _timeout_ parameter in [test configuration](#test-project-configuration)) or exits with status code other than 0, the test session fails.
+If external command execution times out (the time it's given is controlled by the _timeout_ parameter in [test configuration](#test-project-configuration)) or exits with status code other than 0, the test session fails.
 
 ### Assertions
 
@@ -437,7 +437,7 @@ Where `testClass` is the name of the test class, `testMethod` is the test method
 
 Using of *testcase_pattern*:
 
-Let test file is:
+Let test file be:
 ```
 class MyTestClass extends ImpTestCase {
     function testMe() {...}
@@ -488,7 +488,7 @@ The following environment variables need to be set before spec run:
 
 Then `npm test`.
 
-On *WIN OS* you have to correct _package.json_ file, line `    "test": "node_modules/jasmine/bin/jasmine.js"` have to be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
+On *Windows* you have to correct _package.json_ file, line `    "test": "node_modules/jasmine/bin/jasmine.js"` have to be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
 
 For example:
 
