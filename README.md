@@ -7,13 +7,18 @@ on imp devices. All the the tools are written in [Node.js](https://nodejs.org/en
 available in sources.
 
 - [Installation](#installation)
-- [Writing tests](#writing-tests)
-  - [Agent code and device code together](#agent-code-and-device-code-together)
+- [Test Project Configuration](#test-project-configuration)
+  - [New Project Configuration](#new-project-configuration)
+  - [Sample Test Generation](#sample-test-generation)
+  - [GitHub Credentials Configuration](#github-credentials-configuration)
+  - [Environment Variables Settings](#environment-variables-settings)
+- [Writing Tests](#writing-tests)
+  - [Agent Code And Device Code Together](#agent-code-and-device-code-together)
   - [Test Case Lifecycle: setUp() and tearDown()](#test-case-lifecycle-setup-and-teardown)
-  - [Asynchronous testing](#asynchronous-testing)
-  - [Builder language](#builder-language)
-    - [Include from GitHub](#include-from-github)
-  - [External commands](#external-commands)
+  - [Asynchronous Testing](#asynchronous-testing)
+  - [Builder Language](#builder-language)
+    - [Include From GitHub](#include-from-github)
+  - [External Commands](#external-commands)
   - [Assertions](#assertions)
     - [assertTrue()](#asserttrue)
     - [assertEqual()](#assertequal)
@@ -25,15 +30,11 @@ available in sources.
     - [assertThrowsError](#assertthrowserror)
   - [Diagnostic Messages](#diagnostic-messages)
   - [Test Case Example](#test-case-example)
-- [Test configuration](#test-configuration)
-  - [Sample test generation](#sample-test-generation)
-  - [GitHub credentials](#github-credentials)
-  - [Environment Variables](#environment-variables)
-- [Running tests](#running-tests)
-  - [Selective test runs](#selective-test-runs)
-- [impTest Development](#impTest-development)
+- [Running Tests](#running-tests)
+  - [Selective Test Runs](#selective-test-runs)
+- [For impTest Developers](#for-imptest-developers)
   - [Installation](#installation-1)
-  - [Running impTest under development](#running-imptest-under-development)
+  - [Running impTest Under Development](#running-imptest-under-development)
   - [Testing impTest](#testing-imptest)
 - [License](#license)
 
@@ -43,7 +44,79 @@ available in sources.
 
 [Node.js 4.0+](https://nodejs.org/en/) is required.
 
-## Writing tests
+## Test Project Configuration
+
+### New Project Configuration
+
+A file is used to configure tests execution. Configuration file can be generated with command *imptest init*. 
+The command can also be used to update existing configuration.
+
+```
+imptest init [options]
+
+Options:
+
+  -d, --debug          debug output
+  -c, --config [path]  config file path [default: .imptest]
+  -f, --force          overwrite existing configuration
+```
+
+The configuration file may be prepared manually. The file syntax is:
+
+```js
+{
+    "apiKey":         {string},           // Build API key, optional
+    "modelId":        {string},           // Model id
+    "devices":        {string[]},         // Device IDs
+    "deviceFile":     {string|false},     // Device code file. Default: "device.nut"
+    "agentFile":      {string|false},     // Agent code file. Default: "agent.nut"
+    "tests":          {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
+    "stopOnFailure":  {boolean},          // Stop tests execution on failure? Default: false
+    "timeout":        {number}            // Async test methods timeout, seconds. Default: 10
+}
+```
+
+__timeout__ parameter sets the timeout after which the tests will fail. Async tests will be interrupted
+
+### Sample Test Generation
+
+The command *imptest init* can generate sample test cases. Device code file or/and Agent code file should be specified to activate the generation.
+_tests/agent.test.nut_ file will be generated if 'agentFile' is defined.
+_tests/device.test.nut_ file will be generated if 'deviceFile' is defined.
+
+Example of console log:
+```
+> Write to .imptest?: (yes)
+Config file saved
+> Generate sample test cases?: (yes)
+Created file "tests/agent.test.nut"
+Created file "tests/device.test.nut"
+```
+
+### GitHub Credentials Configuration
+
+The command *imptest github* generates or updates GitHub credentials config file. 
+The credentials will be used to include external sources [from GitHub](#include-from-github)
+
+
+```
+imptest github [options]
+
+Options:
+
+  -d, --debug          debug output
+  -c, --config [path]  github credentials config file path [default: .imptest-auth]
+  -f, --force          overwrite existing configuration
+```
+
+### Environment Variables Settings
+
+Environment variables are used in place of missing keys:
+- **apiKey** – `IMP_BUILD_API_KEY` is used in [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code on imp devices.
+- **github-user** – `GITHUB_USER` is used to include external sources [from GitHub](#include-from-github).
+- **github-token** – `GITHUB_TOKEN` is used to include external sources [from GitHub](#include-from-github).
+
+## Writing Tests
 
 `impTest` uses a [pattern](#test-configuration) to search files with Test classes.
 The [pattern](#test-configuration) can be defined in the `impTest` configuration file.
@@ -60,7 +133,7 @@ class MyTestCase extends ImpTestCase {
 }
 ```
 
-### Agent and device together
+### Agent Code And Device Code Together
 
 It is possible to use agent and device specific test code together. The rules for the using are:
 - The test's implementation should be either in device code nor agent, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
@@ -75,7 +148,7 @@ An example of agent and device using can be found in [sample7](../samples/sample
 
 Each test case can have __setUp()__ and __tearDown()__ methods for instantiating the environment and cleaning-up afterwards.
 
-### Asynchronous testing
+### Asynchronous Testing
 
 Every test method (as well as __setUp()__ and __tearDown()__) can either be synchronous or asynchronous.
 
@@ -93,7 +166,7 @@ function testSomethingAsyncronously() {
 }
 ```
 
-### Builder language
+### Builder Language
 
 A Builder language is supported in impTest. The Builder language combines a preprocessor with an expression language and advanced imports.
 Builder language syntax is [here](https://github.com/electricimp/Builder). 
@@ -123,13 +196,13 @@ this.assertEqual(
 );
 ```
 
-#### Include from GitHub
+#### Include From GitHub
 
 An include external sources [from GitHub](https://github.com/electricimp/Builder#from-github) can be used in test files. So it may be needed to have a credentials to obtain an access to GitHub. Exists two ways to provide GitHub credentials:
 The first way is to use an [Environment Variables](#environment-variables).
 The second way is to provide [GitHub credentials file](#github-credentials).
 
-### External commands
+### External Commands
 
 External commands can be triggered by test case like so:
 
@@ -288,7 +361,7 @@ Return values (other than *null*) are displayed in the console when test succeed
 
 <img src="./docs/diagnostic-messages.png" width=497>
 
-Test cases can also outout informational messages with:
+Test cases can also output informational messages with:
 
 ```squirrel
 this.info(<message>)
@@ -343,77 +416,7 @@ class TestCase1 extends ImpTestCase {
 }
 ```
 
-## Test configuration
-
-A file is used to configure tests execution. Configuration file can be generated with command *imptest init*. 
-The command can also be used to update existing configuration.
-
-```
-imptest init [options]
-
-Options:
-
-  -d, --debug          debug output
-  -c, --config [path]  config file path [default: .imptest]
-  -f, --force          overwrite existing configuration
-```
-
-The configuration file may be prepared manually. The file syntax is:
-
-```js
-{
-    "apiKey":         {string},           // Build API key, optional
-    "modelId":        {string},           // Model id
-    "devices":        {string[]},         // Device IDs
-    "deviceFile":     {string|false},     // Device code file. Default: "device.nut"
-    "agentFile":      {string|false},     // Agent code file. Default: "agent.nut"
-    "tests":          {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
-    "stopOnFailure":  {boolean},          // Stop tests execution on failure? Default: false
-    "timeout":        {number}            // Async test methods timeout, seconds. Default: 10
-}
-```
-
-__timeout__ parameter sets the timeout after which the tests will fail. Async tests will be interrupted
-
-### Sample test generation
-
-The command *imptest init* can generate sample test cases. Device code file or/and Agent code file should be specified to activate the generation.
-_tests/agent.test.nut_ file will be generated if 'agentFile' is defined.
-_tests/device.test.nut_ file will be generated if 'deviceFile' is defined.
-
-Example of console log:
-```
-> Write to .imptest?: (yes)
-Config file saved
-> Generate sample test cases?: (yes)
-Created file "tests/agent.test.nut"
-Created file "tests/device.test.nut"
-```
-
-### GitHub credentials
-
-The command *imptest github* generates or updates GitHub credentials config file. 
-The credentials will be used to include external sources [from GitHub](#include-from-github)
-
-
-```
-imptest github [options]
-
-Options:
-
-  -d, --debug          debug output
-  -c, --config [path]  github credentials config file path [default: .imptest-auth]
-  -f, --force          overwrite existing configuration
-```
-
-### Environment Variables
-
-Environment variables are used in place of missing keys:
-- **apiKey** – `IMP_BUILD_API_KEY` is used in [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code on imp devices.
-- **github-user** – `GITHUB_USER` is used to include external sources [from GitHub](#include-from-github).
-- **github-token** – `GITHUB_TOKEN` is used to include external sources [from GitHub](#include-from-github).
-
-## Running tests
+## Running Tests
 
 To run tests *imptest test* command is used. __.imptest__ file is a default configuration file for tests execution.
 
@@ -427,10 +430,10 @@ Options:
   -c,  --config [path]        config file path [default: .imptest]
 ```
 
-### Selective test runs
+### Selective Test Runs
 
-`testcase_pattern` specifies the testcase to be executed. The syntax is: `[testClass].[testMethod]`
-Where `testClass` is the name of the test class, `testMethod` is the test method in a test class. So `testcase_pattern` allows to execute single testcase (methods named as _test..._).
+`testcase_pattern` specifies the test case to be executed. The syntax is: `[testClass].[testMethod]`
+Where `testClass` is the name of the test class, `testMethod` is the test method in a test class. So `testcase_pattern` allows to execute single test case (methods named as _test..._).
 
 Using of *testcase_pattern*:
 
@@ -451,7 +454,7 @@ class MyTestClass_1 extends ImpTestCase {
 - `imptest test .testMe_1` runs *testMe_1()* methods in the both classes
 - `imptest test .` is the same as `imptest test`, which makes all test method in all the found test classes to be run
 
-## impTest Development
+## For impTest Developers
 
 ### Installation
 
@@ -461,7 +464,7 @@ cd imptest
 npm i
 ```
 
-### Running impTest under development
+### Running impTest Under Development
 
 ```bash
 src/cli/imptest.js <command> [options] [arguments]
