@@ -139,10 +139,10 @@ It is possible to use agent and device specific test code together. The rules fo
 - The test's implementation should be either in device code nor agent, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
 - *TestFile* and *PartnerFile* names should conform the pattern ```[TestName].[agent | device].test.nut```.
 - *TestFile* and *PartnerFile* should be in the same folder(directory).
-- *TestFile* **should** be found by "Test file search pattern" (in the imptest [configuration](#test-configuration)).
-- *PartnerFile* **should not** be found by "Test file search pattern" (in the imptest [configuration](#test-configuration)). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. impTest doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
+- *TestFile* **should** be found by "Test file search pattern" (in the imptest [configuration](#test-project-configuration)).
+- *PartnerFile* **should not** be found by "Test file search pattern" (in the imptest [configuration](#test-project-configuration)). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. impTest doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
 
-An example of agent and device using can be found in [sample7](../samples/sample7).
+An example of agent and device using can be found in [sample7](./samples/sample7).
 
 ### Test Case Lifecycle: setUp() and tearDown()
 
@@ -199,8 +199,8 @@ this.assertEqual(
 #### Include From GitHub
 
 An include external sources [from GitHub](https://github.com/electricimp/Builder#from-github) can be used in test files. So it may be needed to have a credentials to obtain an access to GitHub. Exists two ways to provide GitHub credentials:
-The first way is to use an [Environment Variables](#environment-variables).
-The second way is to provide [GitHub credentials file](#github-credentials).
+The first way is to use an [Environment Variables](#environment-variables-settings).
+The second way is to provide [GitHub credentials file](#github-credentials-configuration).
 
 ### External Commands
 
@@ -213,7 +213,7 @@ this.runCommand("echo 123");
 
 The command `echo 123` then will be executed by impTest.
 
-If external command times out (the time it's given is controlled by the _timeout_ parameter in [test configuration](#test-configuration)) or exits with status code other than 0, the test session fails.
+If external command times out (the time it's given is controlled by the _timeout_ parameter in [test configuration](#test-project-configuration)) or exits with status code other than 0, the test session fails.
 
 ### Assertions
 
