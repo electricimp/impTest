@@ -550,7 +550,7 @@ The following environment variables need to be set before spec run:
 - SPEC_MODEL_ID – Model Id to use for tests
 - SPEC_DEVICE_ID/SPEC_DEVICE_IDS – Device Id/Ids (comma-separated) to use for tests
 
-Then `npm test`. The result of ytest executio will be printed at the end of log.
+Then `npm test`. The result of test execution will be printed at the end of log.
 
 On *Windows* you have to correct _package.json_ file, line `    "test": "node_modules/jasmine/bin/jasmine.js"` have to be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
 
