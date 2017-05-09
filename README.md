@@ -35,33 +35,46 @@ available in sources.
 - [For impTest Developers](#for-imptest-developers)
   - [Installation](#installation-1)
   - [Running impTest Under Development](#running-imptest-under-development)
+  - [Debug Messages](#debug-messages)
   - [Testing impTest](#testing-imptest)
 - [License](#license)
 
 ## Installation
 
+[Node.js 4.0+](https://nodejs.org/en/) is required. 
+You can download the Node.js [pre-built installer](https://nodejs.org/en/download/) for your platform or install Node.js via [package manager](https://nodejs.org/en/download/package-manager).
+Once `node` and `npm` are installed, to install `impTest` please execute the command
+
 `npm i -g imptest`
 
-[Node.js 4.0+](https://nodejs.org/en/) is required.
 
 ## Test Project Configuration
 
-### New Project Configuration
+A file is used to configure tests execution. A directory in which configuration file is located will be named *Project Home*.
+Test project configuration file contains next options:
 
-A file is used to configure tests execution. Configuration file can be generated with command *imptest init*. 
-This command can also be used to update existing configuration.
+__apiKey__  Build API key provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/).
+For security reason We strongly recommended to define Build API key as [environment variables](#environment-variables-settings).
 
-```
-imptest init [options]
+__devices__ It is the set of Device IDs that will be used for test execution
 
-Options:
+__modelId__ Id of model that is attached to devices.
 
-  -d, --debug          debug output
-  -c, --config [path]  config file path [default: .imptest]
-  -f, --force          overwrite existing configuration
-```
+__deviceFile__ This is the path to the device additional code file. This code will be deployed on imp device as part of test. `false` is used if no additional code.
 
-The configuration file may be prepared manually. The file syntax is:
+__agentFile__  This is the path to the agent additional code file. This code will be deployed on server as part of test. `false` is used if no additional code.
+
+__tests__ This pattern is used to search test file.
+It is pattern you type when you do stuff like ls `*.js` on the command line.
+If `**` is alone in a path portion, then it matches zero or more directories and subdirectories searching for matches.
+It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`
+The pattern will be applied to directory tree, starts from *Project Home* (directory in which this configuration file is located).
+
+__stopOnFailure__ Set this option to `true` if you want to stop execution after test failing. The default value is `false`.
+
+__timeout__ parameter sets the timeout after which the tests will fail. Async tests will be interrupted.
+
+The file syntax is:
 
 ```js
 {
@@ -76,7 +89,30 @@ The configuration file may be prepared manually. The file syntax is:
 }
 ```
 
-__timeout__ parameter sets the timeout after which the tests will fail. Async tests will be interrupted
+### New Project Configuration
+
+Configuration file can be generated with command *imptest init*.
+__.imptest__ file is a default configuration file for generation.
+Custom name of configuration file may be defined with *-c* option.
+Relative or Absolute path can be used in *-c* option.
+In this case all parent directories have to be created before configuration file generation.
+You will be asked for [configuration properties](#test-project-configuration) during the generation.
+
+*imptest init* command can also be used to update existing configuration.
+The *-f* option have to be used for updating.
+
+
+```
+imptest init [options]
+
+Options:
+
+  -d, --debug          debug output
+  -c, --config [path]  config file path [default: .imptest]
+  -f, --force          overwrite existing configuration
+```
+
+The configuration file may be prepared or updated manually.
 
 ### Sample Test Generation
 
@@ -97,7 +133,7 @@ Created file "tests/device.test.nut"
 
 The command *imptest github* generates or updates GitHub credentials in config file. 
 The credentials will be used to include external sources [from GitHub](#include-from-github)
-
+*imptest github* options is the same as in [*imptest init* command](#new-project-configuration)
 
 ```
 imptest github [options]
@@ -109,6 +145,15 @@ Options:
   -f, --force          overwrite existing configuration
 ```
 
+This file may be prepared manually. The file syntax is:
+
+```
+{
+    "github-user": "user",
+    "github-token": "password_or_token"
+}
+```
+
 ### Environment Variables Settings
 
 Environment variables are used in place of missing keys:
@@ -118,8 +163,8 @@ Environment variables are used in place of missing keys:
 
 ## Writing Tests
 
-`impTest` uses a [pattern](#new-project-configuration) to search files with Test classes.
-The [pattern](#new-project-configuration) can be defined in the `impTest` configuration file.
+`impTest` uses a [pattern](#test-project-configuration) to search files with Test classes.
+The [pattern](#test-project-configuration) can be defined in the `impTest` configuration file.
 After that `impTest` looks for classes inherited from the `ImpTestCase` and treats them as test cases.
 Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
 
@@ -367,6 +412,13 @@ Test cases can also output informational messages with:
 this.info(<message>)
 ```
 
+Log of failed test looks like:
+
+<img src="./docs/diagnostic-messages2.png" width=497>
+
+This means that execution of *testMe* method in the *MyTestCase* class has been failed.
+Incorrect syntax is in line 6 of test file (in which *MyTestCase* class).
+
 ### Test Case Example
 
 utility file myFile.nut code is:
@@ -475,6 +527,9 @@ eg:
 ```bash
 src/cli/imptest.js test -c samples/sample1/.imptest
 ```
+
+### Debug Messages
+
 
 ### Testing impTest
 
