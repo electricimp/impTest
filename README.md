@@ -32,10 +32,10 @@ available in sources.
   - [Test Case Example](#test-case-example)
 - [Running Tests](#running-tests)
   - [Selective Test Runs](#selective-test-runs)
+  - [Debug Mode](#debug-mode)
 - [For impTest Developers](#for-imptest-developers)
   - [Installation](#installation-1)
   - [Running impTest Under Development](#running-imptest-under-development)
-  - [Debug Messages](#debug-messages)
   - [Testing impTest](#testing-imptest)
 - [License](#license)
 
@@ -43,7 +43,7 @@ available in sources.
 
 [Node.js 4.0+](https://nodejs.org/en/) is required. 
 You can download the Node.js [pre-built installer](https://nodejs.org/en/download/) for your platform or install Node.js via [package manager](https://nodejs.org/en/download/package-manager).
-Once `node` and `npm` are installed, to install `impTest` please execute the command
+Once `node` and `npm` are installed, to install *impTest* please execute the command
 
 `npm i -g imptest`
 
@@ -53,7 +53,7 @@ Once `node` and `npm` are installed, to install `impTest` please execute the com
 A file is used to configure tests execution. A directory in which configuration file is located will be named *Project Home*.
 Test project configuration file contains next options:
 
-__apiKey__  Build API key provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/).
+__apiKey__  [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/).
 For security reason We strongly recommended to define Build API key as [environment variables](#environment-variables-settings).
 
 __devices__ It is the set of Device IDs that will be used for test execution
@@ -163,9 +163,9 @@ Environment variables are used in place of missing keys:
 
 ## Writing Tests
 
-`impTest` uses a [pattern](#test-project-configuration) to search files with Test classes.
-The [pattern](#test-project-configuration) can be defined in the `impTest` configuration file.
-After that `impTest` looks for classes inherited from the `ImpTestCase` and treats them as test cases.
+*impTest* uses a [pattern](#test-project-configuration) to search files with Test classes.
+The [pattern](#test-project-configuration) can be defined in the *impTest* configuration file.
+After that *impTest* looks for classes inherited from the `ImpTestCase` and treats them as test cases.
 Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
 
 The simplest test case looks like:
@@ -184,8 +184,8 @@ It is possible to use agent and device specific test code together. The rules fo
 - The test's implementation should be either in device code nor agent, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
 - *TestFile* and *PartnerFile* names should conform the pattern ```[TestName].[agent | device].test.nut```.
 - *TestFile* and *PartnerFile* should be in the same folder(directory).
-- *TestFile* **should** be found by "Test file search pattern" (in the imptest [configuration](#test-project-configuration)).
-- *PartnerFile* **should not** be found by "Test file search pattern" (in the imptest [configuration](#test-project-configuration)). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. impTest doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
+- *TestFile* **should** be found by "Test file search pattern" (in the *impTest* [configuration](#test-project-configuration)).
+- *PartnerFile* **should not** be found by "Test file search pattern" (in the *impTest* [configuration](#test-project-configuration)). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. *impTest* doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
 
 An example of agent and device using can be found in [sample7](./samples/sample7).
 
@@ -213,7 +213,7 @@ function testSomethingAsyncronously() {
 
 ### Builder Language
 
-A Builder language is supported by impTest. The Builder language combines a preprocessor with an expression language and advanced imports.
+A Builder language is supported by *impTest*. The Builder language combines a preprocessor with an expression language and advanced imports.
 Builder language syntax is [here](https://github.com/electricimp/Builder). 
 
 ```squirrel
@@ -256,7 +256,7 @@ External commands can be triggered by test case like so:
 this.runCommand("echo 123");
 ```
 
-The command `echo 123` will be executed by impTest.
+The command `echo 123` will be executed by *impTest*.
 
 If external command execution times out (the time it's given is controlled by the _timeout_ parameter in [test configuration](#test-project-configuration)) or exits with status code other than 0, the test session fails.
 
@@ -506,6 +506,18 @@ class MyTestClass_1 extends ImpTestCase {
 - `imptest test .testMe_1` runs *testMe_1()* methods in the both classes
 - `imptest test .` is the same as `imptest test`, which makes all test method in all the found test classes to be run
 
+### Debug Mode
+
+To run tests in debug mode *imptest test -d* command is used.
+JSON is used to communicate between test and *impTest*.
+Communication messages will be printed to console in debug mode.
+The deployed and run the code is stored in *./build* folder.
+It is useful for analyzing.
+
+Example of debug log:
+
+<img src="./docs/diagnostic-messages3.png" width=497>
+
 ## For impTest Developers
 
 ### Installation
@@ -528,9 +540,6 @@ eg:
 src/cli/imptest.js test -c samples/sample1/.imptest
 ```
 
-### Debug Messages
-
-
 ### Testing impTest
 
 Jasmine test suite is included with the project.
@@ -541,7 +550,7 @@ The following environment variables need to be set before spec run:
 - SPEC_MODEL_ID – Model Id to use for tests
 - SPEC_DEVICE_ID/SPEC_DEVICE_IDS – Device Id/Ids (comma-separated) to use for tests
 
-Then `npm test`.
+Then `npm test`. The result of ytest executio will be printed at the end of log.
 
 On *Windows* you have to correct _package.json_ file, line `    "test": "node_modules/jasmine/bin/jasmine.js"` have to be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
 
