@@ -511,7 +511,7 @@ class MyTestClass_1 extends ImpTestCase {
 To run tests in debug mode *imptest test -d* command is used.
 JSON is used to communicate between test and *impTest*.
 Communication messages will be printed to console in debug mode.
-The deployed and run the code is stored in *./build* folder.
+The deployed and run code is stored in *./build* folder.
 It is useful for analyzing.
 
 Example of debug log:
