@@ -2,15 +2,15 @@
 
 [Node.js 4.0+](https://nodejs.org/en/) is required for development.
 Once `node` and `npm` are installed, to install *impTest* please download imptest source:
-`
+```
 git clone <repo-url-goes-here> imptest
-`
+```
 Then you have to install all dependency via command
 
-`
+```
 cd imptest
 npm i
-`
+```
 
 *impTest* is prepared to be executed now:
 
