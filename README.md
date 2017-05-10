@@ -483,7 +483,7 @@ __.imptest__ file in the current directory will be used if `-c` option is not pr
 The same for the __.imptest-auth__ file:
 __.imptest-auth____ file in the current directory will be used if `-g` option is not provided.
 
-`-d` option switch on [debug mode](#debug-mode).
+`-d` option will turn on [debug mode](#debug-mode).
 
 ### Selective Test Runs
 
