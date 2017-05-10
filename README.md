@@ -33,10 +33,7 @@ available in sources.
 - [Running Tests](#running-tests)
   - [Selective Test Runs](#selective-test-runs)
   - [Debug Mode](#debug-mode)
-- [For impTest Developers](#for-imptest-developers)
-  - [Installation](#installation-1)
-  - [Running impTest Under Development](#running-imptest-under-development)
-  - [Testing impTest](#testing-imptest)
+- [For impTest Developers](./docs/forImptestDevelopers.md)
 - [License](#license)
 
 ## Installation
@@ -470,7 +467,7 @@ class TestCase1 extends ImpTestCase {
 
 ## Running Tests
 
-To run tests *imptest test* command is used. __.imptest__ file is a default configuration file for tests execution.
+To run tests *imptest test* command is used. 
 
 ```
 imptest test [options] [testcase_pattern]
@@ -481,6 +478,12 @@ Options:
   -g,  --github-config [path] github credentials config file path [default: .imptest-auth]
   -c,  --config [path]        config file path [default: .imptest]
 ```
+
+__.imptest__ file in the current directory will be used if `-c` option is not provided.
+The same for the __.imptest-auth__ file:
+__.imptest-auth____ file in the current directory will be used if `-g` option is not provided.
+
+`-d` option switch on [debug mode](#debug-mode).
 
 ### Selective Test Runs
 
@@ -508,7 +511,7 @@ class MyTestClass_1 extends ImpTestCase {
 
 ### Debug Mode
 
-To run tests in debug mode *imptest test -d* command is used.
+*imptest test -d* command is used to run tests in debug mode.
 JSON is used to communicate between test and *impTest*.
 Communication messages will be printed to console in debug mode.
 The deployed and run code is stored in *./build* folder.
@@ -517,48 +520,6 @@ It is useful for analyzing.
 Example of debug log:
 
 <img src="./docs/diagnostic-messages3.png" width=497>
-
-## For impTest Developers
-
-### Installation
-
-```bash
-git clone <repo-url-goes-here> imptest
-cd imptest
-npm i
-```
-
-### Running impTest Under Development
-
-```bash
-src/cli/imptest.js <command> [options] [arguments]
-```
-
-eg:
-
-```bash
-src/cli/imptest.js test -c samples/sample1/.imptest
-```
-
-### Testing impTest
-
-Jasmine test suite is included with the project.
-
-The following environment variables need to be set before spec run: 
-
-- SPEC_DEBUG {true|false} – Enables/disables debug output
-- SPEC_MODEL_ID – Model Id to use for tests
-- SPEC_DEVICE_ID/SPEC_DEVICE_IDS – Device Id/Ids (comma-separated) to use for tests
-
-Then `npm test`. The result of test execution will be printed at the end of log.
-
-On *Windows* you have to correct _package.json_ file, line `    "test": "node_modules/jasmine/bin/jasmine.js"` have to be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
-
-For example:
-
-```bash
-SPEC_DEBUG=false SPEC_MODEL_ID=Lu55555OJHZT SPEC_DEVICE_IDS=237d555558a609ee npm test
-```
 
 ## License
 
