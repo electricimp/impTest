@@ -14,7 +14,10 @@ npm i
 src/cli/imptest.js <command> [options] [arguments]
 ```
 
-eg:
+A set of available options and commands can be found in [Test Project Configuration](../README.md#test-project-configuration)
+and [Running Tests](../README.md#running-tests) sections
+
+example:
 
 ```bash
 src/cli/imptest.js test -c samples/sample1/.imptest
