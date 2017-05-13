@@ -1,7 +1,7 @@
 # impTest
 
 **impTest** is a set of tools to run unit tests built with 
-[impUnit](https://github.com/electricimp/impUnit) test framework. *impTest* leverages
+[impUnit](https://github.com/electricimp/impUnit) test framework. **impTest** leverages
 [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code
 on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and fully 
 available in sources.
@@ -16,7 +16,7 @@ available in sources.
   - [Agent Code And Device Code Together](#agent-code-and-device-code-together)
   - [Test Case Lifecycle: setUp() and tearDown()](#test-case-lifecycle-setup-and-teardown)
   - [Asynchronous Testing](#asynchronous-testing)
-  - [Builder Language](#builder-language)
+  - [**Builder** Language](#builder-language)
     - [Include From GitHub](#include-from-github)
   - [External Commands](#external-commands)
   - [Assertions](#assertions)
@@ -33,43 +33,36 @@ available in sources.
 - [Running Tests](#running-tests)
   - [Selective Test Runs](#selective-test-runs)
   - [Debug Mode](#debug-mode)
-- [For impTest Developers](./docs/forImptestDevelopers.md)
+- [For **impTest** Developers](#for-impTest-developers)
 - [License](#license)
 
 ## Installation
 
 [Node.js 4.0+](https://nodejs.org/en/) is required. 
-You can download the Node.js [pre-built installer](https://nodejs.org/en/download/) for your platform or install Node.js via [package manager](https://nodejs.org/en/download/package-manager).
-Once `node` and `npm` are installed, to install *impTest* please execute the command
+You can download the Node.js [pre-built binary](https://nodejs.org/en/download/) for your platform or install Node.js via [package manager](https://nodejs.org/en/download/package-manager).
+Once `node` and `npm` are installed, to setup **impTest** please execute the command
 
 `npm i -g imptest`
 
 
 ## Test Project Configuration
 
-A file is used to configure tests execution. A directory in which configuration file is located will be named *Project Home*.
+A file is used to configure tests execution. A directory in which configuration file is located will be named **Project Home**.
 Test project configuration file contains next options:
 
-__apiKey__  [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/).
-For security reason We strongly recommended to define Build API key as [environment variables](#environment-variables-settings).
-
-__devices__ It is the set of Device IDs that will be used for test execution
-
-__modelId__ Id of model that is attached to devices.
-
-__deviceFile__ This is the path to the device additional code file. This code will be deployed on imp device as part of test. `false` is used if no additional code.
-
-__agentFile__  This is the path to the agent additional code file. This code will be deployed on server as part of test. `false` is used if no additional code.
-
-__tests__ This pattern is used to search test file.
+| Option | Description |
+| __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reason We strongly recommended to define Build API key as [environment variables](#environment-variables-settings). |
+| __devices__ | It is the set of Device IDs that will be used for test execution. |
+| __modelId__ | Id of model that is attached to devices. |
+| __deviceFile__ | This is the path to the device additional code file. This code will be deployed on imp device as part of test. `false` is used if no additional code. |
+| __agentFile__ | This is the path to the agent additional code file. This code will be deployed on server as part of test. `false` is used if no additional code. |
+| __tests__ | This pattern is used to search test file.
 It is pattern you type when you do stuff like ls `*.js` on the command line.
 If `**` is alone in a path portion, then it matches zero or more directories and subdirectories searching for matches.
 It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`
-The pattern will be applied to directory tree, starts from *Project Home* (directory in which this configuration file is located).
-
-__stopOnFailure__ Set this option to `true` if you want to stop execution after test failing. The default value is `false`.
-
-__timeout__ parameter sets the timeout after which the tests will fail. Async tests will be interrupted.
+The pattern will be applied to directory tree, starts from **Project Home** (directory in which this configuration file is located). |
+| __stopOnFailure__ | Set this option to `true` if you want to stop execution after test failing. The default value is `false`. |
+| __timeout__ | Parameter sets the timeout after which the tests will fail. Async tests will be interrupted. |
 
 The file syntax is:
 
@@ -88,15 +81,15 @@ The file syntax is:
 
 ### New Project Configuration
 
-Configuration file can be generated with command *imptest init*.
+Configuration file can be generated with command `imptest init`.
 __.imptest__ file is a default configuration file for generation.
-Custom name of configuration file may be defined with *-c* option.
-Relative or Absolute path can be used in *-c* option.
+Custom name of configuration file may be defined with `-c` option.
+Relative or absolute path can be used in `-c` option.
 In this case all parent directories have to be created before configuration file generation.
 You will be asked for [configuration properties](#test-project-configuration) during the generation.
 
-*imptest init* command can also be used to update existing configuration.
-The *-f* option have to be used for updating.
+`imptest init` command can also be used to update existing configuration.
+To update (overwrite) an existing configuration, use `-f` option.
 
 
 ```
@@ -113,9 +106,9 @@ The configuration file may be prepared or updated manually.
 
 ### Sample Test Generation
 
-The command *imptest init* can generate sample test cases. Device code file and/or Agent code file should be specified to perform generation.
-_tests/agent.test.nut_ file will be generated if 'agentFile' is defined.
-_tests/device.test.nut_ file will be generated if 'deviceFile' is defined.
+The command `imptest init` can generate sample test cases. Device code file and/or Agent code file should be specified to perform generation.
+`tests/agent.test.nut` file will be generated if __agentFile__ is defined.
+`tests/device.test.nut` file will be generated if __deviceFile__ is defined.
 
 Example of console log:
 ```
@@ -128,9 +121,9 @@ Created file "tests/device.test.nut"
 
 ### GitHub Credentials Configuration
 
-The command *imptest github* generates or updates GitHub credentials in config file. 
+The command `imptest github` generates or updates GitHub credentials in config file. 
 The credentials will be used to include external sources [from GitHub](#include-from-github)
-*imptest github* options is the same as in [*imptest init* command](#new-project-configuration)
+`imptest github` options is the same as in [`imptest init` command](#new-project-configuration)
 
 ```
 imptest github [options]
@@ -160,9 +153,9 @@ Environment variables are used in place of missing keys:
 
 ## Writing Tests
 
-*impTest* uses a [pattern](#test-project-configuration) to search files with Test classes.
-The [pattern](#test-project-configuration) can be defined in the *impTest* configuration file.
-After that *impTest* looks for classes inherited from the `ImpTestCase` and treats them as test cases.
+**impTest** uses a [pattern](#test-project-configuration) to search files with Test classes.
+The [pattern](#test-project-configuration) can be defined in the **impTest** configuration file.
+After that **impTest** looks for classes inherited from the `ImpTestCase` and treats them as test cases.
 Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
 
 The simplest test case looks like:
@@ -181,8 +174,8 @@ It is possible to use agent and device specific test code together. The rules fo
 - The test's implementation should be either in device code nor agent, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
 - *TestFile* and *PartnerFile* names should conform the pattern ```[TestName].[agent | device].test.nut```.
 - *TestFile* and *PartnerFile* should be in the same folder(directory).
-- *TestFile* **should** be found by "Test file search pattern" (in the *impTest* [configuration](#test-project-configuration)).
-- *PartnerFile* **should not** be found by "Test file search pattern" (in the *impTest* [configuration](#test-project-configuration)). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. *impTest* doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
+- *TestFile* **should** be found by "Test file search pattern" (in the **impTest** [configuration](#test-project-configuration)).
+- *PartnerFile* **should not** be found by "Test file search pattern" (in the **impTest** [configuration](#test-project-configuration)). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. **impTest** doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
 
 An example of agent and device using can be found in [sample7](./samples/sample7).
 
@@ -208,10 +201,10 @@ function testSomethingAsyncronously() {
 }
 ```
 
-### Builder Language
+### **Builder** Language
 
-A Builder language is supported by *impTest*. The Builder language combines a preprocessor with an expression language and advanced imports.
-Builder language syntax is [here](https://github.com/electricimp/Builder). 
+[**Builder** language](https://github.com/electricimp/Builder) is supported by **impTest**.
+**Builder** language combines a preprocessor with an expression language and advanced imports.
 
 ```squirrel
 @set assertText = "Failed to assert that values are"
@@ -225,7 +218,7 @@ this.assertEqual(
 );
 ```
 
-*\_\_FILE\_\_* and *\_\_LINE\_\_* variables are defined in the [builder](https://github.com/electricimp/Builder), 
+[*\_\_FILE\_\_* and *\_\_LINE\_\_*](https://github.com/electricimp/Builder#variables) variables are defined in the [**Builder**](https://github.com/electricimp/Builder), 
 which may be useful for debugging information. Here is the usage example:
 
 ```squirrel
@@ -253,7 +246,7 @@ External commands can be triggered by test case like so:
 this.runCommand("echo 123");
 ```
 
-The command `echo 123` will be executed by *impTest*.
+The command `echo 123` will be executed by **impTest**.
 
 If external command execution times out (the time it's given is controlled by the _timeout_ parameter in [test configuration](#test-project-configuration)) or exits with status code other than 0, the test session fails.
 
@@ -467,7 +460,7 @@ class TestCase1 extends ImpTestCase {
 
 ## Running Tests
 
-To run tests *imptest test* command is used. 
+To run tests `imptest test` command is used. 
 
 ```
 imptest test [options] [testcase_pattern]
@@ -506,20 +499,22 @@ class MyTestClass_1 extends ImpTestCase {
 
 - `imptest test MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class
 - `imptest test MyTestClass_1.` runs all test methods from `MyTestClass_1` class
-- `imptest test .testMe_1` runs *testMe_1()* methods in the both classes
+- `imptest test .testMe_1` runs `testMe_1()` methods in the both classes
 - `imptest test .` is the same as `imptest test`, which makes all test method in all the found test classes to be run
 
 ### Debug Mode
 
-*imptest test -d* command is used to run tests in debug mode.
-JSON is used to communicate between test and *impTest*.
+`imptest test -d` command is used to run tests in debug mode.
+JSON is used to communicate between [impUnit](https://github.com/electricimp/impUnit) test framework and **impTest**.
 Communication messages will be printed to console in debug mode.
-Agent code and device code will be stored in *./build* folder that is located in [*Project Home*](#test-project-configuration)
+Agent code and device code will be stored in `./build` folder that is located in [**Project Home**](#test-project-configuration)
 It is useful for analyzing.
 
 Example of debug log:
 
 <img src="./docs/diagnostic-messages3.png" width=497>
+
+## [For **impTest** Developers](./docs/forImptestDevelopers.md)
 
 ## License
 

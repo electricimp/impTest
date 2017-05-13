@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 // MIT License
 //
-// Copyright 2016 Electric Imp
+// Copyright 2016-2017 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
