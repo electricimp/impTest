@@ -4,7 +4,9 @@
 [impUnit](https://github.com/electricimp/impUnit) test framework. **impTest** leverages
 [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code
 on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and fully 
-available in sources.
+available in sources. **impTest** uses a [pattern](#test-project-configuration) to search files with Test classes.
+After that **impTest** looks for classes inherited from the `ImpTestCase` and treats them as test cases.
+Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
 
 - [Installation](#installation)
 - [Test Project Configuration](#test-project-configuration)
@@ -47,24 +49,23 @@ Once `node` and `npm` are installed, to setup **impTest** please execute the com
 
 ## Test Project Configuration
 
-A file is used to configure tests execution. A directory in which configuration file is located will be named **Project Home**.
+Configuration file is JSON file that contains settings for tests execution.
+**impTest** starts to search test files from the directory in which configuration file is located. 
+This directory is treated as **Project Home**.
 Test project configuration file contains next options:
 
 | Option | Description |
+| --- | --- |
 | __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reason We strongly recommended to define Build API key as [environment variables](#environment-variables-settings). |
 | __devices__ | It is the set of Device IDs that will be used for test execution. |
 | __modelId__ | Id of model that is attached to devices. |
 | __deviceFile__ | This is the path to the device additional code file. This code will be deployed on imp device as part of test. `false` is used if no additional code. |
 | __agentFile__ | This is the path to the agent additional code file. This code will be deployed on server as part of test. `false` is used if no additional code. |
-| __tests__ | This pattern is used to search test file.
-It is pattern you type when you do stuff like ls `*.js` on the command line.
-If `**` is alone in a path portion, then it matches zero or more directories and subdirectories searching for matches.
-It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`
-The pattern will be applied to directory tree, starts from **Project Home** (directory in which this configuration file is located). |
+| __tests__ | This pattern is used to search test file. It is pattern you type when you do stuff like ls `*.js` on the command line. If `**` is alone in a path portion, then it matches zero or more directories and subdirectories searching for matches. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. |
 | __stopOnFailure__ | Set this option to `true` if you want to stop execution after test failing. The default value is `false`. |
 | __timeout__ | Parameter sets the timeout after which the tests will fail. Async tests will be interrupted. |
 
-The file syntax is:
+Format of configuration file is:
 
 ```js
 {
@@ -82,10 +83,9 @@ The file syntax is:
 ### New Project Configuration
 
 Configuration file can be generated with command `imptest init`.
-__.imptest__ file is a default configuration file for generation.
-Custom name of configuration file may be defined with `-c` option.
+`-c` option is used to define the name of file. If `-c` is not provided __.imptest__ file in current directory will be used.
 Relative or absolute path can be used in `-c` option.
-In this case all parent directories have to be created before configuration file generation.
+All parent directories have to be created before configuration file generation.
 You will be asked for [configuration properties](#test-project-configuration) during the generation.
 
 `imptest init` command can also be used to update existing configuration.
@@ -155,8 +155,6 @@ Environment variables are used in place of missing keys:
 
 **impTest** uses a [pattern](#test-project-configuration) to search files with Test classes.
 The [pattern](#test-project-configuration) can be defined in the **impTest** configuration file.
-After that **impTest** looks for classes inherited from the `ImpTestCase` and treats them as test cases.
-Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
 
 The simplest test case looks like:
 
@@ -191,7 +189,7 @@ Method should return the instance of [__Promise__](https://github.com/electricim
 
 The resolution means test all test were successful, rejection denotes a failure.
 
-For example:
+Example:
 
 ```squirrel
 function testSomethingAsyncronously() {
@@ -260,7 +258,7 @@ The following assertions are available in test cases.
 
 Asserts that the condition is truthful.
 
-example:
+Example:
 
 ```squirrel
  // ok
@@ -276,7 +274,7 @@ this.assertTrue(1 == 2);
 
 Asserts that two values are equal
 
-example:
+Example:
 
 ```squirrel
 // ok
@@ -292,7 +290,7 @@ this.assertEqual(1, 2);
 
 Asserts that value is greater than some other value.
 
-example:
+Example:
 
 ```squirrel
 // ok
@@ -308,7 +306,7 @@ this.assertGreater(1, 2);
 
 Asserts that value is less than some other value.
 
-example:
+Example:
 
 ```squirrel
 // ok
@@ -324,7 +322,7 @@ this.assertLess(2, 2);
 
 Asserts that value is within some tolerance from expected value.
 
-example:
+Example:
 
 ```squirrel
 // ok
@@ -340,7 +338,7 @@ this.assertClose(10, 9, 0.5);
 
 Performs a deep comparison of tables, arrays and classes.
 
-example:
+Example:
 
 ```squirrel
 // ok
@@ -362,7 +360,7 @@ this.assertDeepEqual({"a" : { "b" : 1 }}, {"a" : { "b" : 0 }});
 
 Asserts that a value belongs to the range from _from_ to _to_.
 
-example:
+Example:
 
 ```squirrel
 // ok
