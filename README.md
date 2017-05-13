@@ -83,9 +83,9 @@ Format of configuration file is:
 ### New Project Configuration
 
 Configuration file can be generated with command `imptest init`.
-`-c` option is used to define the name of file. If `-c` is not provided __.imptest__ file in current directory will be used.
-Relative or absolute path can be used in `-c` option.
-All parent directories have to be created before configuration file generation.
+`-c` option is used to provide the file name. If configuration file is not defined __.imptest__ file in current directory will be used.
+Relative or absolute path can be used with `-c` option.
+Generation will fail if any directory in the path does not exist.
 You will be asked for [configuration properties](#test-project-configuration) during the generation.
 
 `imptest init` command can also be used to update existing configuration.
@@ -106,7 +106,7 @@ The configuration file may be prepared or updated manually.
 
 ### Sample Test Generation
 
-The command `imptest init` can generate sample test cases. Device code file and/or Agent code file should be specified to perform generation.
+The command `imptest init` can generate sample test cases.
 `tests/agent.test.nut` file will be generated if __agentFile__ is defined.
 `tests/device.test.nut` file will be generated if __deviceFile__ is defined.
 
