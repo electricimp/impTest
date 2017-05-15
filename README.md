@@ -462,7 +462,7 @@ where:
 
 ### Selective Test Runs
 
-[`testcase_pattern`](#running-tests) allows to execute single [_test_](#Writing-Tests) in [**test case**](#writing-tests).
+[`testcase_pattern`](#running-tests) allows to execute single [_test_](#writing-tests) in [**test case**](#writing-tests).
 The syntax is: `[testClass].[testMethod]`
 
 where:
