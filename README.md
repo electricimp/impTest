@@ -4,8 +4,9 @@
 [impUnit](https://github.com/electricimp/impUnit) test framework. **impTest** leverages
 [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code
 on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and fully 
-available in sources. **impTest** uses a [pattern](#test-project-configuration) to search files with Test classes.
-After that **impTest** looks for classes inherited from the `ImpTestCase` and treats them as test cases.
+available in sources.
+
+**impTest** looks for classes inherited from the `ImpTestCase` and treats them as test cases.
 Methods named as _test..._ are considered to be the test methods, or, simply _tests_.
 
 - [Installation](#installation)
@@ -61,7 +62,7 @@ Test project configuration file contains next options:
 | __modelId__ | Id of model that is attached to devices. |
 | __deviceFile__ | This is the path to the device additional code file. This code will be deployed on imp device as part of test. `false` is used if no additional code. |
 | __agentFile__ | This is the path to the agent additional code file. This code will be deployed on server as part of test. `false` is used if no additional code. |
-| __tests__ | This pattern is used to search test file. It is pattern you type when you do stuff like ls `*.js` on the command line. If `**` is alone in a path portion, then it matches zero or more directories and subdirectories searching for matches. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. |
+| __tests__ | This is a pattern that **impTest** uses to search Test files. If `**` is alone in a path portion, then it matches zero or more directories and subdirectories searching for matches. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. |
 | __stopOnFailure__ | Set this option to `true` if you want to stop execution after test failing. The default value is `false`. |
 | __timeout__ | Parameter sets the timeout after which the tests will fail. Async tests will be interrupted. |
 
@@ -122,7 +123,7 @@ Created file "tests/device.test.nut"
 ### GitHub Credentials Configuration
 
 The command `imptest github` generates or updates GitHub credentials in config file. 
-The credentials will be used to include external sources [from GitHub](#include-from-github)
+The credentials will be used to include external sources [from GitHub](#include-from-github).
 `imptest github` options is the same as in [`imptest init` command](#new-project-configuration)
 
 ```
