@@ -223,8 +223,8 @@ this.assertEqual(
 
 Sources [from GitHub](https://github.com/electricimp/Builder#from-github) can be included to test files.
 It may required to have credentials to obtain an access to GitHub. There are two ways to provide GitHub credentials:
-The first way is to use an [Environment Variables](#environment-variables-settings).
-The second way is to provide [GitHub credentials file](#github-credentials-configuration).
+- The first way is to use an [Environment Variables](#environment-variables-settings).
+- The second way is to provide [GitHub credentials file](#github-credentials-configuration).
 
 ### External Commands
 
