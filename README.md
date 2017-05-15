@@ -36,7 +36,7 @@ Methods named as _test..._ are considered to be the test methods, or, simply _te
 - [Running Tests](#running-tests)
   - [Selective Test Runs](#selective-test-runs)
   - [Debug Mode](#debug-mode)
-- [For **impTest** Developers](#for-impTest-developers)
+- [For **impTest** Developers](#for-imptest-developers)
 - [License](#license)
 
 ## Installation
@@ -97,7 +97,7 @@ You will be asked for [configuration properties](#test-project-configuration) du
 
 ### Sample Test Generation
 
-The command `imptest init` can generate sample **test cases**.
+The command `imptest init` can generate sample [**test cases**](#writing-tests).
 `tests/agent.test.nut` file will be generated if __agentFile__ is defined.
 `tests/device.test.nut` file will be generated if __deviceFile__ is defined.
 
@@ -169,7 +169,7 @@ An example of agent and device using can be found in [sample7](./samples/sample7
 
 ### **Test Case** Lifecycle: setUp() and tearDown()
 
-Each **test case** can have `setUp()` and `tearDown()` methods for instantiating the environment and cleaning-up afterwards.
+Each [**test case**](#writing-tests) can have `setUp()` and `tearDown()` methods for instantiating the environment and cleaning-up afterwards.
 
 ### Asynchronous Testing
 
@@ -228,7 +228,7 @@ The second way is to provide [GitHub credentials file](#github-credentials-confi
 
 ### External Commands
 
-External commands can be triggered by **test case** like so:
+External commands can be triggered by [**test case**](#writing-tests) like so:
 
 ```squirrel
 // within the test case/method
@@ -241,7 +241,7 @@ If external command execution times out (the time it's given is controlled by th
 
 ### Assertions
 
-The following assertions are available in **test cases**.
+The following assertions are available in [**test cases**](#writing-tests).
 
 #### assertTrue()
 
@@ -385,7 +385,7 @@ Return values (other than *null*) are displayed in the console when test succeed
 
 <img src="./docs/diagnostic-messages.png" width=497>
 
-**Test cases** can also output informational messages with:
+[**Test cases**](#writing-tests) can also output informational messages with:
 
 ```squirrel
 this.info(<message>)
@@ -398,7 +398,7 @@ Log of failed test looks like:
 This means that execution of `testMe` method in the `MyTestCase` class has been failed:
 Incorrect syntax is in line 6 in test file (in which `MyTestCase` class).
 
-### **Test Case** Example
+### [**Test Case**](#writing-tests) Example
 
 utility file `myFile.nut` code is:
 ```squirrel
@@ -412,7 +412,7 @@ utility file `myFile.nut` code is:
   }
 ```
 
-**test case** code is:
+[**test case**](#writing-tests) code is:
 ```squirrel
 class TestCase1 extends ImpTestCase {
 
@@ -462,13 +462,13 @@ where:
 
 ### Selective Test Runs
 
-[`testcase_pattern`](#running-tests) allows to execute single [_test_](#Writing-Tests) in **test case**.
+[`testcase_pattern`](#running-tests) allows to execute single [_test_](#Writing-Tests) in [**test case**](#writing-tests).
 The syntax is: `[testClass].[testMethod]`
 
 where:
 
-* `testClass` &mdash; name of the **test case** (test class)
-* `testMethod` &mdash; test method name in a **test case**.
+* `testClass` &mdash; name of the [**test case**]((#writing-tests)) (test class)
+* `testMethod` &mdash; test method name in a [**test case**](#writing-tests).
 
 Using of `testcase_pattern`:
 
