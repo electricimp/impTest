@@ -467,7 +467,7 @@ The syntax is: `[testClass].[testMethod]`
 
 where:
 
-* `testClass` &mdash; name of the [**test case**]((#writing-tests)) (test class)
+* `testClass` &mdash; name of the [**test case**](#writing-tests) (test class)
 * `testMethod` &mdash; test method name in a [**test case**](#writing-tests).
 
 Using of `testcase_pattern`:
