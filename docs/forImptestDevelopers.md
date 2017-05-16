@@ -5,7 +5,7 @@ Once `node` and `npm` are installed, to install *impTest* please download imptes
 ```
 git clone <repo-url-goes-here> imptest
 ```
-Then you have to install all dependency via command
+Then install all dependency:
 
 ```
 cd imptest

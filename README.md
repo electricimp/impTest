@@ -62,7 +62,7 @@ Configuration file contains following keys:
 | __modelId__ | Id of model that is attached to devices. |
 | __deviceFile__ | This is the path to the device additional code file. This code will be deployed on imp device as part of test. `false` is used if no additional code. |
 | __agentFile__ | This is the path to the agent additional code file. This code will be deployed on server as part of test. `false` is used if no additional code. |
-| __tests__ | This is a pattern that **impTest** uses to search Test files. If `**` is alone in a path portion, then it matches zero or more directories and subdirectories searching for matches. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. |
+| __tests__ | This is set of patterns that **impTest** uses to search Test files. If `**` is alone in a path portion, then it matches zero or more directories and subdirectories searching for matches. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. |
 | __stopOnFailure__ | Set this option to `true` if you want to stop execution after test failing. The default value is `false`. |
 | __timeout__ | Parameter sets the timeout after which the tests will fail. Async tests will be interrupted. |
 
@@ -207,7 +207,7 @@ this.assertEqual(
 ```
 
 [*\_\_FILE\_\_* and *\_\_LINE\_\_*](https://github.com/electricimp/Builder#variables) variables are defined in the [**Builder**](https://github.com/electricimp/Builder), 
-which may be useful for debugging information. Here is the usage example:
+they may be useful for debugging information. Here is the usage example:
 
 ```squirrel
 this.assertEqual(
