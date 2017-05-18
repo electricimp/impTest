@@ -1,5 +1,7 @@
 # For impTest Tools Developers
 
+This information will be useful for those who want to change(correct) the test tools
+
 [Node.js 4.0+](https://nodejs.org/en/) is required for development.
 Once `node` and `npm` are installed, to install *impTest* please download imptest source:
 ```
