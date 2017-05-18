@@ -111,8 +111,7 @@ Created file "tests/device.test.nut"
 
 ### GitHub Credentials Configuration
 
-GitHub credentials may be required to include external sources [from GitHub](#include-from-github).
-For unauthenticated requests, GitHub API allows you to make up to [60 requests per hour](https://developer.github.com/v3/#rate-limiting).
+To avoid [rate limit exceeded](https://developer.github.com/v3/#rate-limiting) the GitHub credentials may be required to include external sources [from GitHub](#include-from-github).
 The command `imptest github` can generate or update credentials in file. For example:
 
 `imptest github [-c <configuration_file>] [-d] [-f]`
