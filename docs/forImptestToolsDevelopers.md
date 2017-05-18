@@ -1,4 +1,4 @@
-# For impTest Developers
+# For impTest Tools Developers
 
 [Node.js 4.0+](https://nodejs.org/en/) is required for development.
 Once `node` and `npm` are installed, to install *impTest* please download imptest source:
