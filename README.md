@@ -483,7 +483,7 @@ If `testcase_pattern` is not provided, [all test methods](#test-project-configur
 
 ### Selective Test Runs
 
-[`testcase_pattern`](#running-tests) allows to execute single [_test_](#writing-tests) in [**test case**](#test-project-configuration).
+[`testcase_pattern`](#running-tests) allows to execute single [_test_](#writing-tests) in [**test case**](#writing-tests).
 The syntax is: `[testClass].[testMethod]`
 
 where:
