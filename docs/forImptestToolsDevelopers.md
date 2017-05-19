@@ -1,6 +1,6 @@
 # For impTest Tools Developers
 
-This information will be useful for those who want to change(correct) the test tools
+This information is intended for those who want to update the test tools.
 
 [Node.js 4.0+](https://nodejs.org/en/) is required for development.
 Once `node` and `npm` are installed, to install *impTest* please download imptest source:
@@ -35,9 +35,9 @@ Jasmine test suite is included with the project.
 
 The following environment variables need to be set before spec run: 
 
-- SPEC_DEBUG {true|false} – Enables/disables debug output
-- SPEC_MODEL_ID – Model Id to use for tests
-- SPEC_DEVICE_ID/SPEC_DEVICE_IDS – Device Id/Ids (comma-separated) to use for tests
+- SPEC_DEBUG {true|false} â€“ Enables/disables debug output
+- SPEC_MODEL_ID â€“ Model Id to use for tests
+- SPEC_DEVICE_ID/SPEC_DEVICE_IDS â€“ Device Id/Ids (comma-separated) to use for tests
 
 Then `npm test`. Some tests are designed to be failed, so the result of test execution will be printed at the end of log.
 
