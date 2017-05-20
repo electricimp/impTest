@@ -4,7 +4,6 @@
 - [Installation](#installation)
 - [Test Project Configuration](#test-project-configuration)
   - [Project Configuration Generation](#project-configuration-generation)
-  - [Sample Test Generation](#sample-test-generation)
   - [GitHub Credentials Configuration](#github-credentials-configuration)
   - [Environment Variables Settings](#environment-variables-settings)
 - [Writing Tests](#writing-tests)
@@ -13,16 +12,8 @@
   - [**Builder** Language](#builder-language)
   - [External Commands](#external-commands)
   - [Assertions](#assertions)
-    - [assertTrue()](#asserttrue)
-    - [assertEqual()](#assertequal)
-    - [assertGreater()](#assertgreater)
-    - [assertLess()](#assertless)
-    - [assertClose()](#assertclose)
-    - [assertDeepEqual()](#assertdeepequal)
-    - [assertBetween()](#assertbetween)
-    - [assertThrowsError](#assertthrowserror)
   - [Diagnostic Messages](#diagnostic-messages)
-  - [**Test Case** Example](#test-case-example)
+  - [Test Case Example](#test-case-example)
 - [Running Tests](#running-tests)
   - [Selective Test Runs](#selective-test-runs)
   - [Debug Mode](#debug-mode)
@@ -75,13 +66,13 @@ Configuration file is a JSON file that contains the following settings:
 | __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reason we strongly recommend to define Build API key as [environment variables](#environment-variables-settings). |
 | __devices__ | A set of Device IDs that specify the devices which to be used for tests execution. |
 | __modelId__ | Model Id that is attached to the devices. |
-| __deviceFile__ | A path to the additional device source code file. This code to be deployed on imp device as part of every **(???)** test. `false` is used if no additional code needed. Default value: "device.nut". See [link to Sample Test Gen **???**] |
-| __agentFile__ | A path to the additional agent source code file. This code to be deployed on imp agent as part of every **(???)** test. `false` is used if no additional code needed. Default value: "agent.nut". See [link to Sample Test Gen **???**] |
+| __deviceFile__ | A path to the additional device source code file. This code to be deployed on imp device as part of every Test Case. `false` is used if no additional code needed. |
+| __agentFile__ | A path to the additional agent source code file. This code to be deployed on imp agent as part of every Test Case. `false` is used if no additional code needed. |
 | __tests__ | A set of patterns that impTest uses to search files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories which to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. |
 | __stopOnFailure__ | Set this option to `true` if you want to stop execution after test failing. The default value is `false`. |
 | __timeout__ | A timeout (in seconds) after which the tests are considered as failed. Async tests to be interrupted. Default value: 10 sec. |
 
-Format of thw configuration file (the settings may be in any order):
+Format of the configuration file (the settings may be in any order):
 
 ```js
 {
@@ -111,14 +102,11 @@ where:
 During the command execution you will be asked for [configuration settings](#test-project-configuration):
 - if a new Test Project Configuration is being created, the default values of the settings are offered;
 - if the existing Test Project Configuration is being updated, the settings from the existing configuration file are offered as defaults. 
+- if __agentFile__ or __deviceFile__ is defined you will be asked to generate sample Test Cases.
 
-### Sample Test Generation
+`tests/agent.test.nut` file will be generated if __agentFile__ is set.
+`tests/device.test.nut` file will be generated if __deviceFile__ is set.
 
-**???** - what is it for? Repeat explanation from the settings? Why "sample"?
-
-The command `imptest init` can generate sample [**test cases**](#writing-tests).
-`tests/agent.test.nut` file will be generated if __agentFile__ is defined.
-`tests/device.test.nut` file will be generated if __deviceFile__ is defined.
 
 Example of console log:
 ```
@@ -141,14 +129,12 @@ For security reason we strongly recommend to provide the credentials via [Enviro
 But there is also a way to store the credentials in a special file (one file per Test Project).
 The file can be created or updated by the command:
 
-`imptest github [-c <credentials_file>] [-d] [-f]`
-
-**??? -c or -g ?**
+`imptest github [-g <credentials_file>] [-d] [-f]`
 
 where:
 
 * `-d` &mdash; print debug output
-* `-c` &mdash; this option is used to provide a path to file with GitHub credentials. Relative or absolute path may be used. Generation will fail if any intermediate directory in the path does not exist. If `-c` option is missed then `.imptest-auth` file in the current directory is assumed.
+* `-g` &mdash; this option is used to provide a path to file with GitHub credentials. Relative or absolute path may be used. Generation will fail if any intermediate directory in the path does not exist. If `-c` option is missed then `.imptest-auth` file in the current directory is assumed.
 * `-f` &mdash; to update (overwrite) an existing file. If the specified file already exists, this option should be explicitly specified to update it. 
 
 The file syntax is:
@@ -164,8 +150,8 @@ The file syntax is:
 
 For security reason we strongly recommend to define Build API key and GitHub credentials as environment variables:
 - [**apiKey**](#test-project-configuration) – `IMP_BUILD_API_KEY` - to deploy and run the code on imp devices via [Electric Imp Build API](https://electricimp.com/docs/buildapi/).
-- [**github-user**](#github-credentials-configuration) – `GITHUB_USER` - to include external sources from [GitHub](#include-from-github).
-- [**github-token**](#github-credentials-configuration) – `GITHUB_TOKEN` - to include external sources from [GitHub](#include-from-github).
+- [**github-user**](#github-credentials-configuration) – `GITHUB_USER` - to include external sources from GitHub.
+- [**github-token**](#github-credentials-configuration) – `GITHUB_TOKEN` - to include external sources from GitHub.
 
 ## Writing Tests
 
@@ -173,8 +159,9 @@ Basic steps to write tests:
 - Choose a name and location of your file with tests. You may have several files with tests in the same or different locations.
   - The name with the path, relative to Project Home, should conform to the patterns specified in [Test Project Configuration](#test-project-configuration) of your Test Project.
   - The file is treated as imp agent test code if `agent` is present in the file name. Otherwise the file is treated as imp device test code.
-  - By default, the test code runs either on imp device or on imp agent. If your test case should run on the both - there is a way that allows you to execute [agent and device test code together](#agent-code-and-device-code-together).
+  - By default, the test code runs either on imp device or on imp agent. If your Test Case should run on the both - there is a way that allows you to execute [agent and device test code together](#agent-code-and-device-code-together).
 - Add a class (Test Case) inherited from the `ImpTestCase` class. Every file can have several Test Cases (classes).
+Test Cases (classes) may have the same names if they is in different files.
 - Add and implement tests - methods which name starts from `test`. Every Test Case (class) can have several tests (methods).
 - Additionally, any Test Case can have `setUp()` and `tearDown()` methods for the environment setup before the tests execution and cleaning-up afterwards. Add and implement them, if needed.
 
@@ -200,7 +187,7 @@ class MyTestCase extends ImpTestCase {
 ### Agent Code And Device Code Together
 
 It is possible to use agent and device specific test code together. The rules for the using are:
-- [**Test cases**](#writing-tests) should be either in device code nor agent code, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
+- [Test case](#overview)(class) should be either in device code nor agent code, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
 - *TestFile* and *PartnerFile* names should conform the pattern ```[TestName].[agent | device].test.nut```.
 - *TestFile* and *PartnerFile* should be in the same folder(directory).
 - *TestFile* **should** be match to ["Test file search pattern"](#test-project-configuration)
@@ -414,7 +401,7 @@ Return values (other than *null*) are displayed in the console when test succeed
 
 <img src="./docs/diagnostic-messages.png" width=497>
 
-[**Test cases**](#writing-tests) can also output informational messages with:
+[Test cases](#overview) can also output informational messages with:
 
 ```squirrel
 this.info(<message>)
@@ -427,7 +414,7 @@ Log of failed test looks like:
 This means that execution of `testMe` method in the `MyTestCase` class has been failed:
 Incorrect syntax is in line 6 in test file (in which `MyTestCase` class).
 
-### [**Test Case**](#writing-tests) Example
+### [Test Case](#overview) Example
 
 utility file `myFile.nut` code is:
 ```squirrel
@@ -441,7 +428,7 @@ utility file `myFile.nut` code is:
   }
 ```
 
-[**test case**](#writing-tests) code is:
+[Test Case](#overview) code is:
 ```squirrel
 class TestCase1 extends ImpTestCase {
 
@@ -490,7 +477,7 @@ where:
 * `testcase_pattern` &mdash; pattern for [selective test runs](#selective-test-runs)
 
 If `testcase_pattern` is not specified, then impTest tool searches all files which matches the file name patterns specified in [Test Project Configuration](#test-project-configuration). The search starts from Project Home. The tool looks for all Test Cases (classes) in that files. And all test methods from that classes are considered as tests for the current Test Project.
-All found tests are executed in a **???** order.
+All found tests are executed in an arbitrary order.
 
 Every test is treated as failed if an error has been thrown. Otherwise the test is treated as passed.
 
@@ -504,8 +491,6 @@ where:
 
 * `testClass` &mdash; name of the Test Case class
 * `testMethod` &mdash; test method name
-
-**??? - is a Test Case (class) name is unique for ALL files?
 
 Example `testcase_pattern` usage:
 

@@ -35,7 +35,7 @@ const GithubCommand = require('../lib/Commands/GithubCommand');
 
 commander
   .option('-d, --debug', 'debug output')
-  .option('-c, --config [path]', 'github credentials config file path [default: .imptest-auth]', '.imptest-auth')
+  .option('-g, --config [path]', 'github credentials config file path [default: .imptest-auth]', '.imptest-auth')
   .option('-f, --force', 'overwrite existing configuration')
   .parse(process.argv);
 
