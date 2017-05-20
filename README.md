@@ -1,5 +1,8 @@
 # impTest
 
+**impTest** is a set of tools to run unit tests built with 
+[impUnit](https://github.com/electricimp/impUnit) test framework.
+
 - [Overview](#overview)
 - [Installation](#installation)
 - [Test Project Configuration](#test-project-configuration)
@@ -9,7 +12,7 @@
 - [Writing Tests](#writing-tests)
   - [Agent Code And Device Code Together](#agent-code-and-device-code-together)
   - [Asynchronous Testing](#asynchronous-testing)
-  - [**Builder** Language](#builder-language)
+  - [Builder Language](#builder-language)
   - [External Commands](#external-commands)
   - [Assertions](#assertions)
   - [Diagnostic Messages](#diagnostic-messages)
@@ -17,7 +20,7 @@
 - [Running Tests](#running-tests)
   - [Selective Test Runs](#selective-test-runs)
   - [Debug Mode](#debug-mode)
-- [For **impTest** Tools Developers](#for-imptest-tools-developers)
+- [For impTest Tools Developers](#for-imptest-tools-developers)
 - [License](#license)
 
 ## Overview
@@ -32,13 +35,13 @@ available in sources.
 
 There is one **Test Project Configuration** per one Test Project. It's a file where all settings related to all tests of the corresponding Test Project are located.
 
-**Project Home** - is a directory where Test Configuration File is located.
+**Project Home** - is a directory where Test Project Configuration is located.
 
 All files located in Project Home (and in all subdirectories) which names match with the patterns specified in [Test Project Configuration](#test-project-configuration) are considered as files with Test Cases.
 
 **Test Case** - is a class inherited from the `ImpTestCase` class. There may be several Test Cases (classes) in a file.
 
-**Test** - is a method which name starts from *test*. (E.g. *testEverythingOk()*.) There may be several tests (methods) in a Test Case (class).
+**Test** - is a method which name starts from `test`. (E.g. *testEverythingOk()*) There may be several tests (methods) in a Test Case (class).
 
 In order to work with impTest you need to:
 - [Install](#installation) impTest
@@ -46,7 +49,7 @@ In order to work with impTest you need to:
 - [Write or Update Tests](#writing-tests)
 - [Run Tests](#running-tests)
 
-Additionally, if you want to update impTest itself - [For **impTest** Tools Developers](./docs/forImptestToolsDevelopers.md)
+Additionally, if you want to update impTest itself - see [For **impTest** Tools Developers](./docs/forImptestToolsDevelopers.md)
 
 ## Installation
 
@@ -102,20 +105,6 @@ where:
 During the command execution you will be asked for [configuration settings](#test-project-configuration):
 - if a new Test Project Configuration is being created, the default values of the settings are offered;
 - if the existing Test Project Configuration is being updated, the settings from the existing configuration file are offered as defaults. 
-- if __agentFile__ or __deviceFile__ is defined you will be asked to generate sample Test Cases.
-
-`tests/agent.test.nut` file will be generated if __agentFile__ is set.
-`tests/device.test.nut` file will be generated if __deviceFile__ is set.
-
-
-Example of console log:
-```
-> Write to .imptest?: (yes)
-Config file saved
-> Generate sample test cases?: (yes)
-Created file "tests/agent.test.nut"
-Created file "tests/device.test.nut"
-```
 
 ### GitHub Credentials Configuration
 
@@ -476,20 +465,25 @@ where:
 * `-d` &mdash; print [debug output](#debug-mode), store device and agent code
 * `testcase_pattern` &mdash; pattern for [selective test runs](#selective-test-runs)
 
-If `testcase_pattern` is not specified, then impTest tool searches all files which matches the file name patterns specified in [Test Project Configuration](#test-project-configuration). The search starts from Project Home. The tool looks for all Test Cases (classes) in that files. And all test methods from that classes are considered as tests for the current Test Project.
-All found tests are executed in an arbitrary order.
+impTest tool searches all files which matches the file name patterns specified in [Test Project Configuration](#test-project-configuration). The search starts from Project Home. The tool looks for all Test Cases (classes) in that files. And all test methods from that classes are considered as tests for the current Test Project.
+
+Optional `testcase_pattern` selects a specific test or set of tests for execution from all found tests.
+
+If `testcase_pattern` is not specified, all found tests are selected for execution.
+
+The selected tests are executed in an arbitrary order.
 
 Every test is treated as failed if an error has been thrown. Otherwise the test is treated as passed.
 
 ### Selective Test Runs
 
-[`testcase_pattern`](#running-tests) allows to execute a single test from Test Case.
+[`testcase_pattern`](#running-tests) allows to execute a single test or a set of tests from one or several Test Cases.
 
 The syntax of the pattern is: `[testClass].[testMethod]`
 
 where:
 
-* `testClass` &mdash; name of the Test Case class
+* `testClass` &mdash; name of the Test Case class. Note: Test Cases with the same name may exist in different files belonged to the same Test Project, all of them to be selected.
 * `testMethod` &mdash; test method name
 
 Example `testcase_pattern` usage:
