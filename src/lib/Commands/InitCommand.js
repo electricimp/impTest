@@ -64,7 +64,7 @@ class InitCommand extends AbstractCommand {
         if (written && (this._impTestFile.values.deviceFile || this._impTestFile.values.agentFile)) {
           return this._generateBasicTests();
         }
-      })
+      });
   }
 
   /**
