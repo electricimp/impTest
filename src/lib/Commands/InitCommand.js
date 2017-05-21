@@ -369,7 +369,7 @@ class InitCommand extends AbstractCommand {
             key: 'generate',
             label: c.yellow('> Generate sample test cases?'),
             type: 'boolean',
-            'default': 'yes'
+            'default': 'no'
           }
         ],
         (input) => {
