@@ -168,7 +168,7 @@ class TestCommand extends AbstractCommand {
       }) - 1];
       if (/.*\.(agent|device)\.test\.nut$/ig.test(file)) {
         let tmp = file.replace(/\.(agent|device)\.test\.nut$/ig, '');
-        if (fs.existsSync(path.resolve(configCwd, tmp+'.agent.test.nut')) && 
+        if (fs.existsSync(path.resolve(configCwd, tmp+'.agent.test.nut')) &&
             fs.existsSync(path.resolve(configCwd, tmp+'.device.test.nut'))) {
           Object.defineProperty(lastAdded, 'partnerpath', {
             value: path.resolve(configCwd, file.endsWith('.device.test.nut') ?
@@ -182,8 +182,22 @@ class TestCommand extends AbstractCommand {
     configCwd = this._impTestFile.dir;
     let searchPatterns = this._impTestFile.values.tests;
 
+    let testFileName = null;
+    this.testCase = this.selectedTest;
+    if (this.selectedTest && this.selectedTest.length > 0) {
+      let tmp = this.selectedTest.indexOf(':');
+      if (tmp >= 0) {
+        this.testCase = this.selectedTest.slice(tmp+1);
+        testFileName = this.selectedTest.slice(0, tmp);
+      }
+    }
+
     for (const searchPattern of searchPatterns) {
       for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
+        if (testFileName != null && 0 <= file.search(testFileName)) {
+          this._debug("Skipping found test " + file);
+          continue;
+        }
         pushFile(file);
       }
     }
@@ -290,11 +304,11 @@ class TestCommand extends AbstractCommand {
     // look in the current test the individual test to run
     let testClass = '';
     let testCase = '';
-    if (this.testCaseFile && this.testCaseFile.length > 0) {
-      let tmp = this.testCaseFile.indexOf('.');
+    if (this.testCase && this.testCase.length > 0) {
+      let tmp = this.testCase.indexOf('.');
       if (tmp >= 0) {
-        testCase = this.testCaseFile.slice(tmp+1);
-        testClass = this.testCaseFile.slice(0, tmp);
+        testCase = this.testCase.slice(tmp+1);
+        testClass = this.testCase.slice(0, tmp);
       }
     }
 
@@ -388,7 +402,7 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
 
     agentCode = this._Builder.machine.execute(agentCode);
     deviceCode = this._Builder.machine.execute(deviceCode);
- 
+
     if (this.debug) {
       // FUNCTION: create a new directory and any necessary subdirectories
       let mkdirs = (dirName) => {
@@ -790,7 +804,7 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
       if (this.githubUser && this.githubToken) {
         this.__Builder.machine.readers.github.username = this.githubUser;
         this.__Builder.machine.readers.github.token = this.githubToken;
-      } 
+      }
     }
     return this.__Builder;
   }
@@ -813,11 +827,11 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
     this._testFrameworkFile = value;
   }
 
-  get testCaseFile() {
+  get testCase() {
     return this._testCaseFile;
   }
 
-  set testCaseFile(value) {
+  set testCase(value) {
     this._testCaseFile = value;
   }
 

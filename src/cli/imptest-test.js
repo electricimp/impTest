@@ -49,7 +49,7 @@ const command = new TestCommand();
 command.version = packageJson.version;
 command.debug = parseBool(commander.debug);
 command.testFrameworkFile = __dirname + '/../impUnit/index.nut';
-command.testCaseFile = commander.args[0] || null;
+command.selectedTest = commander.args[0] || null;
 command.configPath = commander.config;
 
 // github credentials in env vars
