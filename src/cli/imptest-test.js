@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright 2016 Electric Imp
+// Copyright 2016-2017 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
@@ -29,6 +29,8 @@
 'use strict';
 
 const commander = require('commander');
+const path = require('path');
+const fs = require('fs');
 const packageJson = require('../../package.json');
 const parseBool = require('../lib/utils/parseBool');
 const TestCommand = require('../lib/Commands/TestCommand');
@@ -36,6 +38,7 @@ const TestCommand = require('../lib/Commands/TestCommand');
 commander
   .usage('[options] <test case file>')
   .option('-d, --debug', 'debug output')
+  .option('-g, --github-config [path]', 'github credentials config file path [default: .imptest-auth]', '.imptest-auth')
   .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
   .parse(process.argv);
 
@@ -48,6 +51,22 @@ command.debug = parseBool(commander.debug);
 command.testFrameworkFile = __dirname + '/../impUnit/index.nut';
 command.testCaseFile = commander.args[0] || null;
 command.configPath = commander.config;
+
+// github credentials in env vars
+command.githubUser = process.env['GITHUB_USER'];
+command.githubToken = process.env['GITHUB_TOKEN'];
+// env vars values have the bigger priority
+if (!command.githubUser || !command.githubToken) {
+  // github credentials in .imptest-auth file in current folder
+  const githubCredentialsPath = path.resolve(commander.githubConfig);
+  if (fs.existsSync(githubCredentialsPath)) {
+    // read github credentials
+    let githubCredentials = fs.readFileSync(githubCredentialsPath).toString();
+    githubCredentials = JSON.parse(githubCredentials);
+    command.githubUser = githubCredentials['github-user'];
+    command.githubToken = githubCredentials['github-token'];
+  }
+}
 
 // go
 command.run()

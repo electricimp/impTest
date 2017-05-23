@@ -1,7 +1,6 @@
-#! /usr/bin/env node
 // MIT License
 //
-// Copyright 2016-2017 Electric Imp
+// Copyright 2017 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
@@ -24,17 +23,35 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 /**
- * impTest cli app
+ * Github command
  */
 
 'use strict';
 
 const commander = require('commander');
 const packageJson = require('../../package.json');
+const parseBool = require('../lib/utils/parseBool');
+const GithubCommand = require('../lib/Commands/GithubCommand');
 
 commander
-  .version(packageJson.version)
-  .command('github', 'Initialize .imptest-auth file')
-  .command('init', 'Initialize .impconfig file')
-  .command('test', 'Run tests')
+  .option('-d, --debug', 'debug output')
+  .option('-g, --config [path]', 'github credentials config file path [default: .imptest-auth]', '.imptest-auth')
+  .option('-f, --force', 'overwrite existing configuration')
   .parse(process.argv);
+
+// bootstrap command
+
+const command = new GithubCommand();
+
+command.debug = parseBool(commander.debug);
+command.force = parseBool(commander.force);
+command.version = packageJson.version;
+command.configPath = commander.config;
+
+// go
+command.run()
+  .then(() => {
+    process.exit(0);
+  }, () => {
+    process.exit(1);
+  });
