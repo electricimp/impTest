@@ -400,8 +400,8 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
       // </editor-fold>
     }
 
-    agentCode = this._Builder.machine.execute(agentCode);
-    deviceCode = this._Builder.machine.execute(deviceCode);
+    agentCode = this._Builder.machine.execute(agentCode, this.builderVariables);
+    deviceCode = this._Builder.machine.execute(deviceCode, this.builderVariables);
 
     if (this.debug) {
       // FUNCTION: create a new directory and any necessary subdirectories
