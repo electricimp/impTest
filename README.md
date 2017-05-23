@@ -1,6 +1,6 @@
 # impTest
 
-**impTest** is a set of tools to run unit tests built with 
+**impTest** is a set of tools to run unit tests built with
 [impUnit](https://github.com/electricimp/impUnit) test framework.
 
 - [Overview](#overview)
@@ -25,10 +25,10 @@
 
 ## Overview
 
-**impTest** is a set of tools to run unit tests built with 
+**impTest** is a set of tools to run unit tests built with
 [impUnit](https://github.com/electricimp/impUnit) test framework. **impTest** leverages
 [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code
-on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and fully 
+on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and fully
 available in sources.
 
 **Test Project** - is a directory (with all subdirectories) where the tests are located.
@@ -53,7 +53,7 @@ Additionally, if you want to update impTest itself - see [For **impTest** Tools 
 
 ## Installation
 
-[Node.js 4.0+](https://nodejs.org/en/) is required. 
+[Node.js 4.0+](https://nodejs.org/en/) is required.
 You can download the Node.js [pre-built binary](https://nodejs.org/en/download/) for your platform or install Node.js via [package manager](https://nodejs.org/en/download/package-manager).
 Once `node` and `npm` are installed, to setup **impTest** please execute the command
 
@@ -100,11 +100,11 @@ where:
 
 * `-d` &mdash; print debug output
 * `-c` &mdash; this option is used to provide a path to the configuration file. Relative or absolute path may be used. Generation will fail if any intermediate directory in the path does not exist. If `-c` option is missed then `.imptest` file in the current directory is assumed.
-* `-f` &mdash; to update (overwrite) an existing configuration. If the specified configuration file already exists, this option should be explicitly specified to update the file. 
+* `-f` &mdash; to update (overwrite) an existing configuration. If the specified configuration file already exists, this option should be explicitly specified to update the file.
 
 During the command execution you will be asked for [configuration settings](#test-project-configuration):
 - if a new Test Project Configuration is being created, the default values of the settings are offered;
-- if the existing Test Project Configuration is being updated, the settings from the existing configuration file are offered as defaults. 
+- if the existing Test Project Configuration is being updated, the settings from the existing configuration file are offered as defaults.
 
 ### GitHub Credentials Configuration
 
@@ -124,7 +124,7 @@ where:
 
 * `-d` &mdash; print debug output
 * `-g` &mdash; this option is used to provide a path to file with GitHub credentials. Relative or absolute path may be used. Generation will fail if any intermediate directory in the path does not exist. If `-c` option is missed then `.imptest-auth` file in the current directory is assumed.
-* `-f` &mdash; to update (overwrite) an existing file. If the specified file already exists, this option should be explicitly specified to update it. 
+* `-f` &mdash; to update (overwrite) an existing file. If the specified file already exists, this option should be explicitly specified to update it.
 
 The file syntax is:
 
@@ -222,7 +222,7 @@ this.assertEqual(
 );
 ```
 
-[*\_\_FILE\_\_* and *\_\_LINE\_\_*](https://github.com/electricimp/Builder#variables) variables are defined in the [**Builder**](https://github.com/electricimp/Builder), 
+[*\_\_FILE\_\_* and *\_\_LINE\_\_*](https://github.com/electricimp/Builder#variables) variables are defined in the [**Builder**](https://github.com/electricimp/Builder),
 they may be useful for debugging information. Here is the usage example:
 
 ```squirrel
@@ -482,16 +482,17 @@ Every test is treated as failed if an error has been thrown. Otherwise the test 
 
 [`testcase_pattern`](#running-tests) allows to execute a single test or a set of tests from one or several Test Cases.
 
-The syntax of the pattern is: `[testClass].[testMethod]`
+The syntax of the pattern is: `[testFileName]:[testClass].[testMethod]`
 
 where:
 
+* `testFileName` &mdash; name of the Test Case file. Pattern to filter required file among all conforming to [`Test file search pattern`](#test-project-configuration)
 * `testClass` &mdash; name of the Test Case class. Note: Test Cases with the same name may exist in different files belonged to the same Test Project, all of them to be selected.
 * `testMethod` &mdash; test method name
 
 Example `testcase_pattern` usage:
 
-E.g. a test file contains:
+E.g. a test file `TestFile1` contains:
 ```
 class MyTestClass extends ImpTestCase {
     function testMe() {...}
@@ -503,11 +504,23 @@ class MyTestClass_1 extends ImpTestCase {
 }
 ```
 
+And a test file `TestFile2` contains:
+```
+class MyTestClass extends ImpTestCase {
+    function testMe() {...}
+    function testMe_1() {...}
+}
+```
+
+
 In this case:
-- `imptest test MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class
-- `imptest test MyTestClass_1.` runs all test methods from `MyTestClass_1` class
-- `imptest test .testMe_1` runs `testMe_1()` methods in the both classes
+- `imptest test TestFile1:MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class of the `TestFile1` file
+- `imptest test MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class from `TestFile1` __and__ `TestFile2` file
+- `imptest test MyTestClass_1.` runs all test methods from `MyTestClass_1` class of the first file
+- `imptest test TestFile2:` runs all test methods from `TestFile2` file
+- `imptest test .testMe_1` runs `testMe_1()` methods in all classes of all files
 - `imptest test .` is the same as calling `imptest test` w/o `testcase_pattern` - all found tests to be executed.
+
 
 ### Debug Mode
 
