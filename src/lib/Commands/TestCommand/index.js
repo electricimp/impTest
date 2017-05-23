@@ -787,6 +787,10 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
         error: this._error
       };
       this.__Builder.machine.generateLineControlStatements = true;
+      if (this.githubUser && this.githubToken) {
+        this.__Builder.machine.readers.github.username = this.githubUser;
+        this.__Builder.machine.readers.github.token = this.githubToken;
+      } 
     }
     return this.__Builder;
   }

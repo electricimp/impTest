@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright 2016 Electric Imp
+// Copyright 2016-2017 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
@@ -150,6 +150,22 @@ class AbstractCommand {
 
   set configPath(value) {
     this._configPath = value;
+  }
+
+  get githubUser() {
+    return this._githubUser;
+  }
+
+  set githubUser(value) {
+    this._githubUser = value;
+  }
+
+  get githubToken() {
+    return this._githubToken;
+  }
+
+  set githubToken(value) {
+    this._githubToken = value;
   }
 
   // </editor-fold>

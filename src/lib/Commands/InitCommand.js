@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright 2016 Electric Imp
+// Copyright 2016-2017 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
@@ -31,6 +31,7 @@
 const fs = require('fs');
 const c = require('colors');
 const glob = require('glob');
+const path = require('path');
 const prompt = require('cli-prompt');
 const CliTable = require('cli-table');
 const AbstractCommand = require('./AbstractCommand');
@@ -252,12 +253,6 @@ class InitCommand extends AbstractCommand {
       let deviceFiles = [];
       let agentFiles = [];
 
-      // local files
-      deviceFiles = glob.sync('**/*device*.nut', {cwd: this._impTestFile.dir})
-        .concat(glob.sync('**/*.nut', {cwd: this._impTestFile.dir}));
-      agentFiles = glob.sync('**/*agent*.nut', {cwd: this._impTestFile.dir})
-        .concat(glob.sync('**/*.nut', {cwd: this._impTestFile.dir}));
-
       // files from .imptest
       if (this._impTestFile.exists) {
         deviceFiles.unshift(this._impTestFile.values.deviceFile || '<no file>');
@@ -361,7 +356,7 @@ class InitCommand extends AbstractCommand {
         });
     });
   }
-
+  
   /**
    * Generate sample tests
    * @return {Promise}
@@ -374,7 +369,7 @@ class InitCommand extends AbstractCommand {
             key: 'generate',
             label: c.yellow('> Generate sample test cases?'),
             type: 'boolean',
-            'default': 'yes'
+            'default': 'no'
           }
         ],
         (input) => {
@@ -410,7 +405,7 @@ class InitCommand extends AbstractCommand {
         fs.writeFileSync(file,
           `class ${type === 'agent' ? 'Agent' : 'Device'}TestCase extends ImpTestCase {
   function setUp() {
-    return "Hi from #{__FILE__}!";
+    return "Hi from @{__FILE__}!";
   }
 
   function testSomething() {
