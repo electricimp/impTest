@@ -10,7 +10,7 @@
   - [GitHub Credentials Configuration](#github-credentials-configuration)
   - [Environment Variables Settings](#environment-variables-settings)
 - [Writing Tests](#writing-tests)
-  - [Extending Tests with Partner's Code](#extending-tests-with-partners-codeagent-code)
+  - [Extending Tests with Partner's Code](#extending-tests-with-partners-code)
   - [Asynchronous Testing](#asynchronous-testing)
   - [Builder Language](#builder-language)
   - [External Commands](#external-commands)
