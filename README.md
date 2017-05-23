@@ -173,16 +173,19 @@ class MyTestCase extends ImpTestCase {
 }
 ```
 
-### Agent Code And Device Code Together
+### Extending Tests with Supplemental Code on Partner's Side
 
-It is possible to use agent and device specific test code together. The rules for the using are:
+To test agent and device interaction `impTest` allows developers to extend test code on device or agent side with a corresponding logic implemented for agent or device respectively. The test "extensions" can be used to emulate real device-agent interaction and communication.
+
+There are some restrictions imposed on the test extensions:
+
 - [Test case](#overview)(class) should be either in device code nor agent code, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
-- *TestFile* and *PartnerFile* names should conform the pattern ```[TestName].[agent | device].test.nut```.
-- *TestFile* and *PartnerFile* should be in the same folder(directory).
-- *TestFile* **should** be match to ["Test file search pattern"](#test-project-configuration)
+- *TestFile* and *PartnerFile* names should conform the pattern `[TestName].[agent | device].test.nut`. Which means they need to have the same prefix `[TestName]` and sufix `.test.nut`.
+- *TestFile* and *PartnerFile* should be located in the same folder (directory) on the disk.
+- *TestFile* **should** conform to ["Test file search pattern"](#test-project-configuration)
 - *PartnerFile* **should not** be match to ["Test file search pattern"](#test-project-configuration). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. **impTest** doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
 
-An example of agent and device using can be found in [sample7](./samples/sample7).
+Example of test extension can be found at [sample7](./samples/sample7).
 
 ### Asynchronous Testing
 
