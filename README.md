@@ -10,7 +10,7 @@
   - [GitHub Credentials Configuration](#github-credentials-configuration)
   - [Environment Variables Settings](#environment-variables-settings)
 - [Writing Tests](#writing-tests)
-  - [Extending Tests with Partner's Code](#extending-tests-with-partners-code)
+  - [Tests for bidirectional Device-Agent Communication](#tests-for-bidirectional-device-agent-communication)
   - [Asynchronous Testing](#asynchronous-testing)
   - [Builder Language](#builder-language)
   - [External Commands](#external-commands)
@@ -173,9 +173,9 @@ class MyTestCase extends ImpTestCase {
 }
 ```
 
-### Extending Tests with Partner's Code
+### Tests for bidirectional Device-Agent Communication
 
-To test agent and device interaction `impTest` allows developers to extend test code on device or agent side with a corresponding logic implemented for agent or device respectively. The test "extensions" can be used to emulate real device-agent interaction and communication.
+To test interaction between device and agent `impTest` allows developers to extend tests with a corresponding logic implemented on the other side (agent or device respectively). The test "extensions" can be used to emulate real device-agent interaction and communication.
 
 There are some restrictions imposed on the test extensions:
 
