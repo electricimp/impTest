@@ -465,6 +465,7 @@ where:
 
 * `-c` &mdash; this option is used to provide a path to Test Project Configuration file. Relative or absolute path may be used. If `-c` option is missed then `.imptest` file in the current directory is assumed.
 * `-g` &mdash; this option is used to provide a path to file with GitHub credentials. Relative or absolute path may be used. If `-g` option is missed then `.imptest-auth` file in the current directory is assumed.
+* `-b` &mdash; this option is used to provide a path to file with [`Builder variables`](https://github.com/electricimp/Builder#usage). Relative or absolute path may be used. If `-b` option is missed then `.imptest-builder` file in the current directory is assumed.
 * `-d` &mdash; print [debug output](#debug-mode), store device and agent code
 * `testcase_pattern` &mdash; pattern for [selective test runs](#selective-test-runs)
 
