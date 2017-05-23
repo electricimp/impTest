@@ -10,7 +10,7 @@
   - [GitHub Credentials Configuration](#github-credentials-configuration)
   - [Environment Variables Settings](#environment-variables-settings)
 - [Writing Tests](#writing-tests)
-  - [Agent Code And Device Code Together](#agent-code-and-device-code-together)
+  - [Extending Tests with Partner's Code](#extending-tests-with-partner-s-codeagent-code)
   - [Asynchronous Testing](#asynchronous-testing)
   - [Builder Language](#builder-language)
   - [External Commands](#external-commands)
@@ -173,7 +173,7 @@ class MyTestCase extends ImpTestCase {
 }
 ```
 
-### Extending Tests with Supplemental Code on Partner's Side
+### Extending Tests with Partner's Code
 
 To test agent and device interaction `impTest` allows developers to extend test code on device or agent side with a corresponding logic implemented for agent or device respectively. The test "extensions" can be used to emulate real device-agent interaction and communication.
 
