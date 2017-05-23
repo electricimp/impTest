@@ -194,6 +194,7 @@ class TestCommand extends AbstractCommand {
 
     for (const searchPattern of searchPatterns) {
       for (const file of glob.sync(searchPattern, {cwd: configCwd})) {
+        // TODO: would it better to add the testFileName to the searchPatterns?
         if (testFileName != null && 0 <= file.search(testFileName)) {
           this._debug("Skipping found test " + file);
           continue;
