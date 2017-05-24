@@ -180,7 +180,8 @@ To test interaction between device and agent `impTest` allows developers to exte
 There are some restrictions imposed on the test extensions:
 
 - [Test case](#overview)(class) should be either in device code nor agent code, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
-- *TestFile* and *PartnerFile* names should conform the pattern `[TestName].[agent | device].test.nut`. Which means they need to have the same prefix `[TestName]` and sufix `.test.nut`.
+- *TestFile* and *PartnerFile* names should conform the pattern `TestName.(agent | device)[.test].nut`. Which means they need to have the same prefix `[TestName]` and sufix `.nut`. *TestFile* is indicated by `.test` string in the suffix. *PartnerFile*  **should not** have this string in the name.
+- The type of the execution environment is indicated by either `.device` or `.agent` in the middle of the name. Those types **should** be different, otherwise the partner will not be found.
 - *TestFile* and *PartnerFile* should be located in the same folder (directory) on the disk.
 - *TestFile* **should** conform to ["Test file search pattern"](#test-project-configuration)
 - *PartnerFile* **should not** be match to ["Test file search pattern"](#test-project-configuration). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. **impTest** doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
