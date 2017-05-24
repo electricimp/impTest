@@ -183,8 +183,8 @@ class TestCommand extends AbstractCommand {
         configCwd = this._impTestFile.dir;
         let searchPatterns = this._impTestFile.values.tests;
 
-        let testFileName = null;
-        this.testCase = this.selectedTest;
+        let testFileName = this.selectedTest;
+        this.testCase = '';
         if (this.selectedTest && this.selectedTest.length > 0) {
             let tmp = this.selectedTest.lastIndexOf(':');
             if (tmp >= 0) {
