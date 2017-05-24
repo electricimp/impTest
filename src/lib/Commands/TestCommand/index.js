@@ -314,7 +314,7 @@ class TestCommand extends AbstractCommand {
                 testMethod = this.testCase.slice(tmp + 1);
                 testClass = this.testCase.slice(0, tmp);
             } else {
-              testClass = this.testCase;
+              testMethod = this.testCase;
             }
         }
 
