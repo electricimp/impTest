@@ -304,12 +304,14 @@ class TestCommand extends AbstractCommand {
 
         // look in the current test the individual test to run
         let testClass = '';
-        let testCase = '';
+        let testMethod = '';
         if (this.testCase && this.testCase.length > 0) {
             let tmp = this.testCase.indexOf('.');
             if (tmp >= 0) {
-                testCase = this.testCase.slice(tmp + 1);
+                testMethod = this.testCase.slice(tmp + 1);
                 testClass = this.testCase.slice(0, tmp);
+            } else {
+              testClass = this.testCase;
             }
         }
 
@@ -323,7 +325,7 @@ imp.wakeup(${this.startupDelay /* prevent log sessions mixing, allow service mes
   t.timeout = ${parseFloat(this._impTestFile.values.timeout)};
   t.stopOnFailure = ${!!this._impTestFile.values.stopOnFailure};
   t.testClass = "${testClass}";
-  t.testCase = "${testCase}";
+  t.testCase = "${testMethod}";
   // poehali!
   t.run();
 });`
