@@ -185,10 +185,12 @@ class TestCommand extends AbstractCommand {
         let testFileName = null;
         this.testCase = this.selectedTest;
         if (this.selectedTest && this.selectedTest.length > 0) {
-            let tmp = this.selectedTest.indexOf(':');
+            let tmp = this.selectedTest.lastIndexOf(':');
             if (tmp >= 0) {
                 this.testCase = this.selectedTest.slice(tmp + 1);
                 testFileName = this.selectedTest.slice(0, tmp);
+                // windows fix
+                testFileName = testFileName.replace(/\\/g, '/');
             }
         }
 
