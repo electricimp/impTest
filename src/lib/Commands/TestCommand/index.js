@@ -248,6 +248,12 @@ class TestCommand extends AbstractCommand {
             // create agent/device code to run
             const code = this._getSessionCode(testFile);
 
+            if ( code == null) {
+                this._info(c.yellow("Skip " + testFile.name + " testing"));
+                resolve();
+                return;
+            }
+
             // get device id
             const deviceId = this._impTestFile.values.devices[deviceIndex];
 
@@ -408,6 +414,28 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
 
     agentCode = this._Builder.machine.execute(agentCode, this.builderVariables);
     deviceCode = this._Builder.machine.execute(deviceCode, this.builderVariables);
+
+    let code2Check = testFile.type == 'agent' ? agentCode : deviceCode;
+
+    if (testClass.length > 0) {
+        let klass = "class[ \s]*"+testClass;
+        let re = new RegExp(klass, 'g');
+        if (code2Check.search(re) < 0) {
+            // skip this test
+            return null;
+        }
+    }
+
+    if (testMethod.length > 0) {
+        let func = "function[ ]*"+testMethod;
+        let re = new RegExp(func, 'g');
+        if (code2Check.search(re) < 0) {
+            // skip this test
+            return null;
+        }
+    }
+
+
 
         if (this.debug) {
             // FUNCTION: create a new directory and any necessary subdirectories
