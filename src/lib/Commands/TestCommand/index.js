@@ -167,12 +167,13 @@ class TestCommand extends AbstractCommand {
                 type: /\bagent\b/i.test(file) ? 'agent' : 'device',
             }) - 1];
             if (/.*\.(agent|device)\.test\.nut$/ig.test(file)) {
-                let tmp = file.replace(/\.(agent|device)\.test\.nut$/ig, '');
-                if (fs.existsSync(path.resolve(configCwd, tmp + '.agent.test.nut')) &&
-                    fs.existsSync(path.resolve(configCwd, tmp + '.device.test.nut'))) {
+                let tmp = file.replace(/\.(agent|device)\.test\.nut$/ig, '') + (lastAdded.type == 'agent' ? '.device' : '.agent')  + '.nut';
+                if (fs.existsSync(path.resolve(configCwd, tmp))) {
                     Object.defineProperty(lastAdded, 'partnerpath', {
-                        value: path.resolve(configCwd, file.endsWith('.device.test.nut') ?
-                            tmp + '.agent.test.nut' : tmp + '.device.test.nut')
+                        value: path.resolve(configCwd, tmp)
+                    });
+                    Object.defineProperty(lastAdded, 'partner', {
+                        value: tmp
                     });
                 }
             }
@@ -215,7 +216,7 @@ class TestCommand extends AbstractCommand {
             files.length +
             c.blue(' test file' +
                 (files.length === 1 ? ':' : 's:')) + '\n\t'
-            + files.map(e => e.name).join('\n\t')
+            + files.map(e => (e.partner) ? e.name + ' (' + e.partner + ')': e.name).join('\n\t')
         );
 
         return files;
