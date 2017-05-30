@@ -71,7 +71,7 @@ Configuration file is a JSON file that contains the following settings:
 | __modelId__ | Model Id that is attached to the devices. |
 | __deviceFile__ | A path to the additional device source code file. This code to be deployed on imp device as part of every Test Case. `false` is used if no additional code needed. |
 | __agentFile__ | A path to the additional agent source code file. This code to be deployed on imp agent as part of every Test Case. `false` is used if no additional code needed. |
-| __tests__ | A set of patterns that impTest uses to search files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories which to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. |
+| __tests__ | A set of patterns that impTest uses to search files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories which to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bidirectional-device-agent-communication) |
 | __stopOnFailure__ | Set this option to `true` if you want to stop execution after test failing. The default value is `false`. |
 | __timeout__ | A timeout (in seconds) after which the tests are considered as failed. Async tests to be interrupted. Default value: 10 sec. |
 
@@ -148,7 +148,7 @@ Basic steps to write tests:
 - Choose a name and location of your file with tests. You may have several files with tests in the same or different locations.
   - The name with the path, relative to Project Home, should conform to the patterns specified in [Test Project Configuration](#test-project-configuration) of your Test Project.
   - The file is treated as imp agent test code if `agent` is present in the file name. Otherwise the file is treated as imp device test code.
-  - By default, the test code runs either on imp device or on imp agent. If your Test Case should run on the both - there is a way that allows you to execute [agent and device test code together](#agent-code-and-device-code-together).
+  - By default, the test code runs either on imp device or on imp agent. If your Test Case should run on the both - there is a way that allows you to execute [agent and device test code together](#tests-for-bidirectional-device-agent-communication).
 - Add a class (Test Case) inherited from the `ImpTestCase` class. Every file can have several Test Cases (classes).
 Test Cases (classes) may have the same names if they is in different files.
 - Add and implement tests - methods which name starts from `test`. Every Test Case (class) can have several tests (methods).
@@ -177,14 +177,14 @@ class MyTestCase extends ImpTestCase {
 
 To test interaction between device and agent `impTest` allows developers to extend tests with a corresponding logic implemented on the other side (agent or device respectively). The test "extensions" can be used to emulate real device-agent interaction and communication.
 
-There are some restrictions imposed on the test extensions:
+To identify partners file uniquely there are some restrictions imposed on the test extensions:
 
-- [Test case](#overview)(class) should be either in device code nor agent code, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*
-- *TestFile* and *PartnerFile* names should conform the pattern `TestName.(agent | device)[.test].nut`. Which means they need to have the same prefix `[TestName]` and sufix `.nut`. *TestFile* is indicated by `.test` string in the suffix. *PartnerFile*  **should not** have this string in the name.
-- The type of the execution environment is indicated by either `.device` or `.agent` in the middle of the name. Those types **should** be different, otherwise the partner will not be found.
+- [Test case](#overview)(class) should be either in device code or agent code, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*s
 - *TestFile* and *PartnerFile* should be located in the same folder (directory) on the disk.
-- *TestFile* **should** conform to ["Test file search pattern"](#test-project-configuration)
-- *PartnerFile* **should not** be match to ["Test file search pattern"](#test-project-configuration). Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role. **impTest** doesn't add `ImpTestCase` class to the partner code. As a result an execution will fail.
+- *TestFile* and *PartnerFile* names should conform the special pattern `TestName.(agent | device)[.test].nut`. Which means they need to have the same prefix `TestName` and suffix `.nut`. *TestFile* is indicated by `.test` string in the suffix. *PartnerFile*  **should not** have this string in the suffix. Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role.
+- The type of the execution environment is indicated by either `.device` or `.agent` in the suffix of the *TestFile* name, e.g. `"Test1.agent.test.nut"`.
+- The *PartnerFile* is found by replacing `(agent | device).test.nut`  with `(device | agent).nut` in the file name suffix.
+- Due to partner special naming **do not** change default value of ["Test file search pattern"](#test-project-configuration).
 
 Example of test extension can be found at [sample7](./samples/sample7).
 
