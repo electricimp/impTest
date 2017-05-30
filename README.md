@@ -520,7 +520,7 @@ where:
 
 Example `testcase_pattern` usage:
 
-E.g. a test file `TestFile1` contains:
+E.g. a test file `TestFile1.test.nut` contains:
 ```
 class MyTestClass extends ImpTestCase {
     function testMe() {...}
@@ -532,7 +532,7 @@ class MyTestClass_1 extends ImpTestCase {
 }
 ```
 
-And a test file `TestFile2` contains:
+And a test file `TestFile2.test.nut` contains:
 ```
 class MyTestClass extends ImpTestCase {
     function testMe() {...}
@@ -540,15 +540,17 @@ class MyTestClass extends ImpTestCase {
 }
 ```
 
-
 In this case:
-- `imptest test TestFile1:MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class of the `TestFile1` file
-- `imptest test MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class from `TestFile1` __and__ `TestFile2` file
-- `imptest test MyTestClass_1.` runs all test methods from `MyTestClass_1` class of the first file
-- `imptest test TestFile2:` runs all test methods from `TestFile2` file
-- `imptest test .testMe_1` runs `testMe_1()` methods in all classes of all files
-- `imptest test .` is the same as calling `imptest test` w/o `testcase_pattern` - all found tests to be executed.
+- `imptest test TestFile1:MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class of the `TestFile1.test.nut` file.
+- `imptest test :MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class from `TestFile1` __and__ `TestFile2.test.nut` file.
+- `imptest test :MyTestClass_1` runs all test methods from `MyTestClass_1` class of the first file since it is the only file with required class.
+- `imptest test TestFile2` runs all test methods from `TestFile2.test.nut` file. - `imptest test :.testMe_1` runs `testMe_1()` methods in all classes of all files.
 
+*Note* that search patterns are allowed for test file names only. Test class and test method **must be** fully qualified.
+
+*Note* that if no colon is present in the testcase filter, it is assumed file name only pattern is specified.
+
+*Note* internal class can play test case role. To denote this use case put `"."` in the end of the filter, e.g. `"imptest test :Inner.TestClass."` executes all test methods from `Inner.TestClass` class.
 
 ### Debug Mode
 
