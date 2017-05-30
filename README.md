@@ -236,6 +236,32 @@ this.assertEqual(
 );
 ```
 
+It is possible to define and propagate [`custom variables`](https://github.com/electricimp/Builder#variables) through separate configuration file which syntax is similar to [`github credential file`](#github-credentials-configuration):
+
+```
+{
+    "pollServer": "http://example.com",
+    "expectedAnswer": "data ready"
+}
+```
+
+The default file name is `.imptest-builder` but alternative name can be selected with command line option `-b <builder_config_file>`
+
+``` bash
+imptest test -b tests/test1/.test1-builder-config
+```
+
+After that [`Builder`](https://github.com/electricimp/Builder) will be able to process custom variables met in the source codes.
+
+```squirrel
+local response = http.get("@{pollServer}", {}).sendsync();
+this.assertEqual(
+  "@{expectedAnswer}",
+  response,
+  "Failed to get expected answer"
+);
+```
+
 ### External Commands
 
 A test can call a host operating system command. Like so:
