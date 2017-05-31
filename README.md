@@ -544,7 +544,8 @@ In this case:
 - `imptest test TestFile1:MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class of the `TestFile1.test.nut` file.
 - `imptest test :MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class from `TestFile1` __and__ `TestFile2.test.nut` file.
 - `imptest test :MyTestClass_1` runs all test methods from `MyTestClass_1` class of the first file since it is the only file with required class.
-- `imptest test TestFile2` runs all test methods from `TestFile2.test.nut` file. - `imptest test :.testMe_1` runs `testMe_1()` methods in all classes of all files.
+- `imptest test TestFile2` runs all test methods from `TestFile2.test.nut` file.
+- `imptest test :.testMe_1` runs `testMe_1()` methods in all classes of all files.
 
 *Note* that search patterns are allowed for test file names only. Test class and test method **must be** fully qualified.
 
