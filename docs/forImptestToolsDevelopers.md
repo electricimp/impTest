@@ -3,14 +3,23 @@
 This information is intended for those who want to update the test tools.
 
 [Node.js 4.0+](https://nodejs.org/en/) is required for development.
-Once `node` and `npm` are installed, to install *impTest* please download imptest source:
+Once `node` and `npm` are installed, to install *impTest* please download impTest source:
 ```
-git clone <repo-url-goes-here> imptest
+git clone --recursive <repo-url-goes-here> impTest
 ```
+
+This command will download *impTest* source and required *impUnit* submodule. It is possible hoverer to manage *impUnit* submodule as independent repository and download it manually:
+
+```
+git clone <imptest-repo-url-goes-here> impTest
+cd imptest/src
+git clone <impunit-repo-url-goes-here> impUnit
+```
+
 Then install all dependency:
 
 ```
-cd imptest
+cd impTest
 npm i
 ```
 
