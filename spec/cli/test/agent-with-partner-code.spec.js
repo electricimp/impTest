@@ -39,7 +39,7 @@ describe('TestCommand test suite for Agent code and device code together scenari
 
   it('should run a command', (done) => {
     run({
-      configPath:  '/fixtures/agent-device-together/.imptest',
+      configPath:  '/fixtures/agent-with-partner-code/.imptest',
       testCaseFile: 'MyTestCase.testMe_1'
     }).then((res) => {
       commandSuccess = res.success;
