@@ -50,6 +50,8 @@ The following environment variables need to be set before spec run:
 
 Then `npm test`. Some tests are designed to be failed, so the result of test execution will be printed at the end of log.
 
+**IMPORTANT**: Tests need to be run either on imp001 or imp002 as some of them are designed to fail with `Out of memory` errors, which may not happen on devices with more memory available.
+
 On *Windows* you have to correct _package.json_ file, line `    "test": "node_modules/jasmine/bin/jasmine.js"` have to be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
 
 For example:
