@@ -40,6 +40,7 @@ commander
   .option('-d, --debug', 'debug output')
   .option('-g, --github-config [path]', 'github credentials config file path [default: .imptest-auth]', '.imptest-auth')
   .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
+  .option('-b, --builder-variables [path]', 'Builder variables file path [default: .imptest-builder]', '.imptest-builder')
   .parse(process.argv);
 
 // bootstrap command
@@ -49,7 +50,7 @@ const command = new TestCommand();
 command.version = packageJson.version;
 command.debug = parseBool(commander.debug);
 command.testFrameworkFile = __dirname + '/../impUnit/index.nut';
-command.testCaseFile = commander.args[0] || null;
+command.selectedTest = commander.args[0] || null;
 command.configPath = commander.config;
 
 // github credentials in env vars
@@ -65,6 +66,16 @@ if (!command.githubUser || !command.githubToken) {
     githubCredentials = JSON.parse(githubCredentials);
     command.githubUser = githubCredentials['github-user'];
     command.githubToken = githubCredentials['github-token'];
+  }
+}
+
+// read Builder variables
+if (commander.builderVariables) {
+  const builderVariablesPath = path.resolve(commander.builderVariables);
+  if (fs.existsSync(builderVariablesPath)) {
+    command._debug("Found Builder related file: " + commander.builderVariables);
+    // read variables
+    command.builderVariables = JSON.parse(fs.readFileSync(builderVariablesPath).toString());
   }
 }
 
