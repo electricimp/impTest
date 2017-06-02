@@ -1,6 +1,6 @@
 # impTest
 
-**impTest** is a set of tools to run unit tests built with
+**impTest** is a set of tools intended to run unit tests that are built with the
 [impUnit](https://github.com/electricimp/impUnit) test framework.
 
 - [Overview](#overview)
@@ -25,23 +25,23 @@
 
 ## Overview
 
-**impTest** is a set of tools to run unit tests built with
+**impTest** is a set of tools intended to run unit tests that are built with the
 [impUnit](https://github.com/electricimp/impUnit) test framework. **impTest** leverages
 [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code
-on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and fully
+on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and are fully
 available in sources.
 
 **Test Project** - is a directory (with all subdirectories) where the tests are located.
 
-There is one **Test Project Configuration** per one Test Project. It's a file where all settings related to all tests of the corresponding Test Project are located.
+There is one **Test Project Configuration** per one Test Project. **Test Project Configuration** contains all settings related to all tests of the corresponding Test Project.
 
 **Project Home** - is a directory where Test Project Configuration is located.
 
-All files located in Project Home (and in all subdirectories) which names match with the patterns specified in [Test Project Configuration](#test-project-configuration) are considered as files with Test Cases.
+All files located in Project Home (and in its subdirectories) are considered as files with Test Cases if their names match the patterns specified in [Test Project Configuration](#test-project-configuration).
 
-**Test Case** - is a class inherited from the `ImpTestCase` class. There may be several Test Cases (classes) in a file.
+**Test Case** - is a class inherited from the `ImpTestCase` class. There can be several Test Cases (classes) in a file.
 
-**Test** - is a method which name starts from `test`. (E.g. *testEverythingOk()*) There may be several tests (methods) in a Test Case (class).
+**Test** - is a method which name starts with `test` (e.g., *testEverythingOk()*). A Test Case (class) can contain several tests (methods).
 
 In order to work with impTest you need to:
 - [Install](#installation) impTest
@@ -49,13 +49,13 @@ In order to work with impTest you need to:
 - [Write or Update Tests](#writing-tests)
 - [Run Tests](#running-tests)
 
-Additionally, if you want to update impTest itself - see [For **impTest** Tools Developers](./docs/forImptestToolsDevelopers.md)
+If you want to update impTest itself, see [For **impTest** Tools Developers](./docs/forImptestToolsDevelopers.md).
 
 ## Installation
 
 [Node.js 4.0+](https://nodejs.org/en/) is required.
 You can download the Node.js [pre-built binary](https://nodejs.org/en/download/) for your platform or install Node.js via [package manager](https://nodejs.org/en/download/package-manager).
-Once `node` and `npm` are installed, to setup **impTest** please execute the command
+Once `node` and `npm` are installed, you must execute the following command to set up **impTest**:
 
 `npm i -g imptest`
 
