@@ -62,20 +62,20 @@ Once `node` and `npm` are installed, you must execute the following command to s
 
 ## Test Project Configuration
 
-Configuration file is a JSON file that contains the following settings:
+A configuration file is a JSON file that contains the following settings:
 
 | Key | Description |
 | --- | --- |
-| __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reason we strongly recommend to define Build API key as [environment variables](#environment-variables-settings). |
-| __devices__ | A set of Device IDs that specify the devices which to be used for tests execution. |
-| __modelId__ | Model Id that is attached to the devices. |
-| __deviceFile__ | A path to the additional device source code file. This code to be deployed on imp device as part of every Test Case. `false` is used if no additional code needed. |
-| __agentFile__ | A path to the additional agent source code file. This code to be deployed on imp agent as part of every Test Case. `false` is used if no additional code needed. |
-| __tests__ | A set of patterns that impTest uses to search files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories which to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bidirectional-device-agent-communication) |
-| __stopOnFailure__ | Set this option to `true` if you want to stop execution after test failing. The default value is `false`. |
-| __timeout__ | A timeout (in seconds) after which the tests are considered as failed. Async tests to be interrupted. Default value: 10 sec. |
+| __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reasons we strongly recommend to define the Build API key as [environment variables](#environment-variables-settings). |
+| __devices__ | A set of Device IDs that specify the devices that must be used for tests execution. |
+| __modelId__ | A Model Id that is attached to the devices. |
+| __deviceFile__ | A path to the source code file of an additional device. This code must be deployed on an imp device as part of every Test Case. `false` is used if no additional code is needed. |
+| __agentFile__ | A path to the source code file of an additional agent. This code must be deployed on an imp agent as part of every Test Case. `false` is used if no additional code is needed. |
+| __tests__ | A set of patterns that impTest uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bidirectional-device-agent-communication) |
+| __stopOnFailure__ | Set this option to `true` if you want to stop an execution after a test failure. The default value is `false`. |
+| __timeout__ | A timeout period (in seconds) after which the tests are considered as failed. Async tests to be interrupted. Default value: 10 sec. |
 
-Format of the configuration file (the settings may be in any order):
+Format of the configuration file (the settings can be listed in an arbitrary order):
 
 ```js
 {
