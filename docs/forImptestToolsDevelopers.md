@@ -3,12 +3,12 @@
 This information is intended for those who want to update the test tools.
 
 [Node.js 4.0+](https://nodejs.org/en/) is required for development.
-Once `node` and `npm` are installed, to install *impTest* please download impTest source:
+Once `node` and `npm` are installed, to install *impTest*, download the impTest source using the following command:
 ```
 git clone --recursive <repo-url-goes-here> impTest
 ```
 
-This command will download *impTest* source and required *impUnit* submodule. It is possible hoverer to manage *impUnit* submodule as independent repository and download it manually:
+The command downloads the *impTest* source and the required *impUnit* submodule. It is possible however to manage the *impUnit* submodule as an independent repository and download it manually as follows:
 
 ```
 git clone <imptest-repo-url-goes-here> impTest
@@ -16,7 +16,7 @@ cd imptest/src
 git clone <impunit-repo-url-goes-here> impUnit
 ```
 
-Then install all dependency:
+Then install all dependencies:
 
 ```
 cd impTest
@@ -29,10 +29,10 @@ npm i
 src/cli/imptest.js <command> [options] [arguments]
 ```
 
-A set of available options and commands can be found in [Test Project Configuration](../README.md#test-project-configuration)
-and [Running Tests](../README.md#running-tests) sections
+A set of available options and commands can be found in the [Test Project Configuration](../README.md#test-project-configuration)
+and [Running Tests](../README.md#running-tests) sections.
 
-example:
+Example:
 
 ```bash
 src/cli/imptest.js test -c samples/sample1/.imptest
@@ -40,7 +40,7 @@ src/cli/imptest.js test -c samples/sample1/.imptest
 
 ## Testing impTest
 
-Jasmine test suite is included with the project.
+Jasmine test suite is included into the project.
 
 The following environment variables need to be set before spec run: 
 
@@ -48,11 +48,11 @@ The following environment variables need to be set before spec run:
 - SPEC_MODEL_ID – Model Id to use for tests
 - SPEC_DEVICE_ID/SPEC_DEVICE_IDS – Device Id/Ids (comma-separated) to use for tests
 
-Then `npm test`. Some tests are designed to be failed, so the result of test execution will be printed at the end of log.
+Then `npm test`. Some tests are designed to fail, so the result of test execution is printed at the end of a log.
 
-**IMPORTANT**: Tests need to be run either on imp001 or imp002 as some of them are designed to fail with `Out of memory` errors, which may not happen on devices with more memory available.
+**IMPORTANT**: Tests need to be run either on imp001 or imp002 as some of them are designed to fail with an `Out of memory` error, which does not happen on devices with more memory available.
 
-On *Windows* you have to correct _package.json_ file, line `    "test": "node_modules/jasmine/bin/jasmine.js"` have to be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
+On *Windows* you have to correct _package.json_ file, the `    "test": "node_modules/jasmine/bin/jasmine.js"` line must be replaced with `    "test": "node node_modules/jasmine/bin/jasmine.js"`.
 
 For example:
 
