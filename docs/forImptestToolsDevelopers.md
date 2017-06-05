@@ -48,7 +48,7 @@ The following environment variables need to be set before spec run:
 - SPEC_MODEL_ID – Model Id to use for tests
 - SPEC_DEVICE_ID/SPEC_DEVICE_IDS – Device Id/Ids (comma-separated) to use for tests
 
-Then `npm test`. Some tests are designed to fail, so the result of test execution is printed at the end of a log.
+Then run the `npm test` command. Some tests are designed to fail, so the result of test execution is printed at the end of a log.
 
 **IMPORTANT**: Tests need to be run either on imp001 or imp002 as some of them are designed to fail with an `Out of memory` error, which does not happen on devices with more memory available.
 
