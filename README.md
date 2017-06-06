@@ -69,8 +69,8 @@ A configuration file is a JSON file that contains the following settings:
 | __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reasons we strongly recommend to define the Build API key as [environment variables](#environment-variables-settings). |
 | __devices__ | A set of Device IDs that specify the devices that must be used for tests execution. |
 | __modelId__ | A Model Id that is attached to the devices. |
-| __deviceFile__ | A path to the source code file of an additional device. This code must be deployed on an imp device as part of every Test Case. `false` is used if no additional code is needed. |
-| __agentFile__ | A path to the source code file of an additional agent. This code must be deployed on an imp agent as part of every Test Case. `false` is used if no additional code is needed. |
+| __deviceFile__ | The source code file of an additional device. This code is merged with the Test Case file and must be deployed on an imp device as part of every Test Case. `false` is used if no additional code is needed. |
+| __agentFile__ | The source code file of an additional agent. This code is merged with the Test Case file and must be deployed on an imp agent as part of every Test Case. `false` is used if no additional code is needed. |
 | __tests__ | A set of patterns that impTest uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bidirectional-device-agent-communication) |
 | __stopOnFailure__ | Set this option to `true` if you want to stop an execution after a test failure. The default value is `false`. |
 | __timeout__ | A timeout period (in seconds) after which the tests are considered as failed. Async tests to be interrupted. Default value: 10 sec. |
@@ -99,8 +99,8 @@ Test Project Configuration file can be created or updated by the following comma
 where:
 
 * `-d` &mdash; prints the debug output
-* `-c` &mdash; used to provide a path to the configuration file. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If the `-c` option is not specified, the `.imptest` file in the current directory is assumed.
-* `-f` &mdash; used to update (overwrite) an existing configuration. If the specified configuration file already exists, this option must be explicitly specified to update the file.
+* `-c` &mdash; provides a path to the configuration file. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If the `-c` option is not specified, the `.imptest` file in the current directory is assumed.
+* `-f` &mdash; updates (overwrites) an existing configuration. If the specified configuration file already exists, this option must be explicitly specified to update the file.
 
 During the command execution you will be asked for [configuration settings](#test-project-configuration) in either of the following cases:
 - if a new Test Project Configuration is being created, the default values of the settings are offered;
@@ -123,8 +123,8 @@ The file can be created or updated by the following command:
 where:
 
 * `-d` &mdash; prints the debug output
-* `-g` &mdash; used to provide a path to the file with GitHub credentials. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If `-c` option is not specified, the `.imptest-auth` file in the current directory is assumed.
-* `-f` &mdash; used to update (overwrite) an existing file. If the specified file already exists, this option must be explicitly specified to update it.
+* `-g` &mdash; provides a path to the file with GitHub credentials. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If `-c` option is not specified, the `.imptest-auth` file in the current directory is assumed.
+* `-f` &mdash; updates (overwrites) an existing file. If the specified file already exists, this option must be explicitly specified to update it.
 
 The file syntax is as follows:
 
