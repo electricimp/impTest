@@ -98,7 +98,7 @@ Test Project Configuration file can be created or updated by the following comma
 
 where:
 
-* `-d` &mdash; a print debug output
+* `-d` &mdash; prints the debug output
 * `-c` &mdash; used to provide a path to the configuration file. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If the `-c` option is not specified, the `.imptest` file in the current directory is assumed.
 * `-f` &mdash; used to update (overwrite) an existing configuration. If the specified configuration file already exists, this option must be explicitly specified to update the file.
 
@@ -122,7 +122,7 @@ The file can be created or updated by the following command:
 
 where:
 
-* `-d` &mdash; a print debug output
+* `-d` &mdash; prints the debug output
 * `-g` &mdash; used to provide a path to the file with GitHub credentials. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If `-c` option is not specified, the `.imptest-auth` file in the current directory is assumed.
 * `-f` &mdash; used to update (overwrite) an existing file. If the specified file already exists, this option must be explicitly specified to update it.
 
