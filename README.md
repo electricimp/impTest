@@ -1,6 +1,6 @@
 # impTest
 
-**impTest** is a set of tools to run unit tests built with
+**impTest** is a set of tools intended to run unit tests that are built with the
 [impUnit](https://github.com/electricimp/impUnit) test framework.
 
 - [Overview](#overview)
@@ -25,23 +25,23 @@
 
 ## Overview
 
-**impTest** is a set of tools to run unit tests built with
+**impTest** is a set of tools intended to run unit tests that are built with the
 [impUnit](https://github.com/electricimp/impUnit) test framework. **impTest** leverages
 [Electric Imp Build API](https://electricimp.com/docs/buildapi/) to deploy and run the code
-on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and fully
+on imp devices. All tools are written in [Node.js](https://nodejs.org/en/) and are fully
 available in sources.
 
 **Test Project** - is a directory (with all subdirectories) where the tests are located.
 
-There is one **Test Project Configuration** per one Test Project. It's a file where all settings related to all tests of the corresponding Test Project are located.
+There is one **Test Project Configuration** per one Test Project. **Test Project Configuration** contains all settings related to all tests of the corresponding Test Project.
 
 **Project Home** - is a directory where Test Project Configuration is located.
 
-All files located in Project Home (and in all subdirectories) which names match with the patterns specified in [Test Project Configuration](#test-project-configuration) are considered as files with Test Cases.
+All files located in Project Home (and in its subdirectories) are considered as files with Test Cases if their names match the patterns specified in [Test Project Configuration](#test-project-configuration).
 
-**Test Case** - is a class inherited from the `ImpTestCase` class. There may be several Test Cases (classes) in a file.
+**Test Case** - is a class inherited from the `ImpTestCase` class. There can be several Test Cases (classes) in a file.
 
-**Test** - is a method which name starts from `test`. (E.g. *testEverythingOk()*) There may be several tests (methods) in a Test Case (class).
+**Test** - is a method which name starts with `test` (e.g., *testEverythingOk()*). A Test Case (class) can contain several tests (methods).
 
 In order to work with impTest you need to:
 - [Install](#installation) impTest
@@ -49,33 +49,33 @@ In order to work with impTest you need to:
 - [Write or Update Tests](#writing-tests)
 - [Run Tests](#running-tests)
 
-Additionally, if you want to update impTest itself - see [For **impTest** Tools Developers](./docs/forImptestToolsDevelopers.md)
+If you want to update impTest itself, see [For **impTest** Tools Developers](./docs/forImptestToolsDevelopers.md).
 
 ## Installation
 
 [Node.js 4.0+](https://nodejs.org/en/) is required.
 You can download the Node.js [pre-built binary](https://nodejs.org/en/download/) for your platform or install Node.js via [package manager](https://nodejs.org/en/download/package-manager).
-Once `node` and `npm` are installed, to setup **impTest** please execute the command
+Once `node` and `npm` are installed, you must execute the following command to set up **impTest**:
 
 `npm i -g imptest`
 
 
 ## Test Project Configuration
 
-Configuration file is a JSON file that contains the following settings:
+A configuration file is a JSON file that contains the following settings:
 
 | Key | Description |
 | --- | --- |
-| __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reason we strongly recommend to define Build API key as [environment variables](#environment-variables-settings). |
-| __devices__ | A set of Device IDs that specify the devices which to be used for tests execution. |
-| __modelId__ | Model Id that is attached to the devices. |
-| __deviceFile__ | A path to the additional device source code file. This code to be deployed on imp device as part of every Test Case. `false` is used if no additional code needed. |
-| __agentFile__ | A path to the additional agent source code file. This code to be deployed on imp agent as part of every Test Case. `false` is used if no additional code needed. |
-| __tests__ | A set of patterns that impTest uses to search files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories which to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bidirectional-device-agent-communication) |
-| __stopOnFailure__ | Set this option to `true` if you want to stop execution after test failing. The default value is `false`. |
-| __timeout__ | A timeout (in seconds) after which the tests are considered as failed. Async tests to be interrupted. Default value: 10 sec. |
+| __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reasons we strongly recommend to define the Build API key as [environment variables](#environment-variables-settings). |
+| __devices__ | A set of Device IDs that specify the devices that must be used for tests execution. |
+| __modelId__ | A Model Id that is attached to the devices. |
+| __deviceFile__ | A path to the source code file of an additional device. This code must be deployed on an imp device as part of every Test Case. `false` is used if no additional code is needed. |
+| __agentFile__ | A path to the source code file of an additional agent. This code must be deployed on an imp agent as part of every Test Case. `false` is used if no additional code is needed. |
+| __tests__ | A set of patterns that impTest uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bidirectional-device-agent-communication) |
+| __stopOnFailure__ | Set this option to `true` if you want to stop an execution after a test failure. The default value is `false`. |
+| __timeout__ | A timeout period (in seconds) after which the tests are considered as failed. Async tests to be interrupted. Default value: 10 sec. |
 
-Format of the configuration file (the settings may be in any order):
+Format of the configuration file (the settings can be listed in an arbitrary order):
 
 ```js
 {
@@ -92,41 +92,41 @@ Format of the configuration file (the settings may be in any order):
 
 ### Project Configuration Generation
 
-Test Project Configuration file can be created or updated by the command:
+Test Project Configuration file can be created or updated by the following command:
 
 `imptest init [-c <configuration_file>] [-d] [-f]`
 
 where:
 
-* `-d` &mdash; print debug output
-* `-c` &mdash; this option is used to provide a path to the configuration file. Relative or absolute path may be used. Generation will fail if any intermediate directory in the path does not exist. If `-c` option is missed then `.imptest` file in the current directory is assumed.
-* `-f` &mdash; to update (overwrite) an existing configuration. If the specified configuration file already exists, this option should be explicitly specified to update the file.
+* `-d` &mdash; a print debug output
+* `-c` &mdash; used to provide a path to the configuration file. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If the `-c` option is not specified, the `.imptest` file in the current directory is assumed.
+* `-f` &mdash; used to update (overwrite) an existing configuration. If the specified configuration file already exists, this option must be explicitly specified to update the file.
 
-During the command execution you will be asked for [configuration settings](#test-project-configuration):
+During the command execution you will be asked for [configuration settings](#test-project-configuration) in either of the following cases:
 - if a new Test Project Configuration is being created, the default values of the settings are offered;
 - if the existing Test Project Configuration is being updated, the settings from the existing configuration file are offered as defaults.
 
 ### GitHub Credentials Configuration
 
-Sources from [GitHub](https://github.com/electricimp/Builder#from-github) may be included to test files.
+Sources from [GitHub](https://github.com/electricimp/Builder#from-github) can be included into test files.
 
 For unauthenticated requests, GitHub API allows you to make up to 60 requests per hour - [GitHub API rate limit exceeding](https://developer.github.com/v3/#rate-limiting).
-To overcome this limitation you may provide user credentials.
+To overcome this limitation, you can provide user credentials.
 
-For security reason we strongly recommend to provide the credentials via [Environment Variables](#environment-variables-settings).
+For security reasons we strongly recommend to provide the credentials via [Environment Variables](#environment-variables-settings).
 
 But there is also a way to store the credentials in a special file (one file per Test Project).
-The file can be created or updated by the command:
+The file can be created or updated by the following command:
 
 `imptest github [-g <credentials_file>] [-d] [-f]`
 
 where:
 
-* `-d` &mdash; print debug output
-* `-g` &mdash; this option is used to provide a path to file with GitHub credentials. Relative or absolute path may be used. Generation will fail if any intermediate directory in the path does not exist. If `-c` option is missed then `.imptest-auth` file in the current directory is assumed.
-* `-f` &mdash; to update (overwrite) an existing file. If the specified file already exists, this option should be explicitly specified to update it.
+* `-d` &mdash; a print debug output
+* `-g` &mdash; used to provide a path to the file with GitHub credentials. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If `-c` option is not specified, the `.imptest-auth` file in the current directory is assumed.
+* `-f` &mdash; used to update (overwrite) an existing file. If the specified file already exists, this option must be explicitly specified to update it.
 
-The file syntax is:
+The file syntax is as follows:
 
 ```
 {
@@ -137,7 +137,7 @@ The file syntax is:
 
 ### Environment Variables Settings
 
-For security reason we strongly recommend to define Build API key and GitHub credentials as environment variables:
+For security reasons we strongly recommend to define Build API key and GitHub credentials as environment variables as follows:
 - [**apiKey**](#test-project-configuration) – `IMP_BUILD_API_KEY` - to deploy and run the code on imp devices via [Electric Imp Build API](https://electricimp.com/docs/buildapi/).
 - [**github-user**](#github-credentials-configuration) – `GITHUB_USER` - to include external sources from GitHub.
 - [**github-token**](#github-credentials-configuration) – `GITHUB_TOKEN` - to include external sources from GitHub.
@@ -145,22 +145,22 @@ For security reason we strongly recommend to define Build API key and GitHub cre
 ## Writing Tests
 
 Basic steps to write tests:
-- Choose a name and location of your file with tests. You may have several files with tests in the same or different locations.
-  - The name with the path, relative to Project Home, should conform to the patterns specified in [Test Project Configuration](#test-project-configuration) of your Test Project.
+- Choose the name and location of your file with tests. You can have several files with tests in the same or different locations.
+  - The name with the path, relative to Project Home, must conform to the patterns specified in [Test Project Configuration](#test-project-configuration) of your Test Project.
   - The file is treated as imp agent test code if `agent` is present in the file name. Otherwise the file is treated as imp device test code.
-  - By default, the test code runs either on imp device or on imp agent. If your Test Case should run on the both - there is a way that allows you to execute [agent and device test code together](#tests-for-bidirectional-device-agent-communication).
+  - By default, the test code runs either on imp device or on imp agent. If your Test Case must run on both the imp device and imp agent, there is a way that allows you to execute [agent and device test code together](#tests-for-bidirectional-device-agent-communication).
 - Add a class (Test Case) inherited from the `ImpTestCase` class. Every file can have several Test Cases (classes).
-Test Cases (classes) may have the same names if they is in different files.
-- Add and implement tests - methods which name starts from `test`. Every Test Case (class) can have several tests (methods).
+Test Cases (classes) can have identical names if they are in different files.
+- Add and implement tests - method names start with `test`. Every Test Case (class) can have several tests (methods).
 - Additionally, any Test Case can have `setUp()` and `tearDown()` methods for the environment setup before the tests execution and cleaning-up afterwards. Add and implement them, if needed.
 
-Test method can be designed as synchronous (by default) or [asynchronous](#asynchronous-testing).
+A test method can be designed as synchronous (by default) or [asynchronous](#asynchronous-testing).
 
-Test file should not contain any `#require` statement. [An include from GitHub](#github-credentials-configuration) should be used instead of it.
+A test file must not contain any `#require` statement. [An include from GitHub](#github-credentials-configuration) must be used instead of it.
 
-For example: `#require "messagemanager.class.nut:1.0.2"` should be replaced with `@include "github:electricimp/MessageManager/MessageManager.class.nut@v1.0.2"`.
+For example: `#require "messagemanager.class.nut:1.0.2"` must be replaced with `@include "github:electricimp/MessageManager/MessageManager.class.nut@v1.0.2"`.
 
-Example of a simple Test Case:
+Below is an example of a simple Test Case:
 
 ```squirrel
 class MyTestCase extends ImpTestCase {
@@ -173,26 +173,26 @@ class MyTestCase extends ImpTestCase {
 }
 ```
 
-### Tests for bidirectional Device-Agent Communication
+### Tests for Bidirectional Device-Agent Communication
 
-To test interaction between device and agent `impTest` allows developers to extend tests with a corresponding logic implemented on the other side (agent or device respectively). The test "extensions" can be used to emulate real device-agent interaction and communication.
+To test interaction between a device and an agent, `impTest` allows developers to extend tests with a corresponding logic implemented on the other side (agent or device respectively). The test "extensions" can be used to emulate a real device-agent interaction and communication.
 
-To identify partners file uniquely there are some restrictions imposed on the test extensions:
+To identify partners file uniquely, there are some restrictions imposed on the test extensions:
 
-- [Test case](#overview)(class) should be either in device code or agent code, not in both. Let's name the file with test's implementation as *TestFile*, another file will have name - *PartnerFile*s
-- *TestFile* and *PartnerFile* should be located in the same folder (directory) on the disk.
-- *TestFile* and *PartnerFile* names should conform the special pattern `TestName.(agent | device)[.test].nut`. Which means they need to have the same prefix `TestName` and suffix `.nut`. *TestFile* is indicated by `.test` string in the suffix. *PartnerFile*  **should not** have this string in the suffix. Otherwise the *PartnerFile* will be in `TestFile` role and the *TestFile* becomes to be in `PartnerFile` role.
-- The type of the execution environment is indicated by either `.device` or `.agent` in the suffix of the *TestFile* name, e.g. `"Test1.agent.test.nut"`.
+- [Test case](#overview)(class) must be either in the device code or agent code, not in both. Let's name the file with test's implementation as *TestFile*,  the other file will be named *PartnerFile*.
+- *TestFile* and *PartnerFile* must be located in the same folder (directory) on the disk.
+- *TestFile* and *PartnerFile* names must conform to the `TestName.(agent | device)[.test].nut`special pattern, which means they need to have the same `TestName` prefix and the same `.nut` suffix. *TestFile* is indicated by the `.test` string in the suffix. *PartnerFile*  **must not** feature this string in the suffix. Otherwise the *PartnerFile* will perform the `TestFile` role and the *TestFile* will perform the `PartnerFile` role.
+- The type of the execution environment is indicated by either `.device` or `.agent` in the suffix of the *TestFile* name, for example, `"Test1.agent.test.nut"`.
 - The *PartnerFile* is found by replacing `(agent | device).test.nut`  with `(device | agent).nut` in the file name suffix.
-- Due to partner special naming **do not** change default value of ["Test file search pattern"](#test-project-configuration).
+- Due to partner special naming **do not** change the default value of ["Test file search pattern"](#test-project-configuration).
 
-Example of test extension can be found at [sample7](./samples/sample7).
+Examples of test extensions can be found at [sample7](./samples/sample7).
 
 ### Asynchronous Testing
 
 Every test method (as well as `setUp()` and `tearDown()`) can be either synchronous (by default) or asynchronous.
 
-Method should return an instance of [**Promise**](https://github.com/electricimp/Promise) to notify that it needs to do some work asynchronously.
+Method must return an instance of [**Promise**](https://github.com/electricimp/Promise) to notify that it needs to do some work asynchronously.
 
 The Promise resolution means all test have been passed successfully. The Promise rejection denotes a failure.
 
@@ -209,7 +209,9 @@ function testSomethingAsyncronously() {
 ### Builder Language
 
 [**Builder**](https://github.com/electricimp/Builder) is supported by **impTest**.
-**Builder** language combines a preprocessor with an expression language and advanced imports. Example:
+**Builder** language combines a preprocessor with an expression language and advanced imports. 
+
+Example:
 
 ```squirrel
 @set assertText = "Failed to assert that values are"
@@ -224,7 +226,7 @@ this.assertEqual(
 ```
 
 [*\_\_FILE\_\_* and *\_\_LINE\_\_*](https://github.com/electricimp/Builder#variables) variables are defined in the [**Builder**](https://github.com/electricimp/Builder),
-they may be useful for debugging information. Here is the usage example:
+they can be useful for debugging information. Below is a usage example:
 
 ```squirrel
 this.assertEqual(
@@ -236,7 +238,7 @@ this.assertEqual(
 );
 ```
 
-It is possible to define and propagate [`custom variables`](https://github.com/electricimp/Builder#variables) through separate configuration file which syntax is similar to [`github credential file`](#github-credentials-configuration):
+It is possible to define and propagate [`custom variables`](https://github.com/electricimp/Builder#variables) through a separate configuration file which syntax is similar to [`github credential file`](#github-credentials-configuration):
 
 ```
 {
@@ -245,7 +247,7 @@ It is possible to define and propagate [`custom variables`](https://github.com/e
 }
 ```
 
-The default file name is `.imptest-builder` but alternative name can be selected with command line option `-b <builder_config_file>`
+The default file name is `.imptest-builder` but an alternative name can be selected with the  `-b <builder_config_file>` command line option as follows:
 
 ``` bash
 imptest test -b tests/test1/.test1-builder-config
@@ -264,7 +266,7 @@ this.assertEqual(
 
 ### External Commands
 
-A test can call a host operating system command. Like so:
+A test can call a host operating system command as follows:
 
 ```squirrel
 // within the test case/method
@@ -272,7 +274,7 @@ this.runCommand("echo 123");
 // the host operating system command `echo 123` is executed
 ```
 
-If external command execution times out (the timeout is specified by the _timeout_ parameter in [Test Project Configuration](#test-project-configuration)) or exits with a status code other than 0, the test session fails.
+If the execution timeout of an external command expires (the timeout is specified by the _timeout_ parameter in [Test Project Configuration](#test-project-configuration)) or exits with a status code other than 0, the test session fails.
 
 ### Assertions
 
@@ -298,7 +300,7 @@ this.assertTrue(1 == 2);
 
 `this.assertEqual(expected, actual, [message])`
 
-Asserts that two values are equal
+Asserts that two values are equal.
 
 Example:
 
@@ -314,7 +316,7 @@ this.assertEqual(1, 2);
 
 `this.assertGreater(actual, cmp, [message])`
 
-Asserts that value is greater than some other value.
+Asserts that a value is greater than some other value.
 
 Example:
 
@@ -330,7 +332,7 @@ this.assertGreater(1, 2);
 
 `this.assertLess(actual, cmp, [message])`
 
-Asserts that value is less than some other value.
+Asserts that a value is less than some other value.
 
 Example:
 
@@ -346,7 +348,7 @@ this.assertLess(2, 2);
 
 `this.assertClose(expected, actual, maxDiff, [message])`
 
-Asserts that value is within some tolerance from expected value.
+Asserts that a value is within some tolerance from an expected value.
 
 Example:
 
@@ -400,7 +402,7 @@ this.assertBetween(10, 11, 12);
 
 `this.assertThrowsError(func, ctx, [args = []], [message])`
 
-Asserts that function _func_ throws an error when called with arguments _args_ and context _ctx_. Returns error thrown by _func_.
+Asserts that the  _func_ function throws an error when it is called with the  _args_ arguments and the _ctx_ context. Returns an error thrown by _func_.
 
 ```squirrel
 // ok, returns "abc"
@@ -416,7 +418,7 @@ this.assertThrowsError(function () {
 
 ### Diagnostic Messages
 
-Return values (other than *null*) are displayed in the console when test succeeds and can be used to output diagnostic messages, like:
+Return values (other than *null*) are displayed in the console when a test succeeds and can be used to output the following diagnostic messages:
 
 <img src="./docs/diagnostic-messages.png" width=497>
 
@@ -426,16 +428,16 @@ Return values (other than *null*) are displayed in the console when test succeed
 this.info(<message>)
 ```
 
-Log of failed test looks like:
+A log of a failed test looks as follows:
 
 <img src="./docs/diagnostic-messages2.png" width=497>
 
-This means that execution of `testMe` method in the `MyTestCase` class has been failed:
-Incorrect syntax is in line 6 in test file (in which `MyTestCase` class).
+This means that the execution of the `testMe` method in the `MyTestCase` class has failed:
+Incorrect syntax is in line 6 of the test file (containing the `MyTestCase` class).
 
 ### [Test Case](#overview) Example
 
-utility file `myFile.nut` code is:
+The utility file `myFile.nut` code is as follows:
 ```squirrel
 
   // (optional) Async version, can also be synchronous
@@ -447,7 +449,7 @@ utility file `myFile.nut` code is:
   }
 ```
 
-[Test Case](#overview) code is:
+[Test Case](#overview) code is as follows:
 ```squirrel
 class TestCase1 extends ImpTestCase {
 
@@ -484,23 +486,23 @@ class TestCase1 extends ImpTestCase {
 
 ## Running Tests
 
-Use this command to run the tests:
+Use this command to run the tests as follows:
 
 `imptest test [-c <configuration_file>] [-g <credentials_file>] [-d] [testcase_pattern]`
 
 where:
 
-* `-c` &mdash; this option is used to provide a path to Test Project Configuration file. Relative or absolute path may be used. If `-c` option is missed then `.imptest` file in the current directory is assumed.
-* `-g` &mdash; this option is used to provide a path to file with GitHub credentials. Relative or absolute path may be used. If `-g` option is missed then `.imptest-auth` file in the current directory is assumed.
-* `-b` &mdash; this option is used to provide a path to file with [`Builder variables`](https://github.com/electricimp/Builder#usage). Relative or absolute path may be used. If `-b` option is missed then `.imptest-builder` file in the current directory is assumed.
-* `-d` &mdash; print [debug output](#debug-mode), store device and agent code
-* `testcase_pattern` &mdash; pattern for [selective test runs](#selective-test-runs)
+* `-c` &mdash; this option is used to provide a path to the Test Project Configuration file. A relative or absolute path can be used. If the `-c` option is left out, the `.imptest` file in the current directory is assumed.
+* `-g` &mdash; this option is used to provide a path to file with GitHub credentials. A relative or absolute path can be used. If the `-g` option is left out, the `.imptest-auth` file in the current directory is assumed.
+* `-b` &mdash; this option is used to provide a path to file with [`Builder variables`](https://github.com/electricimp/Builder#usage). A relative or absolute path can be used. If the `-b` option is left out, the `.imptest-builder` file in the current directory is assumed.
+* `-d` &mdash; prints [debug output](#debug-mode), stores device and agent code
+* `testcase_pattern` &mdash; a pattern for [selective test runs](#selective-test-runs)
 
-impTest tool searches all files which matches the file name patterns specified in [Test Project Configuration](#test-project-configuration). The search starts from Project Home. The tool looks for all Test Cases (classes) in that files. And all test methods from that classes are considered as tests for the current Test Project.
+The impTest tool searches all files that matche the file name patterns specified in the [Test Project Configuration](#test-project-configuration). The search starts with Project Home. The tool looks for all Test Cases (classes) in the files. And all test methods from those classes are considered as tests for the current Test Project.
 
-Optional `testcase_pattern` selects a specific test or set of tests for execution from all found tests.
+Optional `testcase_pattern` selects a specific test or a set of tests for execution from all the found tests.
 
-If `testcase_pattern` is not specified, all found tests are selected for execution.
+If `testcase_pattern` is not specified, all the found tests are selected for execution.
 
 The selected tests are executed in an arbitrary order.
 
@@ -510,13 +512,13 @@ Every test is treated as failed if an error has been thrown. Otherwise the test 
 
 [`testcase_pattern`](#running-tests) allows to execute a single test or a set of tests from one or several Test Cases.
 
-The syntax of the pattern is: `[testFileName]:[testClass].[testMethod]`
+The syntax of the pattern is as follows: `[testFileName]:[testClass].[testMethod]`
 
 where:
 
-* `testFileName` &mdash; name of the Test Case file. Pattern to filter required file among all conforming to [`Test file search pattern`](#test-project-configuration)
-* `testClass` &mdash; name of the Test Case class. Note: Test Cases with the same name may exist in different files belonged to the same Test Project, all of them to be selected.
-* `testMethod` &mdash; test method name
+* `testFileName` &mdash; the name of the Test Case file. A pattern to filter required file among all conforming to [`Test file search pattern`](#test-project-configuration)
+* `testClass` &mdash; the name of the Test Case class. Note: Test Cases with identical names can exist in different files that belong to the same Test Project, all of them must be selected.
+* `testMethod` &mdash; a test method name
 
 Example `testcase_pattern` usage:
 
@@ -541,27 +543,27 @@ class MyTestClass extends ImpTestCase {
 ```
 
 In this case:
-- `imptest test TestFile1:MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class of the `TestFile1.test.nut` file.
-- `imptest test :MyTestClass.testMe` runs `testMe()` method in `MyTestClass` class from `TestFile1` __and__ `TestFile2.test.nut` file.
-- `imptest test :MyTestClass_1` runs all test methods from `MyTestClass_1` class of the first file since it is the only file with required class.
-- `imptest test TestFile2` runs all test methods from `TestFile2.test.nut` file.
-- `imptest test :.testMe_1` runs `testMe_1()` methods in all classes of all files.
+- `imptest test TestFile1:MyTestClass.testMe` runs the `testMe()` method in the `MyTestClass` class of the `TestFile1.test.nut` file.
+- `imptest test :MyTestClass.testMe` runs the `testMe()` method in the `MyTestClass` class from the `TestFile1` __and__ `TestFile2.test.nut` file.
+- `imptest test :MyTestClass_1` runs all test methods from the `MyTestClass_1` class of the first file since it is the only file with the required class.
+- `imptest test TestFile2` runs all test methods from the `TestFile2.test.nut` file.
+- `imptest test :.testMe_1` runs the `testMe_1()` methods in all classes of all files.
 
-*Note* that search patterns are allowed for test file names only. Test class and test method **must be** fully qualified.
+*Note* that search patterns are allowed for test file names only. A test class and a test method **must be** fully qualified.
 
-*Note* that if no colon is present in the testcase filter, it is assumed file name only pattern is specified.
+*Note* that if no colon is present in the testcase filter, it is assumed that  the only pattern of a file name is specified.
 
-*Note* internal class can play test case role. To denote this use case put `"."` in the end of the filter, e.g. `"imptest test :Inner.TestClass."` executes all test methods from `Inner.TestClass` class.
+*Note* an internal class can play the role of a test case. To denote this use case, put `"."` at the end of the filter, for example, `"imptest test :Inner.TestClass."` executes all test methods from the `Inner.TestClass` class.
 
 ### Debug Mode
 
-`-d` option is used to run tests in debug mode:
-- debug output will be switched on. JSON is used to communicate between [impUnit](https://github.com/electricimp/impUnit) test framework and **impTest**. The communication messages will be printed.
-- device and agent code will be stored in `./build` folder that will be created in Project Home.
+The `-d` option is used to run tests in the debug mode:
+- a debug output is switched on. JSON is used to communicate between [impUnit](https://github.com/electricimp/impUnit) test framework and **impTest**. Communication messages are printed.
+- device and agent code are stored in the `./build` folder that is created in Project Home.
 
-Debug mode is useful for failures analyzing.
+The debug mode is useful for the analysis of failures.
 
-Example of debug log:
+An example of a debug log can be found below:
 
 <img src="./docs/diagnostic-messages3.png" width=497>
 
