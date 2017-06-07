@@ -68,9 +68,9 @@ A configuration file is a JSON file that contains the following settings:
 | --- | --- |
 | __apiKey__ | [Build API key](https://electricimp.com/docs/ideuserguide/account) provides access to [Electric Imp Build API](https://electricimp.com/docs/buildapi/). For security reasons we strongly recommend to define the Build API key as [environment variables](#environment-variables-settings). |
 | __devices__ | A set of Device IDs that specify the devices that must be used for tests execution. |
-| __modelId__ | A Model Id that is attached to the devices. |
-| __deviceFile__ | The source code file of an additional device. This code is merged with the Test Case file and must be deployed on an imp device as part of every Test Case. `false` is used if no additional code is needed. |
-| __agentFile__ | The source code file of an additional agent. This code is merged with the Test Case file and must be deployed on an imp agent as part of every Test Case. `false` is used if no additional code is needed. |
+| __modelId__ | A Model Id that the devices are attached to. |
+| __deviceFile__ | A path to a file with the device source code that is deployed along with the tests. `false` is used if no additional code is needed. |
+| __agentFile__ | A path to a file with the agent source code that is deployed along with the tests. `false` is used if no additional code is needed. |
 | __tests__ | A set of patterns that impTest uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bidirectional-device-agent-communication) |
 | __stopOnFailure__ | Set this option to `true` if you want to stop an execution after a test failure. The default value is `false`. |
 | __timeout__ | A timeout period (in seconds) after which the tests are considered as failed. Async tests to be interrupted. Default value: 10 sec. |
