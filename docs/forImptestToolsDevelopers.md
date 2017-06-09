@@ -44,6 +44,7 @@ Jasmine test suite is included into the project.
 
 The following environment variables need to be set before spec run: 
 
+- IMP_BUILD_API_KEY - Build API key
 - SPEC_DEBUG {true|false} – Enables/disables debug output
 - SPEC_MODEL_ID – Model Id to use for tests
 - SPEC_DEVICE_ID/SPEC_DEVICE_IDS – Device Id/Ids (comma-separated) to use for tests
