@@ -1,6 +1,6 @@
 class AgentTestCase extends ImpTestCase {
   function setUp() {
-    return "Hi from #{__FILE__}!";
+    return "Hi from @{__FILE__}!";
   }
 
   function testSomething() {

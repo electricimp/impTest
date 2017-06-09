@@ -1,7 +1,29 @@
+// MIT License
+//
+// Copyright 2016-2017 Electric Imp
+//
+// SPDX-License-Identifier: MIT
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+// EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
 /**
  * Init command
- *
- * @author Mikhail Yurasov <mikhail@electricimp.com>
  */
 
 'use strict';
@@ -9,6 +31,7 @@
 const fs = require('fs');
 const c = require('colors');
 const glob = require('glob');
+const path = require('path');
 const prompt = require('cli-prompt');
 const CliTable = require('cli-table');
 const AbstractCommand = require('./AbstractCommand');
@@ -119,10 +142,10 @@ class InitCommand extends AbstractCommand {
     for (const modelId in this._models) {
       for (const deviceId of  this._models[modelId].devices) {
         table.push([
-          deviceId,
-          this._devices[deviceId].name,
-          this._models[modelId].id,
-          this._models[modelId].name,
+          deviceId                     || "",
+          this._devices[deviceId].name || "",
+          this._models[modelId].id     || "",
+          this._models[modelId].name   || "",
           this._devices[deviceId].powerstate === 'online'
             ? c.green(this._devices[deviceId].powerstate)
             : c.red(this._devices[deviceId].powerstate)
@@ -230,12 +253,6 @@ class InitCommand extends AbstractCommand {
       let deviceFiles = [];
       let agentFiles = [];
 
-      // local files
-      deviceFiles = glob.sync('**/*device*.nut', {cwd: this._impTestFile.dir})
-        .concat(glob.sync('**/*.nut', {cwd: this._impTestFile.dir}));
-      agentFiles = glob.sync('**/*agent*.nut', {cwd: this._impTestFile.dir})
-        .concat(glob.sync('**/*.nut', {cwd: this._impTestFile.dir}));
-
       // files from .imptest
       if (this._impTestFile.exists) {
         deviceFiles.unshift(this._impTestFile.values.deviceFile || '<no file>');
@@ -339,7 +356,7 @@ class InitCommand extends AbstractCommand {
         });
     });
   }
-
+  
   /**
    * Generate sample tests
    * @return {Promise}
@@ -352,7 +369,7 @@ class InitCommand extends AbstractCommand {
             key: 'generate',
             label: c.yellow('> Generate sample test cases?'),
             type: 'boolean',
-            'default': 'yes'
+            'default': 'no'
           }
         ],
         (input) => {
@@ -388,7 +405,7 @@ class InitCommand extends AbstractCommand {
         fs.writeFileSync(file,
           `class ${type === 'agent' ? 'Agent' : 'Device'}TestCase extends ImpTestCase {
   function setUp() {
-    return "Hi from #{__FILE__}!";
+    return "Hi from @{__FILE__}!";
   }
 
   function testSomething() {
