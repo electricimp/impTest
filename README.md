@@ -7,13 +7,13 @@
   - [GitHub Credentials Configuration](#github-credentials-configuration)
   - [Environment Variables](#environment-variables)
 - [Writing Tests](#writing-tests)
-  - [Tests for bidirectional Device-Agent Communication](#tests-for-bidirectional-device-agent-communication)
+  - [Tests for Bi-directional Device-Agent Communication](#tests-for-bi-directional-device-agent-communication)
   - [Asynchronous Testing](#asynchronous-testing)
   - [Builder Language](#builder-language)
   - [External Commands](#external-commands)
   - [Assertions](#assertions)
   - [Diagnostic Messages](#diagnostic-messages)
-  - [Test Case Example](#test-case-example)
+  - [A Test Case Example](#a-test-case-example)
 - [Running Tests](#running-tests)
   - [Selective Test Runs](#selective-test-runs)
   - [Debug Mode](#debug-mode)
@@ -165,7 +165,7 @@ class MyTestCase extends ImpTestCase {
 }
 ```
 
-### Tests for Bidirectional Device-Agent Communication
+### Tests for Bi-directional Device-Agent Communication
 
 To test interaction between a device and an agent, *impTest* allows developers to extend tests with corresponding logic implemented on the other side of the link (agent or device, respectively). The test “extensions” can be used to emulate real device-agent interaction and communication.
 
