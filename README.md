@@ -66,7 +66,7 @@ A configuration file is a JSON file that contains the following key-value pairs:
 | _modelId_ | The ID of the Model that the devices are assigned to |
 | _deviceFile_ | A path to a file with the device source code that is deployed along with the tests. `false` is used if no additional code is needed |
 | _agentFile_ | A path to a file with the agent source code that is deployed along with the tests. `false` is used if no additional code is needed |
-| _tests_ | A set of patterns that *impTest* uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bidirectional-device-agent-communication) |
+| _tests_ | A set of patterns that *impTest* uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bi-directional-device-agent-communication) |
 | _stopOnFailure_ | Set this option to `true` if you want to stop an execution after a test failure. The default value is `false` |
 | _timeout_ | A timeout period (in seconds) after which the tests are considered as failed. Asynchronous tests are interrupted. The default value is ten seconds |
 
@@ -142,7 +142,7 @@ The following are the basic steps you need to follow in order to write tests:
 - Choose the name and location of your file with tests. You can have several files with tests in the same or different locations.
   - The name with the path, relative to Project Home, must conform to the patterns specified in the [Test Project Configuration](#test-project-configuration) file within your Test Project.
   - The file is treated as agent test code if `agent` is present in the file name. Otherwise the file is treated as device test code.
-  - By default, the test code runs either on device or agent. If your Test Case must run on both the device and its agent, there is a way that allows you to execute [agent and device test code together](#tests-for-bidirectional-device-agent-communication).
+  - By default, the test code runs either on device or agent. If your Test Case must run on both the device and its agent, there is a way that allows you to execute [agent and device test code together](#tests-for-bi-directional-device-agent-communication).
 - Add a Test Case class that inherits from the *ImpTestCase* class. A file can have several Test Cases. Test Cases can have identical names if they are in different files.
 - Add and implement tests: methods whose names start with `test`. Every Test Case can have several tests.
 - Additionally, any Test Case can have *setUp()* and *tearDown()* methods to perform the environment setup before the tests execute and then perform cleaning-up afterwards.
