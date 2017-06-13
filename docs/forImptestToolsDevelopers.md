@@ -52,13 +52,13 @@ The following environment variables need to be set before spec run:
 
 Then run the command `npm test`. Some tests are designed to fail, so the result of test execution is printed at the end of a log.
 
-**Important** Tests need to be run either on an imp001 or an imp002 as some of them are designed to fail with an `"Out of memory"` error, which does not happen on imp modules with more memory available.
-
 #### Example
 
 ```bash
 SPEC_DEBUG=false SPEC_MODEL_ID=Lu55555OJHZT SPEC_DEVICE_IDS=237d555558a609ee npm test
 ```
+
+**Important** Tests need to be run either on an imp001 or an imp002 as some of them are designed to fail with an `"Out of memory"` error, which does not happen on imp modules with more memory available.
 
 ## Windows
 
