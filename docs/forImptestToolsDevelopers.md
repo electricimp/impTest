@@ -2,7 +2,8 @@
 
 This information is intended for those who want to update the test tools.
 
-[Node.js 4.0+](https://nodejs.org/en/) is required for development.
+[Node.js 4.0 or greater](https://nodejs.org/en/) is required for development.
+
 Once *node* and *npm* are installed, to install *impTest*, download the impTest source using the following command:
 
 ```bash
