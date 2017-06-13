@@ -38,8 +38,8 @@ All files located in Project Home (and in its subdirectories) are considered as 
 
 In order to work with impTest you need to:
 
-- [Install](#installation) *impTest*
-- [Create or Update `Test Project Configuration`](#test-project-configuration)
+- [Install *impTest*](#installation)
+- [Create or Update Test Project Configuration](#test-project-configuration)
 - [Write or Update Tests](#writing-tests)
 - [Run Tests](#running-tests)
 
