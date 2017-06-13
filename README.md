@@ -5,7 +5,7 @@
 - [Test Project Configuration](#test-project-configuration)
   - [Project Configuration Generation](#project-configuration-generation)
   - [GitHub Credentials Configuration](#github-credentials-configuration)
-  - [Environment Variables Settings](#environment-variables)
+  - [Environment Variables](#environment-variables)
 - [Writing Tests](#writing-tests)
   - [Tests for bidirectional Device-Agent Communication](#tests-for-bidirectional-device-agent-communication)
   - [Asynchronous Testing](#asynchronous-testing)
