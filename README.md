@@ -179,7 +179,7 @@ The [Test case](#overview) class must be located either in the device code or th
 
 The type of execution environment is indicated by either `.device` or `.agent` in the file name &mdash; if **TestFile** contains `.agent`, **PartnerFile** must have `.device`, and *vice versa*.
 
-For example, `"Test1.agent.test.nut"` (test file) and `"Test1.device.but"` (partner file).
+For example, `"Test1.agent.test.nut"` (test file) and `"Test1.device.nut"` (partner file).
 
 Due to partner special naming **do not** change the default value of ["Test file search pattern"](#test-project-configuration).
  
