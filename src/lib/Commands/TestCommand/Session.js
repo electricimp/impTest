@@ -213,6 +213,15 @@ class Session extends EventEmitter {
 
       case 'DEVICE_DISCONNECTED':
 
+        if (this.allowDisconnect) {
+          this.emit('message', {
+          type: 'info',
+          message: c.blue('Disconnected. Allowed by config')
+        });
+
+          break;
+        }
+
         this.emit(
           this.state === 'started' ? 'error' : 'warning',
           new Errors.DeviceDisconnectedError()
@@ -426,6 +435,14 @@ class Session extends EventEmitter {
 
         break;
     }
+  }
+
+  set allowDisconnect(value) {
+    this._allowDisconnect = value;
+  }
+
+  get allowDisconnect() {
+    return this._allowDisconnect;
   }
 
   get id() {
