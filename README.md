@@ -68,7 +68,7 @@ A configuration file is a JSON file that contains the following key-value pairs:
 | _agentFile_ | A path to a file with the agent source code that is deployed along with the tests. `false` is used if no additional code is needed |
 | _tests_ | A set of patterns that *impTest* uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bi-directional-device-agent-communication) |
 | _stopOnFailure_ | Set this option to `true` if you want to stop an execution after a test failure. The default value is `false` |
-| _allowDisconnect_ | Set this option to `true` if you want to not fail the session on device disconnect. The default value is `false` |
+| _allowDisconnect_ | Set this option to `true` if you want the test sessions to stay alive on temporary device disconnect. The default value is `false` |
 | _timeout_ | A timeout period (in seconds) after which the tests are considered as failed. Asynchronous tests are interrupted. The default value is ten seconds |
 
 This is the format of the configuration file, though the settings can be listed in any order:
@@ -81,7 +81,7 @@ This is the format of the configuration file, though the settings can be listed 
   "agentFile":       {string|false},     // Agent code file. Default: "agent.nut"
   "tests":           {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
   "stopOnFailure":   {boolean},          // Stop tests execution on failure? Default: false
-  "allowDisconnect": {boolean},          // Fail on device disconnect? Default: false
+  "allowDisconnect": {boolean},          // Keep the session alive on device disconnects? Default: false
   "timeout":         {number}            // Async test methods timeout, seconds. Default: 10 }
 ```
 
