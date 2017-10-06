@@ -215,8 +215,8 @@ class Session extends EventEmitter {
 
         if (this.allowDisconnect) {
           this.emit('message', {
-          type: 'info',
-          message: c.blue('Disconnected. Allowed by config.')
+            type: 'info',
+            message: c.blue('Disconnected. Allowed by config.')
         });
 
           break;
