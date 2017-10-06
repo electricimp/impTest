@@ -65,6 +65,7 @@ class ImpTestFile {
       agentFile: '',
       deviceFile: '',
       stopOnFailure: false,
+      allowDisconnect: false,
       timeout: 30,
       tests: ['*.test.nut', 'tests/**/*.test.nut']
     };

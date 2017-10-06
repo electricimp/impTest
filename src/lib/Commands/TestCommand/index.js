@@ -525,6 +525,7 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
             this._session.debug = this.debug;
             this._session.buildAPIClient = this._buildAPIClient;
             this._session.externalCommandsTimeout = parseFloat(this._impTestFile.values.timeout);
+            this._session.allowDisconnect = this._impTestFile.values.allowDisconnect;
             this._session.externalCommandsCwd = this._impTestFile.dir;
             this._session.externalCommandsBlockedEnvVars = [BUILD_API_KEY_ENV_VAR];
 
@@ -609,7 +610,7 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
         } else if (error instanceof Session.Errors.DeviceDisconnectedError) {
 
             this._testLine(c.red(error.message));
-            this._stopSession = true;
+            this._stopSession = !this._impTestFile.values.allowDisconnect;
 
         } else if (error instanceof Session.Errors.DeviceRuntimeError) {
 
