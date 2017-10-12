@@ -74,15 +74,16 @@ A configuration file is a JSON file that contains the following key-value pairs:
 This is the format of the configuration file, though the settings can be listed in any order:
 
 ```js
-{ "apiKey":          {string},           // Build API key, optional
-  "modelId":         {string},           // Model ID
-  "devices":         {string[]},         // Device IDs
-  "deviceFile":      {string|false},     // Device code file. Default: "device.nut"
-  "agentFile":       {string|false},     // Agent code file. Default: "agent.nut"
-  "tests":           {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
-  "stopOnFailure":   {boolean},          // Stop tests execution on failure? Default: false
-  "allowDisconnect": {boolean},          // Keep the session alive on device disconnects? Default: false
-  "timeout":         {number}            // Async test methods timeout, seconds. Default: 10 }
+{ "apiKey":          <string>,                 // Build API key, optional
+  "modelId":         <string>,                 // Model ID
+  "devices":         <string array>,           // Device IDs
+  "deviceFile":      <string or false>,        // Device code file. Default: "device.nut"
+  "agentFile":       <string or false>,        // Agent code file. Default: "agent.nut"
+  "tests":           <string or string array>, // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
+  "stopOnFailure":   <boolean>,                // Stop tests execution on failure? Default: false
+  "allowDisconnect": <boolean>,                // Keep the session alive on device disconnects? Default: false
+  "timeout":         <number>                  // Async test methods timeout, seconds. Default: 10 
+}
 ```
 
 ### Project Configuration Generation
