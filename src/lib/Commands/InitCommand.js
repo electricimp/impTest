@@ -312,6 +312,12 @@ class InitCommand extends AbstractCommand {
             'default': this._impTestFile.values.stopOnFailure ? 'yes' : 'no'
           },
           {
+            key: 'allowDisconnect',
+            label: c.yellow('> Continue session on disconnect?'),
+            type: 'boolean',
+            'default': this._impTestFile.values.allowDisconnect ? 'yes' : 'no'
+          },
+          {
             key: 'timeout',
             label: c.yellow('> Test methods timeout, seconds'),
             type: 'integer',
@@ -320,6 +326,7 @@ class InitCommand extends AbstractCommand {
         ],
         (input) => {
           this._impTestFile.values.stopOnFailure = input.stopOnFailure;
+          this._impTestFile.values.allowDisconnect = input.allowDisconnect;
           this._impTestFile.values.timeout = parseFloat(input.timeout);
           resolve();
         });
