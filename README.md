@@ -74,15 +74,16 @@ A configuration file is a JSON file that contains the following key-value pairs:
 This is the format of the configuration file, though the settings can be listed in any order:
 
 ```js
-{ "apiKey":          {string},           // Build API key, optional
-  "modelId":         {string},           // Model ID
-  "devices":         {string[]},         // Device IDs
-  "deviceFile":      {string|false},     // Device code file. Default: "device.nut"
-  "agentFile":       {string|false},     // Agent code file. Default: "agent.nut"
-  "tests":           {string|string[]},  // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
-  "stopOnFailure":   {boolean},          // Stop tests execution on failure? Default: false
-  "allowDisconnect": {boolean},          // Keep the session alive on device disconnects? Default: false
-  "timeout":         {number}            // Async test methods timeout, seconds. Default: 10 }
+{ "apiKey":          <string>,                 // Build API key, optional
+  "modelId":         <string>,                 // Model ID
+  "devices":         <string array>,           // Device IDs
+  "deviceFile":      <string or false>,        // Device code file. Default: "device.nut"
+  "agentFile":       <string or false>,        // Agent code file. Default: "agent.nut"
+  "tests":           <string or string array>, // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
+  "stopOnFailure":   <boolean>,                // Stop tests execution on failure? Default: false
+  "allowDisconnect": <boolean>,                // Keep the session alive on device disconnects? Default: false
+  "timeout":         <number>                  // Async test methods timeout, seconds. Default: 10 
+}
 ```
 
 ### Project Configuration Generation
@@ -181,7 +182,7 @@ The [Test case](#overview) class must be located either in the device code or th
 
 The type of execution environment is indicated by either `.device` or `.agent` in the file name &mdash; if **TestFile** contains `.agent`, **PartnerFile** must have `.device`, and *vice versa*.
 
-For example, `"Test1.agent.test.nut"` (test file) and `"Test1.device.but"` (partner file).
+For example, `"Test1.agent.test.nut"` (test file) and `"Test1.device.nut"` (partner file).
 
 Due to partner special naming **do not** change the default value of ["Test file search pattern"](#test-project-configuration).
  
