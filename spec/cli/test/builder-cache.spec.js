@@ -53,7 +53,7 @@ describe('TestCommand test suite for Builder cache scenario', () => {
   };
   removeCacheDir(".builder-cache");
 
-  it('should run a command', (done) => {
+  it('should run a command without cache option in the project config', (done) => {
     run({
       configPath:  '/fixtures/builder-cache/.imptest',
     }).then((res) => {
@@ -63,7 +63,7 @@ describe('TestCommand test suite for Builder cache scenario', () => {
     });
   });
 
-  it('should verify the output', (done) => {
+  it('should verify that there is no cache folder', (done) => {
     // todo: insert more checks here
     expect(commandSuccess).toBe(true);
     expect(commandOut).not.toBeEmptyString();
@@ -72,7 +72,7 @@ describe('TestCommand test suite for Builder cache scenario', () => {
     done();
   });
 
-  it('should run a command', (done) => {
+  it('should run a command to check that command line cache option has a higher priority than project config', (done) => {
     run({
       configPath:  '/fixtures/builder-cache/.imptest_cache_true',
       builderCache: false,
@@ -83,7 +83,7 @@ describe('TestCommand test suite for Builder cache scenario', () => {
     });
   });
 
-  it('should verify the output', (done) => {
+  it('should verify that there is no cache folder', (done) => {
     // todo: insert more checks here
     expect(commandSuccess).toBe(true);
     expect(commandOut).not.toBeEmptyString();
@@ -92,7 +92,7 @@ describe('TestCommand test suite for Builder cache scenario', () => {
     done();
   });
 
-  it('should run a command', (done) => {
+  it('should run a command with cache enabled', (done) => {
     run({
       configPath:  '/fixtures/builder-cache/.imptest_cache_false',
       builderCache: true,
@@ -103,7 +103,7 @@ describe('TestCommand test suite for Builder cache scenario', () => {
     });
   });
 
-  it('should verify the output', (done) => {
+  it('should verify that cache folder present', (done) => {
     // todo: insert more checks here
     expect(commandSuccess).toBe(true);
     expect(commandOut).not.toBeEmptyString();
@@ -111,4 +111,6 @@ describe('TestCommand test suite for Builder cache scenario', () => {
     expect(fs.existsSync(".builder-cache")).toBe(true);
     done();
   });
+
+  removeCacheDir(".builder-cache");
 });
