@@ -37,6 +37,7 @@ commander
   .option('-d, --debug', 'debug output')
   .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
   .option('-f, --force', 'overwrite existing configuration')
+  .option('    --builder-cache', 'enable/disable builder cache', true)
   .parse(process.argv);
 
 // bootstrap command
@@ -45,6 +46,7 @@ const command = new InitCommand();
 
 command.debug = parseBool(commander.debug);
 command.force = parseBool(commander.force);
+command.builderCache = parseBool(commander['builder-cache']);
 command.version = packageJson.version;
 command.configPath = commander.config;
 
