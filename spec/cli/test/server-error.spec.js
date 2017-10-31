@@ -47,11 +47,47 @@ describe('TestCommand test server error scenario', () => {
     });
   });
 
-  it('should verify that there is no test failuer happen', (done) => {
-    // todo: insert more checks here
+  it('should verify that there is no test failure happen', (done) => {
     expect(commandSuccess).toBe(true);
     expect(commandOut).not.toBeEmptyString();
     expect(commandOut).toMatch(/Testing succeeded\n/);
+    done();
+  });
+
+  // Negative test cases
+  it('Should fail with field does not exist', (done) => {
+    run({
+      configPath:  '/fixtures/server-error/.imptest_check_failure',
+    }).then((res) => {
+      commandSuccess = res.success;
+      commandOut = res.out;
+      done();
+    });
+  });
+
+  it('check that test failed', (done) => {
+    expect(commandSuccess).toBe(false);
+    expect(commandOut).not.toBeEmptyString();
+    expect(commandOut).toMatch(/Testing failed\n/);
+    expect(commandOut).toMatch("the index 'fieldDoesNotExists' does not exist");
+    done();
+  });
+
+  it('Should fail with unhandled exception', (done) => {
+    run({
+      configPath:  '/fixtures/server-error/.imptest_check_exception',
+    }).then((res) => {
+      commandSuccess = res.success;
+      commandOut = res.out;
+      done();
+    });
+  });
+
+  it('check that test failed with unhandled exception', (done) => {
+    expect(commandSuccess).toBe(false);
+    expect(commandOut).not.toBeEmptyString();
+    expect(commandOut).toMatch(/Testing failed\n/);
+    expect(commandOut).toMatch("unhandled exception");
     done();
   });
 });

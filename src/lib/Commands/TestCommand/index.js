@@ -591,7 +591,7 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
     // @protected
 
     _onError(error) {
-        var keepSuccessStatus = false;
+        var ignoreErrorLog = false;
 
         this._debug('Error type: ' + error.constructor.name);
 
@@ -616,13 +616,13 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
 
         } else if (error instanceof Session.Errors.DeviceRuntimeError) {
 
-            keepSuccessStatus = true;
+            ignoreErrorLog = true;
             this._testLine(c.red(error.message));
             this._stopSession = false;
 
         } else if (error instanceof Session.Errors.AgentRuntimeError) {
 
-            keepSuccessStatus = true;
+            ignoreErrorLog = true;
             this._testLine(c.red(error.message));
             this._stopSession = false;
 
@@ -684,7 +684,7 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
 
         }
 
-        if (this._session && !keepSuccessStatus) {
+        if (this._session && !ignoreErrorLog) {
             this._session.error = true;
         }
 
@@ -698,7 +698,7 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
         }
 
         // command has not succeeded
-        if (!keepSuccessStatus)
+        if (!ignoreErrorLog)
           this._success = false;
     }
 
