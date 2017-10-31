@@ -1,8 +1,7 @@
 
 class AgentTestCase extends ImpTestCase {
   function testAgentServerError() {
-      assertTrue(10 > 1, "Simple assert");
-      local errorMaker = AgentServerError();
-      errorMaker.checkFieldDoesNotExist();
+      AgentServerError().checkFieldDoesNotExist();
+      assertTrue(false, "This assert should never happen because of runtime error on the previous step.");
   }
 }
