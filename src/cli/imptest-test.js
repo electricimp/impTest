@@ -41,6 +41,7 @@ commander
   .option('-g, --github-config [path]', 'github credentials config file path [default: .imptest-auth]', '.imptest-auth')
   .option('-c, --config [path]', 'config file path [default: .imptest]', '.imptest')
   .option('-b, --builder-variables [path]', 'Builder variables file path [default: .imptest-builder]', '.imptest-builder')
+  .option('--builder-cache [enable]', 'enable/disable builder cache')
   .parse(process.argv);
 
 // bootstrap command
@@ -49,6 +50,7 @@ const command = new TestCommand();
 
 command.version = packageJson.version;
 command.debug = parseBool(commander.debug);
+command.builderCache = commander.builderCache != undefined ? parseBool(commander.builderCache) : null;
 command.testFrameworkFile = __dirname + '/../impUnit/index.nut';
 command.selectedTest = commander.args[0] || null;
 command.configPath = commander.config;

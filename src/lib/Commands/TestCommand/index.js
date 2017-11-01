@@ -842,6 +842,8 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
                 this.__Builder.machine.readers.github.username = this.githubUser;
                 this.__Builder.machine.readers.github.token = this.githubToken;
             }
+            // command line option has higher priority than config option
+            this.__Builder.machine.useCache = this.builderCache != null ? (this.builderCache == true) : (this._impTestFile.values.builderCache == true);
         }
         return this.__Builder;
     }

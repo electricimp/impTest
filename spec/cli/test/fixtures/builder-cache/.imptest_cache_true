@@ -1,0 +1,12 @@
+{
+    "modelId": <modelId>,
+    "devices": <deviceIds>,
+    "agentFile": "myAgent.class.nut",
+    "deviceFile": "myDevice.class.nut",
+    "builderCache": true,
+    "stopOnFailure": false,
+    "timeout": 40,
+    "tests": [
+        "tests/builder.agent.nut"
+    ]
+}

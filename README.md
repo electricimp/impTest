@@ -34,7 +34,7 @@ There is one [**Test Project Configuration**](#test-project-configuration) file 
 
 All files located in Project Home (and in its subdirectories) are considered as files with Test Cases if their names match the patterns specified in Test Project Configuration.
 
-**Test Case** is a class inherited from the *ImpTestCase* class. There can be several Test Cases (classes) in a file. A Test Case (class) can contain several tests (methods), each of which should be prefixed *test*, eg. *testEverythingOk()*. 
+**Test Case** is a class inherited from the *ImpTestCase* class. There can be several Test Cases (classes) in a file. A Test Case (class) can contain several tests (methods), each of which should be prefixed *test*, eg. *testEverythingOk()*.
 
 In order to work with impTest you need to:
 
@@ -68,6 +68,7 @@ A configuration file is a JSON file that contains the following key-value pairs:
 | _agentFile_ | A path to a file with the agent source code that is deployed along with the tests. `false` is used if no additional code is needed |
 | _tests_ | A set of patterns that *impTest* uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bi-directional-device-agent-communication) |
 | _stopOnFailure_ | Set this option to `true` if you want to stop an execution after a test failure. The default value is `false` |
+| _builderCache_ | Set this option to `true` if you want to enable the builder cache for remote libs. The default value is `false` |
 | _allowDisconnect_ | Set this option to `true` if you want the test sessions to stay alive on temporary device disconnect. The default value is `false` |
 | _timeout_ | A timeout period (in seconds) after which the tests are considered as failed. Asynchronous tests are interrupted. The default value is ten seconds |
 
@@ -80,9 +81,10 @@ This is the format of the configuration file, though the settings can be listed 
   "deviceFile":      <string or false>,        // Device code file. Default: "device.nut"
   "agentFile":       <string or false>,        // Agent code file. Default: "agent.nut"
   "tests":           <string or string array>, // Test file search pattern. Default: ["*.test.nut", "tests/**/*.test.nut"]
+  "builderCache":    <boolean>,                // Enable build cache? Default: false
   "stopOnFailure":   <boolean>,                // Stop tests execution on failure? Default: false
   "allowDisconnect": <boolean>,                // Keep the session alive on device disconnects? Default: false
-  "timeout":         <number>                  // Async test methods timeout, seconds. Default: 10 
+  "timeout":         <number>                  // Async test methods timeout, seconds. Default: 10
 }
 ```
 
@@ -161,7 +163,7 @@ class MyTestCase extends ImpTestCase {
     function testAssertTrue() {
         this.assertTrue(true);
     }
-    
+
     function testAssertEqual() {
         this.assertEqual(1000 * 0.01, 100 * 0.1);
     }
@@ -176,16 +178,16 @@ To identify partners file uniquely, there are some restrictions imposed on the t
 
 The [Test case](#overview) class must be located either in the device code or the agent code, but not in both. Whichever of the two it is included in, that is the **TestFile** &mdash; the other file is the **PartnerFile**. Both of these files must be located in the same directory on the disk.
 
-**TestFile** and **PartnerFile** must be named as follows: `TestName.(agent|device)[.test].nut`, ie. they need to have the same `TestName` prefix and the same `.nut` suffix. 
+**TestFile** and **PartnerFile** must be named as follows: `TestName.(agent|device)[.test].nut`, ie. they need to have the same `TestName` prefix and the same `.nut` suffix.
 
-**TestFile** is indicated by the `.test` string in its filename; **PartnerFile** must not feature this string in the suffix. 
+**TestFile** is indicated by the `.test` string in its filename; **PartnerFile** must not feature this string in the suffix.
 
 The type of execution environment is indicated by either `.device` or `.agent` in the file name &mdash; if **TestFile** contains `.agent`, **PartnerFile** must have `.device`, and *vice versa*.
 
 For example, `"Test1.agent.test.nut"` (test file) and `"Test1.device.nut"` (partner file).
 
 Due to partner special naming **do not** change the default value of ["Test file search pattern"](#test-project-configuration).
- 
+
 Further examples of test extensions can be found at [sample7](./samples/sample7).
 
 ### Asynchronous Testing
@@ -208,7 +210,7 @@ function testSomethingAsynchronously() {
 
 ### Builder Language
 
-[*Builder*](https://github.com/electricimp/Builder) is supported by *impTest*. The *Builder* language combines a preprocessor with an expression language and advanced imports. 
+[*Builder*](https://github.com/electricimp/Builder) is supported by *impTest*. The *Builder* language combines a preprocessor with an expression language and advanced imports.
 
 #### Example
 
@@ -480,13 +482,14 @@ class TestCase1 extends ImpTestCase {
 Use this command to run the tests:
 
 ```bash
-imptest test [-c <configuration_file>] [-g <credentials_file>] [-d] [testcase_pattern]
+imptest test [-c <configuration_file>] [-g <credentials_file>] [-b <builder_file>] [--builder-cache=true|false] [-d] [testcase_pattern]
 ```
 where:
 
 * `-c` &mdash; this option is used to provide a path to the Test Project Configuration file. A relative or absolute path can be used. If the `-c` option is left out, the `.imptest` file in the current directory is assumed.
 * `-g` &mdash; this option is used to provide a path to file with GitHub credentials. A relative or absolute path can be used. If the `-g` option is left out, the `.imptest-auth` file in the current directory is assumed.
 * `-b` &mdash; this option is used to provide a path to file with [Builder variables](https://github.com/electricimp/Builder#usage). A relative or absolute path can be used. If the `-b` option is left out, the `.imptest-builder` file in the current directory is assumed.
+* `--builder-cache` &mdash; enable (if *true*) / disable (if *false*) builder cache for this test run. If not specified, defined by the setting in the test project configuration.
 * `-d` &mdash; prints [debug output](#debug-mode), stores device and agent code.
 * `testcase_pattern` &mdash; a pattern for [selective test runs](#selective-test-runs).
 
@@ -546,6 +549,23 @@ In this case:
 **Note** If no colon is present in the testcase filter, it is assumed that only the pattern for a file name is specified.
 
 **Note** An internal class can play the role of a test case. To denote this use case, put `"."` at the end of the filter. For example, `"imptest test :Inner.TestClass."` executes all test methods from the *Inner.TestClass* class.
+
+### Builder cache
+
+Builder cache is intended to improve the build time and reduce the number of requests to external resources.
+
+It is possible to cache external libraries only. Builder stores the cache up to 24 hours in the `.builer-cache` folder.
+
+By default builder cache is disabled and it can be activated during a [test project configuration generation](#project-configuration-generation).
+
+Also, it is possible to specify should the builder cache be enabled or disabled for every [test run](#running-tests). For example, to disable the cache:
+```shell
+>imptest test --builder-cache=false
+```
+There is no special imptest's option or command to remove the builder cache. But you can do this manually. For example:
+```shell
+>rm -rf .builder-cache
+```
 
 ### Debug Mode
 
