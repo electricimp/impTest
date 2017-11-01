@@ -2,6 +2,7 @@
 class AgentTestCase extends ImpTestCase {
   function testAgentServerError() {
       AgentServerError().checkThrowException();
-      assertTrue(true, "This check should never happen because of runtime error on the previous step.");
+      // should never get next line executed
+      server.error("If you see this message, something went wrong!!!");
   }
 }
