@@ -1,0 +1,11 @@
+{
+    "modelId": <modelId>,
+    "devices": <deviceIds>,
+    "agentFile": "myAgent.class.nut",
+    "deviceFile": null,
+    "stopOnFailure": false,
+    "timeout": 40,
+    "tests": [
+        "tests/server-throw-exception.agent.nut"
+    ]
+}

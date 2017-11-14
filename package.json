@@ -1,6 +1,6 @@
 {
   "name": "imptest",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Electric Imp Test Runner",
   "main": "src/cli/imptest.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "url": "https://github.com/electricimp/impTest.git"
   },
   "dependencies": {
-    "Builder": "^2.1.0",
+    "Builder": "^2.2.2",
     "cli-prompt": "^0.4.3",
     "cli-table": "^0.3.1",
     "colors": "^1.1.2",
