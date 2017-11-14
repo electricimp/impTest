@@ -68,7 +68,7 @@ A configuration file is a JSON file that contains the following key-value pairs:
 | _agentFile_ | A path to a file with the agent source code that is deployed along with the tests. `false` is used if no additional code is needed |
 | _tests_ | A set of patterns that *impTest* uses to search for files with Test Cases. If `**` is alone in the path portion, then it matches zero or more directories and subdirectories that need to be searched. It does not crawl symlinked directories. The pattern default value is `["*.test.nut", "tests/**/*.test.nut"]`. Do not change this value if there is a plan to run [agent and device test code together](#tests-for-bi-directional-device-agent-communication) |
 | _stopOnFailure_ | Set this option to `true` if you want to stop an execution after a test failure. The default value is `false` |
-| _builderCache_ | Set this option to `true` if you want to enable the builder cache for remote libs. The default value is `false` |
+| _builderCache_ | Set this option to `true` if you want to enable the builder cache for remote libraries. The default value is `false` |
 | _allowDisconnect_ | Set this option to `true` if you want the test sessions to stay alive on temporary device disconnect. The default value is `false` |
 | _timeout_ | A timeout period (in seconds) after which the tests are considered as failed. Asynchronous tests are interrupted. The default value is ten seconds |
 
@@ -489,7 +489,7 @@ where:
 * `-c` &mdash; this option is used to provide a path to the Test Project Configuration file. A relative or absolute path can be used. If the `-c` option is left out, the `.imptest` file in the current directory is assumed.
 * `-g` &mdash; this option is used to provide a path to file with GitHub credentials. A relative or absolute path can be used. If the `-g` option is left out, the `.imptest-auth` file in the current directory is assumed.
 * `-b` &mdash; this option is used to provide a path to file with [Builder variables](https://github.com/electricimp/Builder#usage). A relative or absolute path can be used. If the `-b` option is left out, the `.imptest-builder` file in the current directory is assumed.
-* `--builder-cache` &mdash; enable (if *true*) / disable (if *false*) builder cache for this test run. If not specified, defined by the setting in the test project configuration.
+* `--builder-cache` &mdash; enable (if `=true`) / disable (if `=false`) builder cache for this test run. If not specified, defined by the setting in the test project configuration.
 * `-d` &mdash; prints [debug output](#debug-mode), stores device and agent code.
 * `testcase_pattern` &mdash; a pattern for [selective test runs](#selective-test-runs).
 
@@ -550,21 +550,22 @@ In this case:
 
 **Note** An internal class can play the role of a test case. To denote this use case, put `"."` at the end of the filter. For example, `"imptest test :Inner.TestClass."` executes all test methods from the *Inner.TestClass* class.
 
-### Builder cache
+### Builder Cache
 
-Builder cache is intended to improve the build time and reduce the number of requests to external resources.
+Builder cache is intended to improve the build time and reduce the number of requests to external resources. It is only possible to cache external libraries. Builder stores the cache in the `.builer-cache` folder for up to 24 hours.
 
-It is possible to cache external libraries only. Builder stores the cache up to 24 hours in the `.builer-cache` folder.
+Caching is disabled by default. It can be activated during a [test project configuration generation](#project-configuration-generation).
 
-By default builder cache is disabled and it can be activated during a [test project configuration generation](#project-configuration-generation).
+It is possible to specify whether the builder cache should be enabled or disabled for a given [test run](#running-tests). For example, to disable the cache:
 
-Also, it is possible to specify should the builder cache be enabled or disabled for every [test run](#running-tests). For example, to disable the cache:
 ```shell
->imptest test --builder-cache=false
+imptest test --builder-cache=false
 ```
-There is no special imptest's option or command to remove the builder cache. But you can do this manually. For example:
+
+There is no special impTest option or command to remove the builder cache, but you can do this manually:
+
 ```shell
->rm -rf .builder-cache
+rm -rf .builder-cache
 ```
 
 ### Debug Mode
