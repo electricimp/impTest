@@ -591,6 +591,8 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
     // @protected
 
     _onError(error) {
+        var ignoreErrorLog = false;
+
         this._debug('Error type: ' + error.constructor.name);
 
         if (error instanceof Session.Errors.TestMethodError) {
@@ -614,13 +616,15 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
 
         } else if (error instanceof Session.Errors.DeviceRuntimeError) {
 
+            ignoreErrorLog = true;
             this._testLine(c.red(error.message));
-            this._stopSession = true;
+            this._stopSession = false;
 
         } else if (error instanceof Session.Errors.AgentRuntimeError) {
 
+            ignoreErrorLog = true;
             this._testLine(c.red(error.message));
-            this._stopSession = true;
+            this._stopSession = false;
 
         } else if (error instanceof Session.Errors.DeviceError) {
 
@@ -680,7 +684,7 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
 
         }
 
-        if (this._session) {
+        if (this._session && !ignoreErrorLog) {
             this._session.error = true;
         }
 
@@ -694,7 +698,8 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
         }
 
         // command has not succeeded
-        this._success = false;
+        if (!ignoreErrorLog)
+          this._success = false;
     }
 
     // Log message
@@ -842,6 +847,8 @@ ${'partnerpath' in testFile ? '@include "' + backslashToSlash(testFile.partnerpa
                 this.__Builder.machine.readers.github.username = this.githubUser;
                 this.__Builder.machine.readers.github.token = this.githubToken;
             }
+            // command line option has higher priority than config option
+            this.__Builder.machine.useCache = this.builderCache != null ? (this.builderCache == true) : (this._impTestFile.values.builderCache == true);
         }
         return this.__Builder;
     }

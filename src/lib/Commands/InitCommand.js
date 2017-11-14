@@ -312,6 +312,12 @@ class InitCommand extends AbstractCommand {
             'default': this._impTestFile.values.stopOnFailure ? 'yes' : 'no'
           },
           {
+            key: 'builderCache',
+            label: c.yellow('> Enable builder cache ?'),
+            type: 'boolean',
+            'default': this._impTestFile.values.builderCache ? 'yes' : 'no'
+          },
+          {
             key: 'allowDisconnect',
             label: c.yellow('> Continue session on disconnect?'),
             type: 'boolean',
@@ -326,6 +332,7 @@ class InitCommand extends AbstractCommand {
         ],
         (input) => {
           this._impTestFile.values.stopOnFailure = input.stopOnFailure;
+          this._impTestFile.values.builderCache = input.builderCache;
           this._impTestFile.values.allowDisconnect = input.allowDisconnect;
           this._impTestFile.values.timeout = parseFloat(input.timeout);
           resolve();
@@ -363,7 +370,7 @@ class InitCommand extends AbstractCommand {
         });
     });
   }
-  
+
   /**
    * Generate sample tests
    * @return {Promise}
