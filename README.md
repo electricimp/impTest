@@ -122,7 +122,7 @@ imptest github [-g <credentials_file>] [-d] [-f]
 where:
 
 * `-d` &mdash; prints the debug output/
-* `-g` &mdash; provides a path to the file with GitHub credentials. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If `-c` option is not specified, the `.imptest-auth` file in the current directory is assumed.
+* `-g` &mdash; provides a path to the file with GitHub credentials. A relative or absolute path can be used. Generation fails if any intermediate directory in the path does not exist. If `-g` option is not specified, the `.imptest-auth` file in the current directory is assumed.
 * `-f` &mdash; updates (overwrites) an existing file. If the specified file already exists, this option must be explicitly specified to update it.
 
 The file syntax is as follows:
