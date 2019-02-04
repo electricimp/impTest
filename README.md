@@ -1,3 +1,6 @@
+| :warning: The Electric Imp’s Build API used by the impTest is not supported anymore. Please use [impCentral impt test](https://github.com/electricimp/imp-central-impt/blob/master/TestingGuide.md) instead. |
+| --- |
+
 # impTest
 
 - [Overview](#overview)
